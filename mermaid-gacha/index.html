@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マーメイドガチャ抽選機</title>
+<style>
+:root{--bg:#eef5f6;--fg:#12303a;--card:#fff;--mut:#5b7a84;--line:#c9dde1;--ac:#0e7c86;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a24;--fg:#dcecef;--card:#12293a;--mut:#8fb0ba;--line:#244558;--ac:#4cc3cc;--on:#06222a}}
+:root[data-theme="dark"]{--bg:#0b1a24;--fg:#dcecef;--card:#12293a;--mut:#8fb0ba;--line:#244558;--ac:#4cc3cc;--on:#06222a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.mut{color:var(--mut);font-size:.9rem;margin:0 0 16px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.4em .9em;cursor:pointer}
+button.pri{background:var(--ac);color:var(--on);border:0;font-size:1.1rem;font-weight:700;padding:.65em 1.8em;border-radius:999px}
+input[type=number]{width:4em;font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:.2em .4em}
+textarea,input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:.6em}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+summary{cursor:pointer;padding:.6em .9em;display:flex;gap:.6em;align-items:center}
+summary .cnt{margin-left:auto;color:var(--mut);font-size:.85rem}
+details.top>summary{font-weight:700}
+.in{padding:0 .9em .9em}
+.sp{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 .9em .8em}
+.sp label{white-space:nowrap}
+.bar{display:grid;grid-template-columns:9.5em 1fr 2.2em;gap:8px;align-items:center;font-size:.85rem}
+.bar i{display:block;height:8px;background:var(--ac);border-radius:4px}
+.bar b{text-align:right;font-weight:400}
+#hist{white-space:pre-line;font-size:.85rem;color:var(--mut)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style></head>
+<body><main>
+<p class="mut" style="margin:0 0 6px"><a href="../" style="color:inherit">潮だまり工房へ戻る</a></p>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h1>マーメイドガチャ抽選機</h1><button id="th" aria-label="表示モードを切り替え"></button></div>
+<p class="mut">抽選はブラウザの乱数で行い、ChatGPTに貼れる「確定抽選シート」を作ります。</p>
+<div class="row"><button id="go" class="pri">抽選する</button><label>幻想枠 <input id="p" type="number" min="0" max="100" value="5">%</label></div>
+<div class="row"><button id="gs">生物だけ引き直す</button><button id="gc">構図だけ引き直す</button></div>
+<textarea id="out" readonly rows="17" placeholder="ここに確定抽選シートが出ます"></textarea>
+<div class="row"><button id="cp" class="pri" style="font-size:1rem;padding:.5em 1.3em">完成プロンプトをコピー</button><button id="cs">確定抽選シートのみコピー</button></div>
+<p id="msg" class="mut" style="margin:0 0 8px;min-height:1.7em"></p>
+
+<details class="top"><summary>画風モード</summary><div class="in">
+<div class="row"><label><input type="radio" name="sm" value="A"> 標準画風</label><label><input type="radio" name="sm" value="B"> 画風指定なし</label><label><input type="radio" name="sm" value="C"> カスタム画風</label></div>
+<textarea id="cst" rows="4" hidden placeholder="好きな画風の指定を入力します。この端末のブラウザ内にだけ保存されます。"></textarea></div></details>
+
+<details class="top"><summary>完成プロンプトのプレビュー</summary><div class="in">
+<p class="mut">コピーされる全文です。画風を切り替えても、抽選結果は変わりません。</p>
+<textarea id="pv" readonly rows="22"></textarea></div></details>
+
+<details class="top" open><summary>生物の選択</summary><div class="in">
+<div class="row"><button id="on">全部オン</button><button id="off">全部オフ</button><button id="rs">初期設定に戻す</button></div>
+<input id="q" type="search" placeholder="種名や分類名で探す">
+<div id="list"></div></div></details>
+
+<details class="top"><summary>履歴と集計</summary><div class="in">
+<p class="mut" id="n"></p><div id="tally"></div>
+<p class="mut" style="margin-top:14px">直近の結果</p><div id="hist"></div>
+<div class="row"><button id="hc">履歴を消す</button></div></div></details>
+
+<details class="top"><summary>設定コード</summary><div class="in">
+<p class="mut">オン・オフの状態をコードにして、別の端末や他の人に渡せます。同じ版のツール同士で使えます。</p>
+<textarea id="cd" rows="3"></textarea>
+<div class="row"><button id="ce">書き出す</button><button id="ci">読み込む</button></div></div></details>
+</main>
+<script>
+const $=i=>document.getElementById(i),E=(t,h,c)=>{const e=document.createElement(t);if(h)e.innerHTML=h;if(c)e.className=c;return e};
+const G="左上,中央上,右上,左中央,中央,右中央,左下,中央下,右下";
+const D=[
+["一般海水魚","マダイ,クロマグロ,マカジキ,トビウオ,サンマ,ヒラメ,マコガレイ,カサゴ,アカムツ,ブリ,マアジ,タチウオ,ボラ,カワハギ"],
+["淡水魚","ヤマメ,イワナ,イトウ,アユ,ナマズ,ニホンウナギ,チョウザメ,ピラルク,ピラニア,カムルチー,タナゴ,オイカワ,ドジョウ,ブラックバス"],
+["熱帯魚・観賞魚","ネオンテトラ,ディスカス,エンゼルフィッシュ,ベタ,グッピー,カクレクマノミ,ナンヨウハギ,ミノカサゴ,ツノダシ,ハナヒゲウツボ,アロワナ,ニシキゴイ,!ミナミハコフグ,!ハリセンボン"],
+["金魚の品種","ワキン,リュウキン,ランチュウ,オランダシシガシラ,デメキン,スイホウガン,チョウテンガン,コメット,シュブンキン,トサキン,ジキン,アズマニシキ"],
+["サメ類","ホホジロザメ,ジンベエザメ,ネコザメ,ラブカ,ミツクリザメ,オオメジロザメ,ノコギリザメ,ウバザメ,トラフザメ,ドチザメ,ヨシキリザメ,エビスザメ,!シュモクザメ"],
+["エイ類","マダラトビエイ,オニイトマキエイ,ナンヨウマンタ,アカエイ,ガンギエイ,シビレエイ,ウチワザメ,オトメエイ,ホシエイ,!ノコギリエイ"],
+["深海魚","リュウグウノツカイ,フウセンウナギ,ホテイウオ,ギンザメ,ミズウオ,ユメカサゴ,キンメダイ,ムネエソ,ハダカイワシ,!チョウチンアンコウ,!デメニギス,!ヌタウナギ"],
+["海棲哺乳類","シャチ,ザトウクジラ,シロナガスクジラ,マッコウクジラ,バンドウイルカ,シロイルカ,イッカク,アマゾンカワイルカ,ジュゴン,マナティー,ゴマフアザラシ,トド,ラッコ,セイウチ"],
+["甲殻類","イセエビ,タカアシガニ,タラバガニ,クルマエビ,ボタンエビ,モンハナシャコ,ダイオウグソクムシ,ヤシガニ,ソメンヤドカリ,!オキアミ,!フジツボ"],
+["頭足類","ミズダコ,マダコ,ダイオウイカ,ヤリイカ,コウイカ,アオリイカ,ホタルイカ,オウムガイ,メンダコ,ヒョウモンダコ,ダンゴイカ,ミミイカ"],
+["貝類","サザエ,アワビ,ホラガイ,タカラガイ,イモガイ,ホタテガイ,シャコガイ,ヒザラガイ,オキナエビス,!アサリ,!シジミ,!ハマグリ"],
+["ウミウシ類","アオウミウシ,シロウミウシ,ミノウミウシ,アオミノウミウシ,ウデフリツノザヤウミウシ,コノハミドリガイ,アメフラシ,ミドリリュウグウウミウシ,コモンウミウシ,ハダカカメガイ（クリオネ）"],
+["クラゲ・有櫛動物","ミズクラゲ,アカクラゲ,タコクラゲ,エチゼンクラゲ,ハナガサクラゲ,オキクラゲ,カブトクラゲ,ウリクラゲ,ベニクラゲ,サカサクラゲ,!ハブクラゲ,!カツオノエボシ"],
+["その他の無脊椎動物","カブトガニ,ヒラムシ,ケヤリムシ,ナメクジウオ,!マナマコ,!ウミシダ,!ホヤ,!カイメン,!サンゴ,!ウニ,!ヒトデ,!イソギンチャク,!ゴカイ"],
+["水棲爬虫類","アオウミガメ,タイマイ,オサガメ,アカウミガメ,エラブウミヘビ,ウミイグアナ,イリエワニ,スッポン,カミツキガメ"],
+["特殊な体型の魚類","タツノオトシゴ,リーフィーシードラゴン,ヨウジウオ,ダンゴウオ,ウミテング,ダルマオコゼ,チンアナゴ,ウツボ,ダツ,!ブロブフィッシュ,!ハコフグ,!トラフグ,!マンボウ,!ヤリマンボウ,!ウシマンボウ"],
+["その他の水棲生物","ウーパールーパー,オオサンショウウオ,アカハライモリ,カモノハシ,コウテイペンギン,ユーラシアカワウソ,!タガメ,!ゲンゴロウ"],
+["幻想水棲ドラゴン","リヴァイアサン,東洋の水龍,深海龍,海蛇型の水龍,氷海の幻想龍,蛟（ミズチ）,渦潮の龍,珊瑚礁の龍"]];
+const C=[
+["身体方向","頭を上にした姿勢,頭を下にした潜降,水平遊泳,斜め上への浮上,斜め下への潜降,水中での旋回,静止・浮遊,上下逆さまの姿勢"],
+["カメラ位置・角度","正面,背面,真横,斜め前,斜め後方,真上からの俯瞰,真下からの煽り,進行方向の前方,進行方向の後方"],
+["カメラの高さ","水面付近,浅い水中,中層,深い水中,海底付近,身体より高い位置,身体と同じ高さ,身体より低い位置"],
+["画角・撮影距離","広く引いた全景,全身,腰から上,尾の近接,広角で近接,望遠で圧縮"],
+["画面内配置","中央,左寄り,右寄り,上寄り,下寄り,斜めに横切る,余白を大きく取る"],
+["奥行き方向","頭と上半身が手前・尾が奥,尾先端が手前・上半身が奥,尾が奥へ伸び再び手前へ湾曲,身体がS字や螺旋状に奥行きを描く,カメラに向かって泳ぐ,カメラから遠ざかる,頭と尾がほぼ同じ奥行き"],
+["遠近法の強さ","弱い遠近感,中程度の遠近感,強い遠近感,極端な遠近感"],
+["頭の画面内位置",G],["尾先端の画面内位置",G],
+["身体動作","尾を大きくくねらせる,腕を伸ばす,身体を丸める,身体をひねる,腕を広げる,流れに身を任せる,尾を強く振り上げる,横たわって休む"],
+["顔方向","カメラ正面,斜め左,斜め右,上を向く,下を向く,背を向ける"],
+["視線","カメラ目線,進行方向,上方,下方,横,伏し目,遠く"]];
+const cats=D.map(([n,l])=>({n,s:l.split(",").map(x=>({n:x.replace("!",""),d:x[0]!="!",on:x[0]!="!"}))}));
+const flat=cats.flatMap(c=>c.s),st={h:[],last:""},KEY="mg1";
+const code=()=>"v1:"+flat.map((x,i)=>x.on?"":i.toString(36)).filter(Boolean).join(".");
+function apply(c){const m=/^v1:(.*)$/.exec((c||"").trim());if(!m)return false;flat.forEach(x=>x.on=true);m[1].split(".").filter(Boolean).forEach(k=>{const x=flat[parseInt(k,36)];if(x)x.on=false});return true}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({o:code(),h:st.h,l:st.last}))}catch(e){}}
+try{const j=JSON.parse(localStorage.getItem(KEY));if(j){apply(j.o);st.h=j.h||[];st.last=j.l||""}}catch(e){}
+function R(n){const a=new Uint32Array(1),lim=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+const box=$("list");
+cats.forEach(c=>{const d=E("details"),s=E("summary"),cb=E("input"),ct=E("span","","cnt"),w=E("div","","sp");
+cb.type="checkbox";cb.onchange=()=>{c.s.forEach(x=>x.on=cb.checked);refresh();save()};
+s.append(cb,E("span",c.n),ct);
+c.s.forEach(x=>{const l=E("label"),k=E("input");k.type="checkbox";k.onchange=()=>{x.on=k.checked;refresh();save()};l.append(k,x.n);w.append(l);x.k=k;x.l=l});
+d.append(s,w);Object.assign(c,{cb,ct,d});box.append(d)});
+function refresh(){cats.forEach(c=>{const n=c.s.filter(x=>x.on).length;c.s.forEach(x=>x.k.checked=x.on);c.cb.checked=n==c.s.length;c.cb.indeterminate=n>0&&n<c.s.length;c.ct.textContent=n+"/"+c.s.length})}
+function tally(){const t=$("tally"),m={};t.innerHTML="";st.h.forEach(h=>m[h.c]=(m[h.c]||0)+1);const mx=Math.max(1,...Object.values(m));
+$("n").textContent="抽選回数："+st.h.length+"回（大分類は等確率で引くので、回数を重ねるとほぼ均等に近づきます）";
+cats.forEach(c=>{const v=m[c.n]||0;t.append(E("div",`<span>${c.n}</span><i style="width:${v/mx*100}%"></i><b>${v}</b>`,"bar"))});
+$("hist").textContent=st.h.slice(-10).reverse().map(h=>h.s+"（"+h.c+"）").join("\n")}
+function spd(){
+const p=Math.min(100,Math.max(0,Math.round(+$("p").value||0))),pool=cats.slice(0,17).filter(c=>c.s.some(x=>x.on)),fc=cats[17],fo=fc.s.some(x=>x.on);
+if(!pool.length&&!fo){$("msg").textContent="有効な生物がありません。選択をオンにしてください";return false}
+const roll=R(100)+1,fan=(fo&&roll>100-p)||!pool.length;let c,s,n;
+const go=()=>{c=fan?fc:pool[R(pool.length)];const a=c.s.filter(x=>x.on);s=a[R(a.length)];n=a.length};
+go();let re="";if(s.n===st.last){re="（直前と同じ種だったため一度再抽選）";go()}
+st.spL=["実在生物／幻想枠："+(fan?"幻想水棲ドラゴン":"実在水棲生物")+"（1〜100の抽選値 "+roll+"、幻想枠 "+p+"％）",
+"大分類："+(fan?"なし（幻想枠）":c.n+"（有効な"+pool.length+"分類から等確率で抽選）"),
+"具体的な種・品種："+s.n+"（有効な"+n+"件から等確率で抽選）"+re];
+st.last=s.n;st.h.push({c:c.n,s:s.n});if(st.h.length>500)st.h.shift();return true}
+function cpd(){st.cpL=C.map(([t,l])=>{const a=l.split(",");return t+"："+a[R(a.length)]})}
+function draw(md){
+if(md!="cp"||!st.spL){if(!spd())return}
+if(md!="sp"||!st.cpL)cpd();
+st.sheet=["【確定抽選シート】","抽選方法：ブラウザの暗号論的乱数（crypto.getRandomValues）を使用",...st.spL,...st.cpL].join("\n");
+$("out").value=st.sheet+"\n\n"+CLOSE;pvu();tally();save();
+$("msg").textContent=md=="sp"?"生物だけ引き直しました（構図はそのまま）":md=="cp"?"構図だけ引き直しました（生物はそのまま）":""}
+$("go").onclick=()=>draw("all");$("gs").onclick=()=>draw("sp");$("gc").onclick=()=>draw("cp");
+async function cpy(t,ok){if(!t){$("msg").textContent="先に抽選してください";return}try{await navigator.clipboard.writeText(t)}catch(e){const a=E("textarea");a.value=t;document.body.append(a);a.select();document.execCommand("copy");a.remove()}$("msg").textContent=ok}
+$("cp").onclick=()=>cpy(st.sheet&&build(),"完成プロンプトをコピーしました");
+$("cs").onclick=()=>cpy(st.sheet&&$("out").value,"確定抽選シートのみコピーしました");
+$("on").onclick=()=>{flat.forEach(x=>x.on=true);refresh();save()};
+$("off").onclick=()=>{flat.forEach(x=>x.on=false);refresh();save()};
+$("rs").onclick=()=>{flat.forEach(x=>x.on=x.d);refresh();save()};
+$("q").oninput=e=>{const q=e.target.value.trim();cats.forEach(c=>{let any=false;c.s.forEach(x=>{const m=!q||x.n.includes(q)||c.n.includes(q);x.l.hidden=!m;any=any||m});c.d.hidden=!any;c.d.open=!!q&&any})};
+$("hc").onclick=()=>{st.h=[];st.last="";tally();save()};
+$("ce").onclick=()=>{$("cd").value=code()};
+$("ci").onclick=()=>{if(apply($("cd").value)){refresh();save();$("msg").textContent="設定を読み込みました"}else $("msg").textContent="コードの形式が違います"};
+const RULES=`【画像生成ルール】
+この企画の目的は、人物に似合う生物を探すことではなく、人物を維持したまま、抽選された生物の身体構造・色彩・質感を取り入れて、新しい姿を見ることです。普段の人物像から大きく離れた結果も歓迎します。
+
+■人物の固定
+・添付した参照画像の人物を使い、顔、髪型、髪色、瞳、肌色、体格、骨格などの身体的特徴を維持する。成人らしい骨格と頭身を保つ。
+・元の衣装や構図の再現は不要。参照衣装の装飾を、生物由来の部分へ流用しない。
+・参照画像が三面図でも、完成画像は三面図にしない。
+
+■抽選結果の固定
+・下の確定抽選シートは外部ツールで抽選済み。再抽選せず、画像に合わせて後付けで変更しない。
+・生成しにくい条件でも、別の生物や構図へ変更しない。複数の構図条件を同時に満たしにくい場合は、身体のひねり、旋回、奥行き、遠近法を使って、できるだけ多くの条件を満たす。
+・描きやすい横向きの全身像へ変更しない。カメラや画像全体を回転させて、条件をごまかさない。
+・身体の連続性と尾の本来の長さは維持する。画角による自然な見切れは許容するが、尾そのものを短縮しない。
+
+■生物の身体構造の翻訳
+・抽選された単一の生物だけをモチーフにする。一般的な魚らしさより、その種の特徴を優先する。
+・色彩だけでなく、体表、骨格、鰭、外殻、模様などの特徴を、人魚の身体構造へ反映する。識別に重要な特徴を選んで身体全体へ統合し、すべてを盛り込む必要はない。特徴が少ない生物を無理に華やかにしない。
+・実在しない鰭・触角・突起を足さない。別種の特徴で補わない。
+・特徴が頭部に集中する生物（牙、発光器官、頭部の形状など）でも、参照人物の顔、髪、頭部の基本構造を優先し、顔を別物に変えない。必要なら尾や体表へ翻訳してよいが、元の器官と無関係な装飾に置き換えない。
+・一般的な魚の尾に生物の装飾を貼り付けただけのデザインにしない。生物の頭部や胴体を、そのまま腰へ接合しない。
+・腰から尾へ、骨格・体表・組織が連続した一つの身体としてつなぐ。境界線は生物由来の組織として自然に見せ、衣服の履き口やスーツのような段差にしない。
+・人間の脚、膝、足、足指を残さない。尾を複数に分裂させない。
+・尾は、腰から末端まで人間の腰から足先以上の長さを基本とする。尾びれだけを大きくして本体を短くしない。
+・幅広い生物や特殊な体型の生物を、無理に細長い魚型へ矯正しない。
+・人物との相性や見栄えを理由に、別の生物へ変更しない。名称や愛称から連想される特徴を混ぜない。
+・幻想枠でも、人間の上半身から一本の尾へ続く構造を保つ。翼や四肢を無制限に足して、通常のドラゴンにしない。
+
+■構図と背景
+・確定抽選シートの構図条件に従う。顔を必ず見せようとしない。
+・生物の生息環境に合った背景にする。人物と背景を分離し、身体構造が読み取れるようにする。
+
+■画像内の文字と禁止事項
+・同種の生物を大量に描いて、モチーフを説明しない。ガラス玉状の球体を大量に配置しない。
+・画像内に、抽選された生物の日本語名だけを、小さく読みやすく表示する。人物や尾の重要な部分を隠さない。
+・それ以外の文字、英名、学名、ロゴ、説明欄は入れない。
+
+■仕上げ
+・高品質な完成イラストとして仕上げる。画風は下の指定に従う。画風を変えても、上のルールは維持する。`,STA="高品質な現代2Dアニメ調。清潔で明瞭な線画と、自然で滑らかなデジタル彩色。髪は大きく整理した毛束で描き、細い飛び毛や過剰な毛先の分裂を避ける。肌は柔らかな陰影の面で立体感を出す。生物由来の鱗、皮膚、外殻、鰭などの質感は丁寧に描き分ける。粒子ノイズ、過度な発光、過剰な装飾を避ける。",CLOSE="上記を固定条件として画像を生成してください。生物と構図の再抽選はしないでください。";
+const SS={m:"A",c:""};try{Object.assign(SS,JSON.parse(localStorage.getItem("mg1s")))}catch(e){}
+function build(){const sty=SS.m=="A"?STA:SS.m=="C"?SS.c.trim():"";return RULES+"\n\n【画風】\n"+(sty||"指定なし。画像生成AIの標準的な画風で仕上げる。")+"\n\n"+(st.sheet||"（抽選するとここに確定抽選シートが入ります）")}
+function pvu(){$("pv").value=build()}
+function sv(){$("cst").hidden=SS.m!="C";pvu();try{localStorage.setItem("mg1s",JSON.stringify(SS))}catch(e){}}
+document.querySelectorAll("input[name=sm]").forEach(r=>{r.checked=r.value==SS.m;r.onchange=()=>{SS.m=r.value;sv()}});
+$("cst").value=SS.c;$("cst").oninput=e=>{SS.c=e.target.value;sv()};
+const TM=["auto","light","dark"],TL={auto:"自動",light:"ライト",dark:"ダーク"},t0=document.documentElement.getAttribute("data-theme");let tm="auto";try{tm=localStorage.getItem("mg1t")||"auto"}catch(e){}
+function tmu(){const r=document.documentElement,v=tm=="auto"?t0:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").textContent="表示："+TL[tm]}
+$("th").onclick=()=>{tm=TM[(TM.indexOf(tm)+1)%3];try{localStorage.setItem("mg1t",tm)}catch(e){}tmu()};
+tmu();refresh();tally();sv();
+</script></body></html>

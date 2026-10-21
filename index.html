@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>潮だまり工房｜やってみたい、作ってみたいを置く場所</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--s0:#2d97bb;--s1:#15698c;--s2:#eaf7fa;--s3:#c9e8ef;--fg:#0b2e3b;--mut:#3f6a79;--card:rgba(255,255,255,.62);--line:rgba(21,105,140,.25);--ac:#0b7a93;--glow:rgba(45,151,187,.38);--bub:rgba(21,105,140,.35);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s0:#0d4468;--s1:#062a40;--s2:#04141f;--s3:#020b12;--fg:#d8f1f5;--mut:#8fbac4;--card:rgba(13,46,66,.55);--line:rgba(95,212,222,.22);--ac:#5fd4de;--glow:rgba(95,212,222,.3);--bub:rgba(160,235,245,.4)}}
+:root[data-theme="dark"]{--s0:#0d4468;--s1:#062a40;--s2:#04141f;--s3:#020b12;--fg:#d8f1f5;--mut:#8fbac4;--card:rgba(13,46,66,.55);--line:rgba(95,212,222,.22);--ac:#5fd4de;--glow:rgba(95,212,222,.3);--bub:rgba(160,235,245,.4)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth;background:linear-gradient(var(--s0) 50%,var(--s3) 50%)}
+body{margin:0;background:var(--s2);color:var(--fg);font:16px/1.8 "Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow-x:hidden}
+#bub{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#bub i{position:absolute;bottom:-40px;border-radius:50%;border:1px solid var(--bub);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55),rgba(255,255,255,.04));animation:rise linear infinite}
+@keyframes rise{0%{transform:translate(0,0)}50%{transform:translate(14px,-55vh)}100%{transform:translate(-10px,-115vh)}}
+svg{fill:currentColor}
+.hero{position:relative;z-index:1;overflow:hidden;color:#fff;background:linear-gradient(var(--s0),var(--s1));padding:0 20px 150px}
+.hero::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(105deg,rgba(255,255,255,.11) 0 36px,transparent 36px 120px);-webkit-mask:linear-gradient(#000,transparent 85%);mask:linear-gradient(#000,transparent 85%);animation:ray 14s ease-in-out infinite alternate}
+@keyframes ray{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+.in,.bar{max-width:960px;margin:0 auto;position:relative;z-index:2}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
+.logo{font-weight:700;letter-spacing:.08em}
+button{font:inherit;font-size:.85rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:.3em 1em;cursor:pointer;backdrop-filter:blur(6px)}
+.eyebrow{margin:48px 0 8px;font-size:.85rem;letter-spacing:.2em;opacity:.85}
+h1{margin:0 0 16px;font-size:clamp(2rem,6.4vw,3.5rem);line-height:1.35}
+.lead{max-width:30em;margin:0 0 28px;opacity:.92}
+.btn{display:inline-block;background:#fff;color:#0b4f6a;font-weight:700;text-decoration:none;border-radius:999px;padding:.7em 1.8em;box-shadow:0 6px 20px rgba(0,30,50,.25);transition:transform .25s}
+.btn:hover{transform:translateY(-2px)}
+.sw{position:absolute;left:0;width:64px;height:64px;color:rgba(255,255,255,.2);animation:swim 44s linear infinite}
+.s1{top:30%}.s2{top:58%;width:40px;height:40px;animation-name:swimr;animation-duration:60s;animation-delay:-22s}
+.jl{position:absolute;right:7%;top:16%;width:70px;height:70px;color:rgba(255,255,255,.22);animation:drift 9s ease-in-out infinite alternate}
+@keyframes swim{from{transform:translateX(-120px) scaleX(-1)}to{transform:translateX(calc(100vw + 120px)) scaleX(-1)}}
+@keyframes swimr{from{transform:translateX(calc(100vw + 120px))}to{transform:translateX(-120px)}}
+@keyframes drift{from{transform:translateY(-10px) rotate(-4deg)}to{transform:translateY(14px) rotate(4deg)}}
+.wave{position:absolute;left:0;right:0;bottom:-1px;height:110px;overflow:hidden;z-index:1}
+.wave svg{position:absolute;bottom:0;left:0;width:200%;height:100%;fill:var(--s2)}
+.w1{opacity:.5;animation:wv 26s linear infinite}.w2{animation:wv 17s linear infinite reverse;transform:translateY(14px)}
+@keyframes wv{to{transform:translateX(-50%)}}
+.w2{animation-name:wv2}@keyframes wv2{from{transform:translate(-50%,14px)}to{transform:translate(0,14px)}}
+main{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:12px 20px 40px}
+.ch{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:36px 0 16px;padding-bottom:10px;border-bottom:2px dotted var(--line)}
+.ch h2{margin:0;font-size:1.5rem}.ch p{margin:0;color:var(--mut);font-size:.92rem;flex:1 1 14em}
+.cnt{font-size:.8rem;color:var(--ac);border:1px solid var(--line);border-radius:999px;padding:0 .8em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;padding:20px;border-radius:20px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:transform .3s,box-shadow .3s,opacity .7s}
+a.card:hover{transform:translateY(-5px);box-shadow:0 14px 34px var(--glow)}
+.card h3{margin:6px 0 0;font-size:1.1rem}.card p{margin:0;font-size:.9rem;color:var(--mut)}
+.ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--ac);background:rgba(120,200,220,.2)}
+.ic svg{width:30px;height:30px}
+.tg{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.tg li{font-size:.75rem;color:var(--ac);border:1px solid var(--line);border-radius:999px;padding:0 .7em}
+.go{margin-top:auto;padding-top:8px;font-size:.88rem;font-weight:700;color:var(--ac)}
+.soon{border-style:dashed;opacity:.8}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}.rv.on{opacity:1;transform:none}
+a.card.rv.on:hover{transform:translateY(-5px)}
+footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(--mut);padding:40px 20px 28px;background:linear-gradient(var(--s2),var(--s3))}
+:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}#bub{display:none}}
+</style></head>
+<body>
+<div id="bub" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="fish" viewBox="0 0 100 100"><path d="M8 50C24 22 56 22 74 50 56 78 24 78 8 50Z"/><path d="M72 50 96 30V70Z"/></symbol>
+<symbol id="jelly" viewBox="0 0 100 100"><path d="M18 50C18 14 82 14 82 50Q50 58 18 50Z"/><path d="M30 54C24 68 36 76 30 92M50 56C44 72 56 80 50 96M70 54C76 68 64 76 70 92" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+</defs></svg>
+<header class="hero">
+<div class="bar"><span class="logo">潮だまり工房</span><button id="th" aria-label="表示モードを切り替え"></button></div>
+<div class="in"><p class="eyebrow">やってみたい、作ってみたいの置き場</p>
+<h1>思いついたものを、<br>潮だまりにひとつずつ。</h1>
+<p class="lead">やってみたいこと、作ってみたいものを、ツールや試作として並べていきます。まずは画像生成まわりの道具から。</p>
+<a class="btn" href="#tools">中をのぞく</a></div>
+<svg class="sw s1" viewBox="0 0 100 100" aria-hidden="true"><use href="#fish"/></svg>
+<svg class="sw s2" viewBox="0 0 100 100" aria-hidden="true"><use href="#fish"/></svg>
+<svg class="jl" viewBox="0 0 100 100" aria-hidden="true"><use href="#jelly"/></svg>
+<div class="wave" aria-hidden="true">
+<svg class="w1" viewBox="0 0 2880 120" preserveAspectRatio="none"><path d="M0 60C240 20 480 100 720 60S1200 100 1440 60 1680 20 1920 60 2400 100 2880 60V120H0Z"/></svg>
+<svg class="w2" viewBox="0 0 2880 120" preserveAspectRatio="none"><path d="M0 60C240 100 480 20 720 60S1200 20 1440 60 1680 100 1920 60 2400 20 2880 60V120H0Z"/></svg>
+</div>
+</header>
+<main id="tools"></main>
+<footer>潮だまり工房　ひとつずつ、増やしています。</footer>
+<script>
+const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const SITE=[{name:"画像生成",desc:"プロンプトと抽選で、一枚の絵のタネをつくる。",tools:[
+{n:"マーメイドガチャ抽選機",d:"水棲生物と構図をブラウザの乱数で抽選し、画像生成AIに貼れる完成プロンプトまで作ります。",u:"mermaid-gacha/",t:["抽選","人魚","プロンプト"],i:"fish"},
+{soon:1,n:"次のなにか",d:"制作中、または思案中です。ここに新しいものが並びます。",i:"jelly"}]}];
+const main=$("#tools");let k=0;
+SITE.forEach(c=>{const s=E("section","cat"),n=c.tools.filter(t=>!t.soon).length;
+s.innerHTML=`<div class="ch rv"><h2>${c.name}</h2><p>${c.desc}</p><span class="cnt">${n}点</span></div>`;
+const g=E("div","grid");
+c.tools.forEach(t=>{const a=E(t.soon?"div":"a","card rv"+(t.soon?" soon":""));
+if(!t.soon){a.href=t.u;if(/^https?:/.test(t.u)){a.target="_blank";a.rel="noopener"}}
+a.innerHTML=`<span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#${t.i}"/></svg></span><h3>${t.n}</h3><p>${t.d}</p>`+(t.t?`<ul class="tg">${t.t.map(x=>`<li>${x}</li>`).join("")}</ul>`:"")+`<span class="go">${t.soon?"準備中":"開く"}</span>`;
+a.style.transitionDelay=(k++%6)*70+"ms";g.append(a)});
+s.append(g);main.append(s)});
+const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}}),{threshold:.12}):null;
+document.querySelectorAll(".rv").forEach(e=>io?io.observe(e):e.classList.add("on"));
+const b=$("#bub");for(let i=0;i<14;i++){const e=E("i"),z=6+Math.random()*16;e.style.cssText=`left:${Math.random()*100}%;width:${z}px;height:${z}px;animation-duration:${14+Math.random()*16}s;animation-delay:${-Math.random()*20}s`;b.append(e)}
+const TM=["auto","light","dark"],TL={auto:"自動",light:"ライト",dark:"ダーク"},t0=document.documentElement.getAttribute("data-theme");let tm="auto";try{tm=localStorage.getItem("ptl-theme")||"auto"}catch(e){}
+function tmu(){const r=document.documentElement,v=tm=="auto"?t0:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("#th").textContent="表示："+TL[tm]}
+$("#th").onclick=()=>{tm=TM[(TM.indexOf(tm)+1)%3];try{localStorage.setItem("ptl-theme",tm)}catch(e){}tmu()};tmu();
+</script></body></html>
