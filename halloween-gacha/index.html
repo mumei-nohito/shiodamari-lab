@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ハロウィン仮装ガチャ抽選機</title>
+<style>
+:root{--bg:#f6f1fa;--fg:#2a1838;--card:#fff;--mut:#6d5a7e;--line:#d9cce6;--ac:#8a3fc0;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#150d1d;--fg:#eadff5;--card:#241631;--mut:#b09cc4;--line:#43305a;--ac:#e08a3c;--on:#1c0f00}}
+:root[data-theme="dark"]{--bg:#150d1d;--fg:#eadff5;--card:#241631;--mut:#b09cc4;--line:#43305a;--ac:#e08a3c;--on:#1c0f00}
+:root[data-theme="dusk"]{--bg:#fbe9df;--fg:#3a2230;--card:#fff7f1;--mut:#80606c;--line:#ecc9bd;--ac:#b8452f;--on:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:1.45rem;margin:0 0 4px}
+.mut{color:var(--mut);font-size:.9rem;margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35em .9em;cursor:pointer}
+select{font:inherit;font-size:.85rem;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.3em .6em;cursor:pointer;max-width:60vw}
+button.pri{background:var(--ac);color:var(--on);border:0;font-weight:700;padding:.6em 1.6em;border-radius:999px}
+textarea,input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:.6em}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+summary{cursor:pointer;padding:.6em .9em;display:flex;gap:.6em;align-items:center}
+summary .cnt{margin-left:auto;color:var(--mut);font-size:.85rem}
+details.t>summary{font-weight:700}
+.in{padding:0 .9em .9em}
+.sp{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 .9em .8em}.sp label{white-space:nowrap}
+.rw{display:grid;grid-template-columns:7.5em 1fr auto;gap:8px;align-items:center;padding:.4em .7em;border-bottom:1px solid var(--line)}
+.rw span{color:var(--mut);font-size:.85rem}.rw b{font-weight:700}.rw button{font-size:.8rem;padding:.15em .7em}
+#res{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:2.4em}
+.bar{display:grid;grid-template-columns:11em 1fr 2.2em;gap:8px;align-items:center;font-size:.85rem}
+.bar i{display:block;height:8px;background:var(--ac);border-radius:4px}.bar b{text-align:right;font-weight:400}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style></head>
+<body><main>
+<div class="top"><h1>ハロウィン仮装ガチャ抽選機</h1><select id="th" aria-label="表示モード"></select></div>
+<p class="mut">仮装や構図をブラウザの乱数で抽選し、ChatGPTなどに貼れる完成プロンプトを作ります。<a href="../" style="color:inherit">潮だまり工房へ戻る</a></p>
+<div class="row"><button id="go" class="pri">抽選する</button><button id="hd">結果を隠す</button></div>
+<div id="res"></div>
+<div class="row"><button id="cp" class="pri" style="font-size:1rem;padding:.5em 1.3em">完成プロンプトをコピー</button><button id="cs">確定抽選シートのみコピー</button></div>
+<p id="msg" class="mut" style="min-height:1.7em;margin:0 0 6px"></p>
+
+<details class="t"><summary>画風モード</summary><div class="in">
+<div class="row"><label><input type="radio" name="sm" value="A"> 標準画風</label><label><input type="radio" name="sm" value="B"> 画風指定なし</label><label><input type="radio" name="sm" value="C"> カスタム画風</label></div>
+<textarea id="cst" rows="4" hidden placeholder="好きな画風の指定を入力します。この端末のブラウザ内にだけ保存されます。"></textarea></div></details>
+<details class="t" id="pvd"><summary>完成プロンプトのプレビュー</summary><div class="in"><p class="mut">コピーされる全文です。画風を切り替えても、抽選結果は変わりません。</p><textarea id="pv" readonly rows="22"></textarea></div></details>
+<details class="t"><summary>項目の選択</summary><div class="in">
+<div class="row"><button id="on">全部オン</button><button id="off">全部オフ</button><button id="rs">初期設定に戻す</button></div>
+<input id="q" type="search" placeholder="項目名や分類名で探す"><div id="list"></div></div></details>
+<details class="t"><summary>履歴と集計</summary><div class="in">
+<div class="row"><label>集計する分類 <select id="tg"></select></label></div><p class="mut" id="n"></p><div id="tally"></div>
+<div class="row"><button id="hc">履歴を消す</button></div></div></details>
+<details class="t"><summary>設定コード</summary><div class="in">
+<p class="mut">オン・オフの状態をコードにして、別の端末や他の人に渡せます。同じ版のツール同士で使えます。</p>
+<textarea id="cd" rows="3"></textarea><div class="row"><button id="ce">書き出す</button><button id="ci">読み込む</button></div></div></details>
+</main>
+<script>
+const $=i=>document.getElementById(i),E=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const D=[
+["仮装テーマ",1,1,"魔女,魔法使い,吸血鬼,悪魔,天使,堕天使,死神,幽霊,ゾンビ,ミイラ,人狼,黒猫,コウモリ,蜘蛛,骸骨,ジャック・オー・ランタン,フランケンシュタイン風の怪物,ゴシックドール,呪われた人形,道化師,キョンシー,マッドサイエンティスト,錬金術師,怪盗,幽霊船の船長,墓守,葬儀屋,魔王,異形の貴族,怪物狩り,オリジナル仮装（AIが考える）"],
+["衣装デザイン",1,1,"洋装,和装,中華風,ヴィクトリアン,ゴシック,クラシカル,現代服,ストリート,パンク,軍服風,貴族服,民族衣装風,ファンタジー,サーカス風,その他（AIが考える）"],
+["丈",1,1,"ロング,ショート"],
+["シルエット",1,1,"タイト,ルーズ,左右非対称,多層構造"],
+["配色",2,4,"黒,白,赤,青,水色,緑,黄,オレンジ,紫,ピンク,ターコイズ,金,銀,茶,ベージュ,グレー,パステル,ネオン,くすみ色"],
+["素材・質感",1,3,"ベルベット,革,レース,シフォン,シルク,ファー,金属,エナメル,包帯,古布,半透明布"],
+["装飾・小物",0,3,"帽子,仮面,杖,ランタン,キャンドル,棺,魔導書,箒,鎌,ステッキ,傘,ぬいぐるみ,キャンディ,カボチャ,花束,鎖,リボン,宝石,羽根,骨,蜘蛛の巣"],
+["身体的な仮装要素",1,1,"角,翼,尻尾,獣耳,牙,尖った爪,縫い目風メイク,フェイスペイント,特殊な瞳,なし"],
+["髪型",1,1,"下ろす,結ぶ,編む,ハーフアップ,ポニーテール,乱れ髪,元の髪型"],
+["雰囲気",1,1,"可愛い,妖艶,不気味,上品,コミカル,ダーク,幻想的,神秘的,退廃的,華やか,静謐,狂気的,いたずらっぽい"],
+["表情",1,1,"穏やかな微笑み,満面の笑顔,口を開けて笑う,不敵な笑み,挑発的な笑み,いたずらっぽい笑顔,妖艶な微笑み,無表情,真剣,冷たい表情,怒り,苛立ち,驚き,怯え,困惑,悲しげ,泣きそう,狂気的な笑顔,恍惚,眠たげ,気だるげ,舌を少し出す,片目を閉じる"],
+["顔の向き",1,1,"正面,少し右,少し左,大きく右,大きく左,右横顔,左横顔,振り返ってこちらを見る,顔を上げる,俯く,肩越しに見る"],
+["ポーズ",1,1,"立つ,歩く,走る,振り返る,座る,しゃがむ,寝転ぶ,踊る,浮遊する,覗き込む,小物を扱う,こちらへ手を伸ばす,横向き,背中を見せる"],
+["画角",1,1,"全身,膝上,腰上,バストアップ"],
+["カメラ",1,1,"正面,斜め,横,俯瞰,煽り"],
+["背景",1,1,"夜の街,古城,墓地,森,洋館,教会,廃墟,仮面舞踏会,ハロウィンパーティー,魔女の工房,月夜,カボチャ畑,霧の路地,異界,室内,シンプルな撮影セット"],
+["露出度",1,1,"低露出,標準,やや高め,大胆"]];
+const RULES=`【画像生成ルール】
+添付キャラクターを使い、ハロウィンをテーマにした一枚絵を生成してください。仮装と各条件は、外部ツールで抽選済みです。
+
+■キャラクターの固定
+・性別、年齢区分、顔立ち・骨格、肌色、瞳の色と基本形状、髪色と基本的な長さ、体格、身体の性別的特徴、種族、固有の耳・角・尻尾・翼・爪など、本人を識別する特徴は固定し、仮装を理由に変更・省略・別キャラクター化しない。
+・テーマから性別・種族・体格・顔立ちを再設計しない（例：幽霊船長を男性海賊にしない、魔法使いをエルフにしない）。常に「添付キャラクター本人がその仮装をしている」状態で描く。
+・人物は今回添付されたキャラクターだけを参照し、過去に生成した別キャラクターの特徴を混入させない。
+
+■抽選結果の固定
+・下の確定抽選シートに従う。再抽選せず、「似合う・定番・生成しやすい・見栄えがよい」を理由に変更しない。ちぐはぐな組み合わせでも捨てず、一枚絵として成立させる。
+・仮装テーマや衣装を、キャラクターの性別・外見・性格・種族・雰囲気で選び直さない。
+・「オリジナル仮装」「その他」が出た場合のみ、AIが独自に考える。
+・雰囲気がテーマと食い違っても変えず、そのギャップを活かす。
+
+■衣装・身体
+・本人固有の耳・角・尻尾などを消したり、別種族の特徴へ置き換えたりしない。抽選された身体的な仮装要素と競合する場合は、装飾や衣装パーツとして自然に共存させる。
+・髪色は仮装を理由に変えない。髪型は抽選結果に従う。
+・露出度は、性別・体格・テーマ・元衣装と連動させない。「大胆」でもファッションとして成立する範囲とし、下着や水着相当以上の過度な露出、裸体に近いデザインにはしない。
+・小物は抽選された分だけ描き、テーマから連想される小物（魔女なら箒など）を自動で足さない。
+
+■構図
+・姿勢、身体方向、顔の向き、手の位置、脚の配置、カメラ、画角を、可能な限り独立して扱う。
+・「座る・しゃがむ・寝転ぶ＋片脚を手前へ大きく出す＋煽り」「頬杖」「片手を顔に添える」「口元へ指や小物を近づける」「身体を斜めに倒してこちらを見る」など、生成AIが好む定番構図へ収束させない。単純な左右反転で済ませない。
+・参照画像の表情や顔の角度を既定にしない。
+
+■人体・描画品質
+・元の体格・肩幅・胸郭・胴の長さ・腰幅・四肢の比率を維持する。衣装の厚みや装飾で人体の骨格を拡大・変形させない。外側のシルエットが大きくなっても、内側には元の人物と同じ自然な人体構造があるものとして描く。
+・首から肩、肩から腕、胸郭から腰、骨盤から脚までを自然につなげる。関節が衣装で隠れていても、肩・肘・手首・股関節・膝・足首の位置を意識する。
+・手は手首から指先まで解剖学的につなげ、掌・手の甲・親指の位置関係を正しく描く。左右が反転した手、余分な指、欠けた指、融合した指を避ける。
+・布、織物、刺繍、革、毛皮、金属、宝石など、素材の違いを描き分ける。
+
+■完成画像
+・設定資料ではなく、完成した一枚絵にする。キャラクター名、テーマ名、抽選結果、説明、タイトルなどの文字は画像内に入れない。`;
+const STA="高品質で滑らかな現代的2Dイラスト。線画は清潔で明瞭にし、細すぎる線や過剰な描き込みを避ける。髪は細い毛や飛び毛を増やさず、大きく整理した毛束でシルエットと立体感を表現する。肌は細かな線で陰影を刻まず、滑らかな陰影の面で立体感を出す。粒状ノイズ、粗い塗り、過剰な細部、ギザギザした輪郭、硬すぎる陰影、過剰なシャープ感を避ける。";
+const CLOSE="上記を固定条件として画像を生成してください。再抽選はしないでください。";
+const gs=D.map(([n,a,b,l])=>({n,a,b,s:l.split(",").map(x=>({n:x.replace("!",""),d:x[0]!="!",on:x[0]!="!"}))}));
+const flat=gs.flatMap(g=>g.s),st={h:[],r:null,sheet:""},KEY="hw1",SS={m:"A",c:""};
+const code=()=>"v1:"+flat.map((x,i)=>x.on?"":i.toString(36)).filter(Boolean).join(".");
+function apply(c){const m=/^v1:(.*)$/.exec((c||"").trim());if(!m)return false;flat.forEach(x=>x.on=true);m[1].split(".").filter(Boolean).forEach(k=>{const x=flat[parseInt(k,36)];if(x)x.on=false});return true}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({o:code(),h:st.h}))}catch(e){}}
+try{const j=JSON.parse(localStorage.getItem(KEY));if(j){apply(j.o);st.h=j.h||[]}}catch(e){}
+try{Object.assign(SS,JSON.parse(localStorage.getItem(KEY+"s")))}catch(e){}
+function R(n){const a=new Uint32Array(1),lim=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+const msg=t=>$("msg").textContent=t;
+const box=$("list");
+gs.forEach(g=>{const d=E("details"),s=E("summary"),cb=E("input"),ct=E("span","cnt"),w=E("div","sp");
+cb.type="checkbox";cb.onchange=()=>{g.s.forEach(x=>x.on=cb.checked);refresh();save()};
+s.append(cb,E("span","",g.n+(g.a==g.b?"":"（"+g.a+"〜"+g.b+"個）")),ct);
+g.s.forEach(x=>{const l=E("label"),i=E("input");i.type="checkbox";i.onchange=()=>{x.on=i.checked;refresh();save()};l.append(i,x.n);w.append(l);x.k=i;x.l=l});
+d.append(s,w);Object.assign(g,{cb,ct,d});box.append(d)});
+function refresh(){gs.forEach(g=>{const n=g.s.filter(x=>x.on).length;g.s.forEach(x=>x.k.checked=x.on);g.cb.checked=n==g.s.length;g.cb.indeterminate=n>0&&n<g.s.length;g.ct.textContent=n+"/"+g.s.length})}
+function pk(g){const p=g.s.filter(x=>x.on),k=Math.min(p.length,g.a+R(g.b-g.a+1)),o=[];for(let i=0;i<k;i++)o.push(p.splice(R(p.length),1)[0].n);return o}
+function pg(i){const g=gs[i],pv=st.r&&st.r[i];let v=pk(g);if(g.a==1&&g.b==1&&pv&&pv[0]==v[0]&&g.s.filter(x=>x.on).length>1)v=pk(g);return v}
+function draw(i){if(!flat.some(x=>x.on)){msg("有効な項目がありません。選択をオンにしてください");return}
+if(i==null){st.r=gs.map((g,j)=>pg(j));st.h.push(st.r.map(a=>a.slice()));if(st.h.length>500)st.h.shift();msg("")}
+else{st.r[i]=pg(i);msg(gs[i].n+"だけ引き直しました")}
+render();save()}
+function render(){const r=$("res");r.innerHTML="";
+st.r.forEach((a,i)=>{const w=E("div","rw"),b=E("button","","引き直す");b.onclick=()=>draw(i);w.append(E("span","",gs[i].n),E("b","",a.join("、")||"なし"),b);r.append(w)});
+st.sheet=["【確定抽選シート】","抽選方法：ブラウザの暗号論的乱数（crypto.getRandomValues）を使用",...st.r.map((a,i)=>gs[i].n+"："+(a.join("、")||"なし"))].join("\n");pvu();tally()}
+function build(){const sty=SS.m=="A"?STA:SS.m=="C"?SS.c.trim():"";return RULES+"\n\n【画風】\n"+(sty||"指定なし。画像生成AIの標準的な画風で仕上げる。")+"\n\n"+(st.sheet||"（抽選するとここに確定抽選シートが入ります）")}
+function pvu(){$("pv").value=build()}
+function sv(){$("cst").hidden=SS.m!="C";pvu();try{localStorage.setItem(KEY+"s",JSON.stringify(SS))}catch(e){}}
+async function cpy(t,ok){if(!t){msg("先に抽選してください");return}try{await navigator.clipboard.writeText(t)}catch(e){const a=E("textarea");a.value=t;document.body.append(a);a.select();document.execCommand("copy");a.remove()}msg(ok)}
+const sel=$("tg");gs.forEach((g,i)=>{const o=E("option","",g.n);o.value=i;sel.append(o)});sel.onchange=tally;
+function tally(){const gi=+sel.value||0,m={},t=$("tally");t.innerHTML="";st.h.forEach(h=>(h[gi]||[]).forEach(x=>m[x]=(m[x]||0)+1));const mx=Math.max(1,...Object.values(m));
+$("n").textContent="抽選回数："+st.h.length+"回（全部を引き直した回だけ数えます）";
+gs[gi].s.forEach(x=>{const v=m[x.n]||0,r=E("div","bar"),i=E("i");i.style.width=v/mx*100+"%";r.append(E("span","",x.n),i,E("b","",v));t.append(r)})}
+$("go").onclick=()=>draw();
+$("cp").onclick=()=>cpy(st.sheet&&build(),"完成プロンプトをコピーしました");
+$("cs").onclick=()=>cpy(st.sheet&&st.sheet+"\n\n"+CLOSE,"確定抽選シートのみコピーしました");
+$("hd").onclick=()=>{const h=!$("res").hidden;$("res").hidden=h;$("pvd").hidden=h;$("hd").textContent=h?"結果を表示":"結果を隠す"};
+$("on").onclick=()=>{flat.forEach(x=>x.on=true);refresh();save()};
+$("off").onclick=()=>{flat.forEach(x=>x.on=false);refresh();save()};
+$("rs").onclick=()=>{flat.forEach(x=>x.on=x.d);refresh();save()};
+$("q").oninput=e=>{const q=e.target.value.trim();gs.forEach(g=>{let any=false;g.s.forEach(x=>{const m=!q||x.n.includes(q)||g.n.includes(q);x.l.hidden=!m;any=any||m});g.d.hidden=!any;g.d.open=!!q&&any})};
+$("hc").onclick=()=>{st.h=[];tally();save()};
+$("ce").onclick=()=>{$("cd").value=code()};
+$("ci").onclick=()=>{if(apply($("cd").value)){refresh();save();msg("設定を読み込みました")}else msg("コードの形式が違います")};
+document.querySelectorAll("input[name=sm]").forEach(r=>{r.checked=r.value==SS.m;r.onchange=()=>{SS.m=r.value;sv()}});
+$("cst").value=SS.c;$("cst").oninput=e=>{SS.c=e.target.value;sv()};
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").value=tm;for(const o of $("th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
+tmu();refresh();tally();sv();
+</script></body></html>
