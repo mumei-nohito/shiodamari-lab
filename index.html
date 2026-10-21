@@ -62,6 +62,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="fish" viewBox="0 0 100 100"><path d="M8 50C24 22 56 22 74 50 56 78 24 78 8 50Z"/><path d="M72 50 96 30V70Z"/></symbol>
 <symbol id="jelly" viewBox="0 0 100 100"><path d="M18 50C18 14 82 14 82 50Q50 58 18 50Z"/><path d="M30 54C24 68 36 76 30 92M50 56C44 72 56 80 50 96M70 54C76 68 64 76 70 92" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="pumpkin" viewBox="0 0 100 100"><path d="M48 23C34 15 16 27 16 49c0 22 15 37 34 37s34-15 34-37c0-22-18-34-32-26Z"/><path d="M50 25c-2-9 3-15 13-17" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="m27 47 15-10-3 18Zm46 0L58 37l3 18ZM27 65q23 22 46 0l-11 3-7-7-6 9-8-9-7 7Z" fill="var(--card,#fff)"/></symbol>
 </defs></svg>
 <header class="hero">
 <div class="bar"><span class="logo">潮だまり工房</span><button id="th" aria-label="表示モードを切り替え"></button></div>
@@ -83,7 +84,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(
 const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
 const SITE=[{name:"画像生成",desc:"プロンプトと抽選で、一枚の絵のタネをつくる。",tools:[
 {n:"マーメイドガチャ抽選機",d:"水棲生物と構図をブラウザの乱数で抽選し、画像生成AIに貼れる完成プロンプトまで作ります。",u:"mermaid-gacha/",t:["抽選","人魚","プロンプト"],i:"fish"},
-{n:"ハロウィン仮装ガチャ抽選機",d:"ハロウィンの仮装テーマを抽選して、画像生成AI向けのプロンプトを作る季節限定ガチャです。",u:"halloween-gacha/",t:["抽選","ハロウィン","仮装"],i:"star"},
+{n:"ハロウィン仮装ガチャ抽選機",d:"ハロウィンの仮装テーマを抽選して、画像生成AI向けのプロンプトを作る季節限定ガチャです。",u:"halloween-gacha/",t:["抽選","ハロウィン","仮装"],i:"pumpkin"},
 {soon:1,n:"次のなにか",d:"制作中、または思案中です。ここに新しいものが並びます。",i:"jelly"}]}];
 const main=$("#tools");let k=0;
 SITE.forEach(c=>{const s=E("section","cat"),n=c.tools.filter(t=>!t.soon).length;
