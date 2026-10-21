@@ -83,6 +83,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(
 const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
 const SITE=[{name:"画像生成",desc:"プロンプトと抽選で、一枚の絵のタネをつくる。",tools:[
 {n:"マーメイドガチャ抽選機",d:"水棲生物と構図をブラウザの乱数で抽選し、画像生成AIに貼れる完成プロンプトまで作ります。",u:"mermaid-gacha/",t:["抽選","人魚","プロンプト"],i:"fish"},
+{n:"ハロウィン仮装ガチャ抽選機",d:"ハロウィンの仮装テーマを抽選して、画像生成AI向けのプロンプトを作る季節限定ガチャです。",u:"halloween-gacha/",t:["抽選","ハロウィン","仮装"],i:"star"},
 {soon:1,n:"次のなにか",d:"制作中、または思案中です。ここに新しいものが並びます。",i:"jelly"}]}];
 const main=$("#tools");let k=0;
 SITE.forEach(c=>{const s=E("section","cat"),n=c.tools.filter(t=>!t.soon).length;
