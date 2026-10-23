@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>世界の伝統衣装ガチャ抽選機</title>
+<style>
+:root{--bg:#f7f1e8;--fg:#2b2118;--card:#fff;--mut:#76624f;--line:#e0d3c0;--ac:#9c4a2f;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17120d;--fg:#f1e8da;--card:#251d15;--mut:#bba98f;--line:#44372a;--ac:#e0a458;--on:#1c1200}}
+:root[data-theme="dark"]{--bg:#17120d;--fg:#f1e8da;--card:#251d15;--mut:#bba98f;--line:#44372a;--ac:#e0a458;--on:#1c1200}
+:root[data-theme="dusk"]{--bg:#fbe9df;--fg:#3a2230;--card:#fff7f1;--mut:#80606c;--line:#ecc9bd;--ac:#b8452f;--on:#fff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:1.45rem;margin:0 0 4px}
+.mut{color:var(--mut);font-size:.9rem;margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35em .9em;cursor:pointer}
+select{font:inherit;font-size:.85rem;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.3em .6em;cursor:pointer;max-width:60vw}
+button.pri{background:var(--ac);color:var(--on);border:0;font-weight:700;padding:.6em 1.6em;border-radius:999px}
+textarea,input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:.6em}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:8px 0}
+summary{cursor:pointer;padding:.6em .9em;display:flex;gap:.6em;align-items:center}
+summary .cnt{margin-left:auto;color:var(--mut);font-size:.85rem}
+details.t>summary{font-weight:700}
+.in{padding:0 .9em .9em}
+.sp{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 .9em .8em}.sp label{white-space:nowrap}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:.5em .7em;background:rgba(128,128,128,.14);font-weight:700}
+.ph button{font-size:.8rem;padding:.15em .7em}
+.rw{display:grid;grid-template-columns:7.5em 1fr auto;gap:8px;align-items:center;padding:.4em .7em;border-bottom:1px solid var(--line)}
+.rw span{color:var(--mut);font-size:.85rem}.rw b{font-weight:700}.rw button{font-size:.8rem;padding:.15em .7em}
+#res{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:2.4em}
+.bar{display:grid;grid-template-columns:11em 1fr 2.2em;gap:8px;align-items:center;font-size:.85rem}
+.bar i{display:block;height:8px;background:var(--ac);border-radius:4px}.bar b{text-align:right;font-weight:400}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style></head>
+<body><main>
+<p class="mut" style="margin:0 0 6px"><a href="../" style="color:inherit">潮だまり工房へ戻る</a></p>
+<div class="top"><h1>世界の伝統衣装ガチャ抽選機</h1><select id="th" aria-label="表示モード"></select></div>
+<p class="mut">世界の伝統衣装と構図をブラウザの乱数で抽選し、ChatGPTなどに貼れる完成プロンプトを作ります。</p>
+<div class="row"><span class="mut" style="margin:0">版</span><label><input type="radio" name="vr" value="m"> 男性衣装</label><label><input type="radio" name="vr" value="f"> 女性衣装</label></div>
+<div class="row"><span class="mut" style="margin:0">モード</span><label><input type="radio" name="nr" value="1"> 1回</label><label><input type="radio" name="nr" value="4"> 4連（2×2の1枚）</label><label><input type="checkbox" id="cdk"> コレクションカード風（文字入り）</label></div>
+<div class="row"><button id="go" class="pri">抽選する</button><button id="hd">結果を隠す</button></div>
+<div id="res"></div>
+<div class="row"><button id="cp" class="pri" style="font-size:1rem;padding:.5em 1.3em">完成プロンプトをコピー</button><button id="cs">確定抽選シートのみコピー</button></div>
+<p id="msg" class="mut" style="min-height:1.7em;margin:0 0 6px"></p>
+
+<details class="t"><summary>画風モード</summary><div class="in">
+<div class="row"><label><input type="radio" name="sm" value="A"> 標準画風</label><label><input type="radio" name="sm" value="B"> 画風指定なし</label><label><input type="radio" name="sm" value="C"> カスタム画風</label></div>
+<textarea id="cst" rows="4" hidden placeholder="好きな画風の指定を入力します。この端末のブラウザ内にだけ保存されます。"></textarea></div></details>
+<details class="t" id="pvd"><summary>完成プロンプトのプレビュー</summary><div class="in"><p class="mut">コピーされる全文です。画風を切り替えても、抽選結果は変わりません。</p><textarea id="pv" readonly rows="22"></textarea></div></details>
+<details class="t"><summary>項目の選択</summary><div class="in">
+<div class="row"><button id="on">全部オン</button><button id="off">全部オフ</button><button id="rs">初期設定に戻す</button></div>
+<input id="q" type="search" placeholder="項目名や分類名で探す"><div id="list"></div></div></details>
+<details class="t"><summary>履歴と集計</summary><div class="in">
+<div class="row"><label>集計する分類 <select id="tg"></select></label></div><p class="mut" id="n"></p><div id="tally"></div>
+<div class="row"><button id="hc">履歴を消す</button></div></div></details>
+<details class="t"><summary>設定コード</summary><div class="in">
+<p class="mut">オン・オフの状態をコードにして、別の端末や他の人に渡せます。同じ版のツール同士で使えます。</p>
+<textarea id="cd" rows="3"></textarea><div class="row"><button id="ce">書き出す</button><button id="ci">読み込む</button></div></div></details>
+</main>
+<script>
+const $=i=>document.getElementById(i),E=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const D=[
+["衣装文化（男性衣装版）","m","日本｜平安～鎌倉期の狩衣・直衣系|Japan,日本｜江戸～明治期の男性着物・羽織袴系|Japan,中国｜漢服文化の男性深衣・長袍系|China,中国｜明代男性服飾系|China,中国｜清代男性長袍・馬褂系|China,韓国｜男性韓服・道袍系|Korea,モンゴル｜男性デール|Mongolia,チベット文化圏｜男性チュバ系|Tibet,ブータン｜男性用ゴ|Bhutan,ベトナム｜男性アオザイ|Vietnam,インド北部｜男性シェルワーニー系|North India,インド・ラージャスターン｜男性伝統衣装系|Rajasthan (India),カシミール地方｜男性フェラン／長衣系|Kashmir,ネパール｜ダウラ・スルワール|Nepal,ウズベキスタン｜男性チャパン系|Uzbekistan,カザフスタン｜男性用長衣・シャパン系|Kazakhstan,キルギス｜男性伝統衣装・カルパック併用系|Kyrgyzstan,トルクメニスタン｜男性伝統長衣・帽子系|Turkmenistan,ジョージア｜チョハ系男性衣装|Georgia,ジョージア・アジャリア／グリア地方｜チャクラ系男性衣装|Georgia (Adjara / Guria),アラビア半島｜男性長衣・外套系|Arabian Peninsula,モロッコ｜男性ジェラバ系|Morocco,マグリブ地域｜男性バーヌース系|Maghreb,西アフリカ｜男性アグバダ系|West Africa,西アフリカ・サヘル地域｜男性ブーブー系|West African Sahel,エチオピア／エリトリア文化圏｜男性白衣・ショール系|Ethiopia and Eritrea,ギリシャ｜フスタネラを用いた男性衣装系|Greece,アルバニア｜男性フスタネラ系|Albania,クロアチア・ヴルリカ地方｜ディナル地方男性衣装|Croatia (Vrlika),セルビア・シュマディヤ地方｜男性民族衣装|Serbia (Šumadija),サルデーニャ島｜男性民族衣装|Sardinia,スコットランド高地地方｜男性ハイランド・ドレス系|Scottish Highlands,フェロー諸島｜男性民族衣装|Faroe Islands,ノルウェー｜男性ブーナッド系|Norway,ルーマニア｜男性民族衣装系|Romania,メキシコ｜チャロ系男性衣装|Mexico,グアテマラ高地｜地域別マヤ男性衣装系|Guatemalan Highlands,アンデス高地｜男性伝統衣装・ポンチョ系|Andes,ペルー／ボリビア高地文化圏｜男性祭礼衣装系|Peru and Bolivia,ポリネシア文化圏｜男性用伝統正装・布衣装系|Polynesia"],
+["衣装文化（女性衣装版）","f","日本｜平安・鎌倉時代の女性装束|Japan,日本｜江戸時代の女性着物|Japan,中国｜漢服・女性襦裙|China,中国｜明代女性装束|China,中国｜清代女性装束|China,韓国｜女性韓服・チマチョゴリ|Korea,モンゴル｜女性デール|Mongolia,チベット｜女性チュバ|Tibet,ブータン｜女性キラ|Bhutan,ベトナム｜女性アオザイ|Vietnam,インド北部｜サリー|North India,インド北部｜レヘンガ・チョリ|North India,インド｜サルワール・カミーズ|India,ネパール｜女性伝統衣装|Nepal,ウズベキスタン｜女性伝統衣装|Uzbekistan,カザフスタン｜女性伝統衣装|Kazakhstan,キルギス｜女性伝統衣装|Kyrgyzstan,トルクメニスタン｜女性伝統衣装|Turkmenistan,ジョージア｜女性民族衣装|Georgia,トルコ｜オスマン文化圏の女性装束|Turkey,アラビア半島｜女性伝統衣装|Arabian Peninsula,モロッコ｜女性カフタン|Morocco,アルジェリア｜アマジグ系女性衣装|Algeria,西アフリカ｜女性ブーブー|West Africa,ガーナ｜ケンテ布を用いた女性装束|Ghana,エチオピア・エリトリア｜女性伝統衣装|Ethiopia and Eritrea,ギリシャ｜女性民族衣装|Greece,アルバニア｜女性民族衣装|Albania,クロアチア｜女性民族衣装|Croatia,セルビア｜女性民族衣装|Serbia,サルデーニャ｜女性民族衣装|Sardinia,スコットランド｜女性伝統衣装|Scotland,フェロー諸島｜女性民族衣装|Faroe Islands,ノルウェー｜女性ブーナッド|Norway,ルーマニア｜女性民族衣装|Romania,メキシコ｜女性伝統衣装|Mexico,グアテマラ｜マヤ系女性衣装|Guatemala,アンデス高地｜女性伝統衣装|Andes,ペルー・ボリビア｜祭礼用女性衣装|Peru and Bolivia,ポリネシア｜女性伝統衣装|Polynesia"],
+["場面","","街路・市場,宮殿・歴史的建築,庭園・中庭,自然風景,祭礼・祝祭,日常生活,伝統工芸・作業,移動・旅路,水辺・港・川,屋内での休息,集落・村落,儀礼・式典"],
+["身体動作","","立っている,歩いている,振り返る,座っている,しゃがんでいる,階段を上り下りする,何かを手に取る,物を運ぶ,布や衣装を整える,景色を眺める,誰かと会話する,作業をしている,風や雨を感じる,踊る・身体を動かす,移動中の一瞬"],
+["顔方向","","正面,右斜め前,左斜め前,右横顔,左横顔,右斜め後ろ,左斜め後ろ,後ろ向き,やや上向き,やや下向き,右上を見る,左上を見る,右下を見る,左下を見る,肩越しに振り返る,手元に顔を向ける,遠景へ顔を向ける,近くの人物や物へ顔を向ける"],
+["視線方向","","カメラを見る,遠くを見る,足元を見る,手元を見る,空を見る,建物を見る,風景を見る,人物を見る,道の先を見る,目を閉じる,衣装を見る,画面外の何かを見る"],
+["カメラ位置","","正面,右斜め前,左斜め前,右側面,左側面,右斜め後ろ,左斜め後ろ,背後"],
+["カメラ高さ","","目線の高さ,やや高い位置,高所からの俯瞰,やや低い位置,低所からのあおり"],
+["画角","","全身,膝上,腰上,胸上,人物を小さめにした環境重視,人物を大きめにした近距離構図"],
+["レアリティ","c","R,SR,SSR"]];
+const COM=`【画像生成ルール】
+添付画像の人物を使い、世界の伝統衣装をテーマにした一枚絵を生成してください。衣装文化と各条件は、外部ツールで抽選済みです。
+
+■人物の固定
+・顔立ち、年齢印象、髪色、髪型、髪の長さ、瞳、肌色、体格、骨格、耳・角・尻尾・翼などの身体的特徴を維持する。衣装に伴う自然なヘアアレンジは許可する。
+・参照画像の衣装、配色、露出度、装身具、ポーズ、表情、背景、構図は引き継がない。人物の身体的特徴と、元衣装のデザイン情報を分離する。
+・過去に生成した画像の衣装、配色、背景、小物、ポーズ、表情、構図の傾向を引き継がない。参照人物以外の別キャラクターの特徴を混入させない。
+
+■抽選結果の固定
+・下の確定抽選シートに従う。人物との相性、衣装の知名度、生成しやすさ、見栄えを理由に、衣装文化や構図条件を変更しない。
+・条件が組み合わせにくい場合も、まず自然に共存できる場面と身体配置を考える。物理的・解剖学的に成立しない場合のみ、その項目の意図を最大限保って調整する。
+・顔方向、視線、身体の向き、カメラ位置、高さ、画角は、独立した条件として扱う。「この人物に最も似合う構図」へ固定しない。
+
+■衣装
+・抽選された衣装文化に実在する、具体的な衣装形式を出発点にする。シルエット、構造、着方、素材、模様、装身具、頭飾り、履物など、識別できる主要な特徴を残す。毎回同じ代表衣装に固定しない。
+・完全な歴史再現は不要。キャラクターイラストとして成立するよう、形状・比率・装飾量は整理してよい。奇抜な特徴は消さず、その衣装ならではの魅力として活かす。元文化と無関係な要素を大量に足して別物にしない。
+・配色は、その文化で実際に見られる伝統的・地域的な配色から決める。人物の髪色・瞳・肌色・元衣装に合わせない。偶然近くなるのは構わない。
+・ファンタジー的な肌見せ、不要なスリット、露出のための布の省略をしない。文化的に露出が自然な衣装は、その特徴を維持する。
+・人物が人間以外の場合も、その特徴を維持する。獣耳があっても、獣人専用のファンタジー衣装に変えない。
+
+■場面・動作・視線
+・場面は衣装文化から逆算せず、抽選結果に従って具体的な場所に置き換える。「有名な建築物」「宮殿」「観光写真のような場所」へ自動的に結びつけない。
+・人物は、カメラを意識していない一瞬を切り取ったように描く。カメラ目線である必要はない。
+・身体動作の抽選結果を、優雅に立つ、座ってこちらを見る、などの安全なポーズへ置き換えない。豪華な椅子に深く座る、脚を大きく広げる、片脚を手前へ突き出す、頬杖や顔に手を添える、背もたれに寄りかかる、といった定型ポーズを、既定ポーズにしない。
+・毎回、正面・目線の高さ・腰上構図へ収束させない。顔を常に画面中央に置く必要もないが、衣装の特徴が十分に伝わる構図を保つ。
+・表情は場面と動作から自然に決め、毎回同じ表情へ戻さない。顔立ちを変えず、眉・目元・口元で変化させる。`;
+const MEN=`■男性衣装版
+・添付人物の性別・外見・性別表現に関係なく、男性用衣装を使用する。人物に合わせて女性用衣装へ変更しない。`;
+const WOM=`■女性衣装版
+・添付人物の性別・外見・性別表現に関係なく、女性用衣装を使用する。女性衣装を着ることは、人物の性別や骨格を変更する指示ではない。衣装で体型が隠れるのは自然だが、別人になるほどの身体変化は避ける。`;
+const CARDR=`■コレクションカード
+・完成画像は、世界伝統衣装コレクションのカードとして仕上げる。画面に、国名または地域名（英語と日本語）、衣装名（日本語）、レアリティ、「Traditional Clothing Collection」を表示する。文字は読める大きさにして、欠落・文字化け・誤字を防ぐ。
+・国名と衣装名をまとめた装飾フレームを、画面上部の左または右に置く。フレームは選ばれた文化の意匠を参考に、毎回デザインを変える。上品なセリフ体や装飾書体を使い、背景に埋もれさせない。
+・レアリティは抽選シートのとおりに、国名フレームの左下付近へ、小さな紋章やプレートとして組み込む。衣装文化の優劣を表すものではなく、カード演出上の要素。装飾は局所的にとどめ、画面全体を過度にキラキラさせない。人物の前に大きな吊り下げ装飾を置かない。
+・文字が人物の重要な部分を隠さないようにする。カード情報以外の文字、ロゴ、透かし、不要な人物は入れない。`;
+const TXT=`■画像内の文字
+・文字、ロゴ、透かし、不要な人物は入れない。`;
+const QUAD=`■4連ガチャ（2列×2行のコレクションシート）
+・4回分の抽選は確定済み。4つの設定をそれぞれ独立したものとして扱い、1回目を基準に色違いやポーズ違いにしない。
+・完成画像は2列×2行の4分割で、左上が1回目、右上が2回目、左下が3回目、右下が4回目。各エリアは独立したコレクションカードとして、その回専用の人物・背景・装飾・文字情報（国名・衣装名・レアリティ・Traditional Clothing Collection）を持たせ、カード同士で混同しない。4つのカードの境界を明確にする。
+・4枚すべてに同じ参照人物を登場させる。4人を同じポーズやカメラ目線に揃える必要はない。ただし、抽選結果を無視して無理に違う構図にもしない。
+・各人物の顔立ちを明確に描き、衣装のシルエットと主要な装飾を読み取れるようにする。文字フレームを過度に大きくしない。情報量が多い場合は、背景の細部や装飾フレームを簡略化し、人物の再現度と衣装の文化的特徴を優先する。
+・同じ国が複数回選ばれていても、そのまま描く。過去の4連画像をテンプレートとして再利用しない。`;
+const BODY=`■人体・描画品質
+・元の体格・肩幅・胸郭・胴の長さ・腰幅・四肢の比率を維持する。衣装の厚みや装飾で人体の骨格を拡大・変形させない。外側のシルエットが大きくなっても、内側には元の人物と同じ自然な人体構造があるものとして描く。
+・首から肩、肩から腕、胸郭から腰、骨盤から脚までを自然につなげる。関節が衣装で隠れていても、肩・肘・手首・股関節・膝・足首の位置を意識する。
+・手は手首から指先まで解剖学的につなげ、掌・手の甲・親指の位置関係を正しく描く。左右が反転した手、余分な指、欠けた指、融合した指、足の重複、余分な四肢を避ける。
+・布、織物、刺繍、革、毛皮、金属、宝石など、素材の違いを描き分ける。
+
+■最終確認
+・人物本人の特徴を維持し、元衣装の配色・露出・構造を引き継いでいない。抽選した衣装文化が明確に分かり、着用構造に大きな矛盾がない。条件に矛盾がある場合は、抽選結果を変えず、人体や衣装の自然な成立を優先して調整する。
+・単なる資料再現ではなく、人物が実際にその場面で動き、生活しているような、魅力的なキャラクターイラストに仕上げる。`;
+const STA="高品質な現代アニメ調の完成イラスト。人物の顔立ちは参照画像に忠実に描く。線画は明瞭にし、過度に細い線を増やさない。髪は大きめの毛束を基本に整理する。肌は柔らかな陰影で立体感を表現する。衣装の布地・刺繍・織物は質感を丁寧に描写する。人物と背景の光源・色温度を統一し、背景は人物に自然に馴染ませる。過剰な粒子・ノイズ・発光演出は避ける。";
+const CLOSE="上記を固定条件として画像を生成してください。再抽選はしないでください。";
+const gs=D.map(([n,f,l])=>({n,f,a:1,b:1,s:l.split(",").map(x=>{const[a,e]=x.split("|");return{n:a.replace("!",""),e,d:a[0]!="!",on:a[0]!="!"}})}));
+const flat=gs.flatMap(g=>g.s),st={h:[],r:null,sheet:""},KEY="cg1",SS={m:"A",c:""};
+let OP={v:"m",c:0,n:1};try{Object.assign(OP,JSON.parse(localStorage.getItem("cg1o")))}catch(e){}
+const code=()=>"v1:"+flat.map((x,i)=>x.on?"":i.toString(36)).filter(Boolean).join(".");
+function apply(c){const m=/^v1:(.*)$/.exec((c||"").trim());if(!m)return false;flat.forEach(x=>x.on=true);m[1].split(".").filter(Boolean).forEach(k=>{const x=flat[parseInt(k,36)];if(x)x.on=false});return true}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({o:code(),h:st.h}))}catch(e){}}
+try{const j=JSON.parse(localStorage.getItem(KEY));if(j){apply(j.o);st.h=j.h||[]}}catch(e){}
+try{Object.assign(SS,JSON.parse(localStorage.getItem(KEY+"s")))}catch(e){}
+function R(n){const a=new Uint32Array(1),lim=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+const msg=t=>$("msg").textContent=t;
+const box=$("list");
+gs.forEach(g=>{const d=E("details"),s=E("summary"),cb=E("input"),ct=E("span","cnt"),w=E("div","sp");
+cb.type="checkbox";cb.onchange=()=>{g.s.forEach(x=>x.on=cb.checked);refresh();save()};
+s.append(cb,E("span","",g.n+(g.a==g.b?"":"（"+g.a+"〜"+g.b+"個）")),ct);
+g.s.forEach(x=>{const l=E("label"),i=E("input");i.type="checkbox";i.onchange=()=>{x.on=i.checked;refresh();save()};l.append(i,x.n);w.append(l);x.k=i;x.l=l});
+d.append(s,w);Object.assign(g,{cb,ct,d});box.append(d)});
+function refresh(){gs.forEach(g=>{const n=g.s.filter(x=>x.on).length;g.s.forEach(x=>x.k.checked=x.on);g.cb.checked=n==g.s.length;g.cb.indeterminate=n>0&&n<g.s.length;g.ct.textContent=n+"/"+g.s.length})}
+const PO=["左上","右上","左下","右下"],card=()=>OP.c||OP.n>1,act=g=>!g.f||(g.f=="c"?card():g.f==OP.v),gt=g=>g.n.replace(/（.*）/,"");
+function pk(g){const p=g.s.filter(x=>x.on),k=Math.min(p.length,1),o=[];for(let i=0;i<k;i++)o.push(p.splice(R(p.length),1)[0].n);return o}
+function pg(i,p){const g=gs[i],pv=st.r&&st.r[p]&&st.r[p][i];let v=pk(g);if(pv&&pv[0]==v[0]&&g.s.filter(x=>x.on).length>1)v=pk(g);return v}
+const pull=p=>gs.map((g,i)=>act(g)?pg(i,p):null);
+function draw(p,i){if(!flat.some(x=>x.on)){msg("有効な項目がありません。選択をオンにしてください");return}
+if(p==null){st.r=Array.from({length:OP.n},(_,k)=>pull(k));st.r.forEach(q=>st.h.push(q.map(a=>a&&a.slice())));if(st.h.length>500)st.h=st.h.slice(-500);msg("")}
+else if(i==null){st.r[p]=pull(p);msg((p+1)+"回目だけ引き直しました")}
+else{st.r[p][i]=pg(i,p);msg(gt(gs[i])+"だけ引き直しました")}
+render();save()}
+function render(){const r=$("res");r.innerHTML="";const L=["【確定抽選シート"+(OP.n>1?"（4連）":"")+"】","抽選方法：ブラウザの暗号論的乱数（crypto.getRandomValues）を使用","版："+(OP.v=="m"?"男性衣装版":"女性衣装版")];
+st.r.forEach((q,p)=>{if(OP.n>1){const h=E("div","ph"),b=E("button","","この回を引き直す");b.onclick=()=>draw(p);h.append(E("span","",(p+1)+"回目（"+PO[p]+"）"),b);r.append(h);L.push("","■"+(p+1)+"回目（"+PO[p]+"）")}
+q.forEach((a,i)=>{if(!a)return;const g=gs[i],t=a.join("、")||"なし",w=E("div","rw"),b=E("button","","引き直す"),it=g.s.find(x=>x.n==a[0]);b.onclick=()=>draw(p,i);w.append(E("span","",gt(g)),E("b","",t),b);r.append(w);L.push(gt(g)+"："+t+(card()&&it&&it.e?"（国名・地域名の英語表記："+it.e+"）":""))})});
+st.sheet=L.join("\n");pvu();tally()}
+function build(){const sty=SS.m=="A"?STA:SS.m=="C"?SS.c.trim():"";return COM+"\n\n"+(OP.v=="m"?MEN:WOM)+"\n\n"+(card()?CARDR:TXT)+(OP.n>1?"\n\n"+QUAD:"")+"\n\n"+BODY+"\n\n【画風】\n"+(sty||"指定なし。画像生成AIの標準的な画風で仕上げる。")+"\n\n"+(st.sheet||"（抽選するとここに確定抽選シートが入ります）")}
+function pvu(){$("pv").value=build()}
+function opu(init){document.querySelectorAll("input[name=vr]").forEach(r=>r.checked=r.value==OP.v);document.querySelectorAll("input[name=nr]").forEach(r=>r.checked=r.value==OP.n);$("cdk").checked=!!card();$("cdk").disabled=OP.n>1;
+if(!init){st.r=null;st.sheet="";$("res").innerHTML="";msg("設定を変えたので、もう一度抽選してください")}pvu();try{localStorage.setItem("cg1o",JSON.stringify(OP))}catch(e){}}
+document.querySelectorAll("input[name=vr]").forEach(r=>r.onchange=()=>{OP.v=r.value;opu()});
+document.querySelectorAll("input[name=nr]").forEach(r=>r.onchange=()=>{OP.n=+r.value;opu()});
+$("cdk").onchange=()=>{OP.c=$("cdk").checked?1:0;opu()};
+function sv(){$("cst").hidden=SS.m!="C";pvu();try{localStorage.setItem(KEY+"s",JSON.stringify(SS))}catch(e){}}
+async function cpy(t,ok){if(!t){msg("先に抽選してください");return}try{await navigator.clipboard.writeText(t)}catch(e){const a=E("textarea");a.value=t;document.body.append(a);a.select();document.execCommand("copy");a.remove()}msg(ok)}
+const sel=$("tg");gs.forEach((g,i)=>{const o=E("option","",g.n);o.value=i;sel.append(o)});sel.onchange=tally;
+function tally(){const gi=+sel.value||0,m={},t=$("tally");t.innerHTML="";st.h.forEach(h=>(h[gi]||[]).forEach(x=>m[x]=(m[x]||0)+1));const mx=Math.max(1,...Object.values(m));
+$("n").textContent="抽選回数："+st.h.length+"回（全部を引き直した回だけ数えます）";
+gs[gi].s.forEach(x=>{const v=m[x.n]||0,r=E("div","bar"),i=E("i");i.style.width=v/mx*100+"%";r.append(E("span","",x.n),i,E("b","",v));t.append(r)})}
+$("go").onclick=()=>draw();
+$("cp").onclick=()=>cpy(st.sheet&&build(),"完成プロンプトをコピーしました");
+$("cs").onclick=()=>cpy(st.sheet&&st.sheet+"\n\n"+CLOSE,"確定抽選シートのみコピーしました");
+$("hd").onclick=()=>{const h=!$("res").hidden;$("res").hidden=h;$("pvd").hidden=h;$("hd").textContent=h?"結果を表示":"結果を隠す"};
+$("on").onclick=()=>{flat.forEach(x=>x.on=true);refresh();save()};
+$("off").onclick=()=>{flat.forEach(x=>x.on=false);refresh();save()};
+$("rs").onclick=()=>{flat.forEach(x=>x.on=x.d);refresh();save()};
+$("q").oninput=e=>{const q=e.target.value.trim();gs.forEach(g=>{let any=false;g.s.forEach(x=>{const m=!q||x.n.includes(q)||g.n.includes(q);x.l.hidden=!m;any=any||m});g.d.hidden=!any;g.d.open=!!q&&any})};
+$("hc").onclick=()=>{st.h=[];tally();save()};
+$("ce").onclick=()=>{$("cd").value=code()};
+$("ci").onclick=()=>{if(apply($("cd").value)){refresh();save();msg("設定を読み込みました")}else msg("コードの形式が違います")};
+document.querySelectorAll("input[name=sm]").forEach(r=>{r.checked=r.value==SS.m;r.onchange=()=>{SS.m=r.value;sv()}});
+$("cst").value=SS.c;$("cst").oninput=e=>{SS.c=e.target.value;sv()};
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").value=tm;for(const o of $("th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
+tmu();opu(1);refresh();tally();sv();
+</script></body></html>
