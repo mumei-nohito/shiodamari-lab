@@ -6,6 +6,7 @@
 :root{--bg:#eef5f6;--fg:#12303a;--card:#fff;--mut:#5b7a84;--line:#c9dde1;--ac:#0e7c86;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a24;--fg:#dcecef;--card:#12293a;--mut:#8fb0ba;--line:#244558;--ac:#4cc3cc;--on:#06222a}}
 :root[data-theme="dark"]{--bg:#0b1a24;--fg:#dcecef;--card:#12293a;--mut:#8fb0ba;--line:#244558;--ac:#4cc3cc;--on:#06222a}
+:root[data-theme="dusk"]{--bg:#fbe9df;--fg:#3a2230;--card:#fff7f1;--mut:#80606c;--line:#ecc9bd;--ac:#b8452f;--on:#fff}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
 main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
@@ -13,6 +14,7 @@ h1{font-size:1.5rem;margin:0 0 4px}
 .mut{color:var(--mut);font-size:.9rem;margin:0 0 16px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0}
 button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.4em .9em;cursor:pointer}
+select{font:inherit;font-size:.85rem;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.3em .6em;cursor:pointer;max-width:60vw}
 button.pri{background:var(--ac);color:var(--on);border:0;font-size:1.1rem;font-weight:700;padding:.65em 1.8em;border-radius:999px}
 input[type=number]{width:4em;font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:.2em .4em}
 textarea,input[type=search]{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:.6em}
@@ -31,7 +33,7 @@ details.top>summary{font-weight:700}
 </style></head>
 <body><main>
 <p class="mut" style="margin:0 0 6px"><a href="../" style="color:inherit">潮だまり工房へ戻る</a></p>
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h1>マーメイドガチャ抽選機</h1><button id="th" aria-label="表示モードを切り替え"></button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h1>マーメイドガチャ抽選機</h1><select id="th" aria-label="表示モード"></select></div>
 <p class="mut">抽選はブラウザの乱数で行い、ChatGPTに貼れる「確定抽選シート」を作ります。</p>
 <div class="row"><button id="go" class="pri">抽選する</button><label>幻想枠 <input id="p" type="number" min="0" max="100" value="5">%</label></div>
 <div class="row"><button id="gs">生物だけ引き直す</button><button id="gc">構図だけ引き直す</button></div>
@@ -186,8 +188,14 @@ function pvu(){$("pv").value=build()}
 function sv(){$("cst").hidden=SS.m!="C";pvu();try{localStorage.setItem("mg1s",JSON.stringify(SS))}catch(e){}}
 document.querySelectorAll("input[name=sm]").forEach(r=>{r.checked=r.value==SS.m;r.onchange=()=>{SS.m=r.value;sv()}});
 $("cst").value=SS.c;$("cst").oninput=e=>{SS.c=e.target.value;sv()};
-const TM=["auto","light","dark"],TL={auto:"自動",light:"ライト",dark:"ダーク"},t0=document.documentElement.getAttribute("data-theme");let tm="auto";try{tm=localStorage.getItem("mg1t")||"auto"}catch(e){}
-function tmu(){const r=document.documentElement,v=tm=="auto"?t0:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").textContent="表示："+TL[tm]}
-$("th").onclick=()=>{tm=TM[(TM.indexOf(tm)+1)%3];try{localStorage.setItem("mg1t",tm)}catch(e){}tmu()};
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").value=tm;for(const o of $("th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
 tmu();refresh();tally();sv();
 </script></body></html>
