@@ -82,7 +82,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border-bottom:1
 #qdlg{width:min(420px,92vw)}#qdlg p{line-height:1.7}
 #intro .steps{margin:6px 0;padding-left:1.4em}#intro .steps li{margin:3px 0}#intro .acc>summary h2{font-size:1.1rem}
 #zbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 0}#zbar button{min-width:42px;min-height:42px}#zv{min-width:68px;text-align:center;color:var(--fg)}
-#map.rd{margin:8px auto}#mapw.z{overflow-x:auto;overflow-y:hidden;padding:60px 0 150px}#mapw.z.rdm{padding:0}#mapw.z #map{margin:26px}#mapw.z.rdm #map{margin:8px}
+#map.rd{margin:8px auto}#mapw.z{overflow-x:auto;overflow-y:hidden;padding:60px 0 150px}#mapw.pang,#mapw.pang *{cursor:grabbing!important}#mapw.z.rdm{padding:0}#mapw.z #map{margin:26px}#mapw.z.rdm #map{margin:8px}
 @media (max-width:700px){main{padding:10px 6px 60px}#bk{margin-left:-2px;margin-right:-2px;padding:8px 4px;border-radius:10px}}
 #map.rd .tx{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#rdhint{margin:4px 0 0}
 #tprev{border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:22vh;overflow:auto;white-space:pre-wrap;word-break:break-word;background:var(--card);margin-bottom:8px}#tdlg .fst{margin:4px 0}
@@ -849,7 +849,7 @@ const LP={t:0,x:0,y:0};
 document.addEventListener("pointerdown",e=>{if(mode!="edit"&&ED.sel&&!e.target.closest("#map,#ctl,#cp,dialog"))select(null)});
 /* ===== ページの拡大表示 ===== */
 function rescale(){const m=$("map"),p=ED.page;if(!p||!ED.g)return;const w=ED.base*(ED.Z||1),s=w/p.size.w;ED.s=s;m.style.width=w+"px";m.style.height=p.size.h*s+"px";ED.g.style.transform=`scale(${s})`;if(mode=="edit")renderCtl()}
-function updZ(){const z=ED.Z||1;$("zv").textContent=Math.round(z*100)+"%";$("zo").disabled=z<=1.001;$("zi").disabled=z>=3.999;$("zf").disabled=z<=1.001;$("zh").textContent=z>1.001?"（横にスワイプして見ます）":""}
+function updZ(){const z=ED.Z||1;$("zv").textContent=Math.round(z*100)+"%";$("zo").disabled=z<=1.001;$("zi").disabled=z>=3.999;$("zf").disabled=z<=1.001;$("zh").textContent=z>1.001?(matchMedia("(pointer:fine)").matches?"（Shiftを押しながらホイールを回す／マウスのホイールボタンを押しながらドラッグ、で横に動かせます）":"（横にスワイプして見ます）"):""}
 function setZoom(z){z=clamp(Math.round(z*100)/100,1,4);const w=$("mapw"),fr=(w.scrollLeft+w.clientWidth/2)/Math.max(1,w.scrollWidth);ED.Z=z;w.classList.toggle("z",z>1.001);rescale();if(z>1.001)w.scrollLeft=fr*w.scrollWidth-w.clientWidth/2;else w.scrollLeft=0;updZ()}
 const ZSTEPS=[1,1.5,2,3,4];
 $("zi").onclick=()=>{const z=ED.Z||1;setZoom(ZSTEPS.find(v=>v>z+.01)||4)};$("zo").onclick=()=>{const z=ED.Z||1;setZoom([...ZSTEPS].reverse().find(v=>v<z-.01)||1)};$("zf").onclick=()=>setZoom(1);
@@ -858,6 +858,14 @@ $("zi").onclick=()=>{const z=ED.Z||1;setZoom(ZSTEPS.find(v=>v>z+.01)||4)};$("zo"
 w.addEventListener("touchstart",e=>{if(mode=="edit"||e.touches.length!=2)return;d0=dist(e.touches);z0=ED.Z||1},{passive:true});
 w.addEventListener("touchmove",e=>{if(mode=="edit"||e.touches.length!=2||!d0)return;e.preventDefault();setZoom(z0*dist(e.touches)/d0)},{passive:false});
 w.addEventListener("touchend",e=>{if(e.touches.length<2)d0=0})})();
+/* PCで拡大したときの横移動：Shift＋ホイール／マウスのホイールボタンを押しながらドラッグ */
+(()=>{const w=$("mapw");let dr=null;const zoomed=()=>(ED.Z||1)>1.001;
+w.addEventListener("wheel",e=>{if(!zoomed()||!e.shiftKey)return;const d=e.deltaX||e.deltaY;if(!d)return;e.preventDefault();w.scrollLeft+=d},{passive:false});
+window.addEventListener("blur",()=>{dr=null;w.classList.remove("pang")});
+w.addEventListener("pointerdown",e=>{if(!zoomed()||e.button!=1)return;e.preventDefault();e.stopPropagation();dr={x:e.clientX,y:e.clientY,l:w.scrollLeft,pid:e.pointerId};w.classList.add("pang");try{w.setPointerCapture(e.pointerId)}catch(_){}},true);
+w.addEventListener("mousedown",e=>{if(e.button==1&&zoomed())e.preventDefault()});
+w.addEventListener("pointermove",e=>{if(!dr||e.pointerId!=dr.pid)return;w.scrollLeft=dr.l-(e.clientX-dr.x);window.scrollBy(0,-(e.clientY-dr.y));dr.y=e.clientY});
+const end=()=>{if(!dr)return;dr=null;w.classList.remove("pang")};w.addEventListener("pointerup",end);w.addEventListener("pointercancel",end)})();
 /* 画面の外（暗い部分）を押したら閉じる。入力のある画面では使わない */
 function outsideClose(d,fn){let dn=false;const inside=e=>{const r=d.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom};d.addEventListener("pointerdown",e=>{dn=!inside(e)});d.addEventListener("click",e=>{if(dn&&!inside(e))fn();dn=false})}
 outsideClose($("hdlg"),()=>$("hcl").click());outsideClose($("qdlg"),()=>$("qcn").click());outsideClose($("pcdlg"),()=>$("pccn").click());
