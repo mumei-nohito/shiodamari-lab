@@ -108,6 +108,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 @media (max-width:699px){#side{height:var(--shh,36dvh)!important}body.so{padding-bottom:var(--shh,36dvh)!important}#szb{display:block}#side .sb{padding:10px 12px}#side .sh2 button{flex:1}.nbox{margin:12px 0}.crow{margin:10px 0}#props label{margin:8px 0}}
 .phx{display:none}@media (max-width:699px){.phx{display:inline}.pcx{display:none}}
 .maskb{margin:10px 0;padding-top:8px;border-top:1px dashed var(--line)}
+.ob.ln{overflow:visible!important}.ob.ln.sel{outline:1px dashed rgba(10,132,160,.5);outline-offset:0}
 </style></head>
 <body><main>
 <p class="mut" style="margin:0 0 6px"><a href="../" style="color:inherit">潮だまり工房へ戻る</a></p>
@@ -126,7 +127,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 
 
 <section><h2>本棚</h2>
-<div class="row"><button id="seed" class="p">サンプル本を作る</button><button id="blank">白紙の本を作る</button></div>
+<div class="row"><button id="seed" class="p">サンプル本を作る</button><button id="blank">白紙の本を作る</button><button id="tplb">テンプレート集を作る</button></div>
 <div class="row"><input id="q" type="search" placeholder="タイトル・作者・タグで探す"><select id="tg"><option value="">すべてのタグ</option></select><select id="so"><option value="upd">更新が新しい順</option><option value="new">作成が新しい順</option><option value="ttl">タイトル順</option><option value="pgs">ページ数が多い順</option></select></div>
 <div id="shelf" class="sh"></div>
 <p class="mut">ここで作った本は、ページを再読み込みしても残ります。</p></section>
@@ -145,7 +146,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <aside id="side" aria-label="追加・レイヤー・詳細設定"><div class="sh"><button type="button" id="st0" class="p">追加</button><button type="button" id="st1">レイヤー</button><button type="button" id="st2">詳細設定</button><button type="button" id="st3">フォント</button><span class="sp"></span><button type="button" id="shl" aria-label="ヘルプ">？</button><button type="button" id="sx" aria-label="閉じる">✕</button></div>
 <div class="sh2"><button type="button" id="un">↶ 元に戻す</button><button type="button" id="rd">↷ やり直し</button><button type="button" id="szb">▲ 広げる</button></div>
 <div class="sb" id="sp0"><p class="mut">ページに新しいものを追加します。追加したものは、そのままページ上で動かせます。</p>
-<div class="addg"><button type="button" id="addt">＋ テキスト枠</button><button type="button" id="addi">＋ 画像枠（ファイルから）</button><button type="button" id="addb">＋ 帯（色つきの四角）</button><button type="button" id="addf">＋ 枠線（ふちだけの四角）</button><button type="button" id="addbg" class="p wide">🎨 背景の色を変える</button><button type="button" id="addch" class="wide">🧬 キメラガチャの結果を取り込む<small style="display:block;font-weight:400;color:var(--mut)">※ ガチャ本体は、まだ未実装です</small></button></div>
+<div class="addg"><button type="button" id="addt">＋ テキスト枠</button><button type="button" id="addi">＋ 画像枠（ファイルから）</button><button type="button" id="addb">＋ 帯（色つきの四角）</button><button type="button" id="addf">＋ 枠線（ふちだけの四角）</button><button type="button" id="addl">＋ 線（直線・矢印）</button><button type="button" id="addbg" class="p wide">🎨 背景の色を変える</button><button type="button" id="addch" class="wide">🧬 キメラガチャの結果を取り込む<small style="display:block;font-weight:400;color:var(--mut)">※ ガチャ本体は、まだ未実装です</small></button></div>
 <p class="mut" style="margin-top:12px">この本で使っている画像（タップすると、画像枠として追加されます。同じ画像は自動で1つにまとめて保存します）</p><div id="ag"></div></div>
 <div class="sb" id="sp1" hidden><p class="mut">👁＝表示/非表示　🔒＝ロック（ロックした枠は、画面をタップしても選ばれません）　↑↓＝重なり順（上ほど手前）。名前をタップすると、その枠が選ばれます。</p><div id="lyl"></div></div>
 <div class="sb" id="sp2" hidden><div id="props"></div></div>
@@ -186,7 +187,10 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <details><summary>⑫ バックアップと復元</summary><ul><li>「バックアップと復元」の「すべての本をバックアップ（ZIP）」で、本・ページ・画像をまとめて書き出せます。本棚の「書き出し」は、その本だけです。</li><li>ブラウザのデータが消えたり、別の端末に移るときは、「ZIPから復元」で戻せます。</li><li>同じ本がすでにあるときは、「別の本として追加（おすすめ）」か「置き換え」を選べます。</li></ul></details>
 <details><summary>⑬ フォントと文字のかざり</summary><ol><li>メニューの「フォント」を開くと、14種類の書体が見本つきで並びます。（日）は日本語用、（英）は英語（アルファベット）用です。</li><li>上の「本全体の基本」を選んでから書体をタップすると、本の全部の文字がその書体になります。「選んだ枠だけ」は、先にテキスト枠をタップして選んでから使います。</li><li>日本語用と英語用は別々に選べます。たとえば、日本語は「Zen Old Mincho」、英語は「Great Vibes」にすると、同じ文章の中で文字の種類ごとに書体が変わります。</li><li>テキスト枠を選ぶと、操作パネルに「B（太字）」「I（斜め）」「S（取り消し線）」「U（下線）」と、左・中央・右の揃えのボタンが出ます。枠の中の文章すべてに効きます。</li><li>ネットがつながらないなどで書体を読み込めないときは、近い見た目の標準の書体で表示されます。枠の大きさは、書体を変えても勝手には変わりません。</li><li>テキスト枠そのものに背景色をつけることもできます。枠を選んで「詳細設定」の「枠の背景色」を押します（はじめは透明です）。別に四角を敷かなくても、色つきの文字枠になります。</li></ol></details>
 <details><summary>⑭ キメラガチャの結果を取り込む</summary><p class="mut">※ キメラガチャ本体は、まだ未実装です。これは、ガチャができたときのために先に用意した機能です。いまは見本で試せます。</p><ol><li>メニューの「追加」→「🧬 キメラガチャの結果を取り込む」を押します。</li><li>ガチャが出力したJSONを貼りつけるか、「JSONファイルを選ぶ」で選びます。形がわからないときは「見本を入れてみる」で試せます。</li><li>「いま開いている本の後ろに足す」か「新しい本を作る」を選んで「取り込む」を押すと、1体につき1ページ（長いときはつづきのページも）できます。</li><li>個体名・構成モチーフ・体型・生息環境・生態・抽選条件・プロンプト・観察記録が、それぞれ別の枠に入ります。画像は、あとから「＋画像枠」で重ねます。</li></ol></details>
-<details><summary>⑮ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
+<details><summary>⑮ ページを他の本へコピー</summary><ol><li>コピーしたいページを、編集画面で開きます。</li><li>上のほうのボタン「他の本へコピー」を押します。</li><li>入れたい本を選ぶと、その本の最後に1ページ増えます。</li></ol><p class="mut">画像も一緒に入ります。コピー元のページは、そのままです。「テンプレート集」から好きな1ページだけ持っていくのにも使えます。</p></details>
+<details><summary>⑯ 線を引く</summary><ol><li>「追加」の中の「＋ 線」を押します。</li><li>線の両端に出る「●」をドラッグすると、長さと向きを変えられます。</li><li>「詳細設定」で、色・太さ・破線・矢印を選べます。</li></ol><p class="mut">相関図の矢印や、年表の線づくりに便利です。</p></details>
+<details><summary>⑰ 画像の枠の形・切り抜き</summary><ul><li><b>枠の形</b>：画像の枠を選び、「詳細設定」→「画像」の「枠の形」で、四角・円・ひし形・六角形・八角形（角を切った形）・角丸を選べます。</li><li><b>切り抜きの型</b>：透明部分のある画像（PNG）を「型」に使うと、その形に画像が切り抜かれます。</li></ul></details>
+<details><summary>⑱ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
 </div></dialog>
 <dialog id="rdlg"><div><h2 style="margin:0 0 6px">バックアップから復元</h2><div id="rsum"></div>
 <div id="rmode" hidden style="margin:8px 0"><p class="mut" style="margin:0 0 4px">同じ本がすでにあります。どうしますか？</p>
@@ -202,6 +206,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <div class="row"><button type="button" id="cgo" class="p" disabled>取り込む</button><button type="button" id="ccn">キャンセル</button></div></div></dialog>
 <div id="vw" hidden role="dialog" aria-label="全画面で読む"><div id="vwb"><button type="button" id="vwx">✕ 閉じる</button><span id="vwc">1 / 1</span><span class="sp"></span><button type="button" id="vwzo" aria-label="縮小">－</button><button type="button" id="vwzi" aria-label="拡大">＋</button></div>
 <div id="vws"><div id="vwp"></div></div><button type="button" class="vwa" id="vwl" aria-label="前のページ">◀</button><button type="button" class="vwa" id="vwr" aria-label="次のページ">▶</button><div id="vwh">左右にスワイプでページをめくる／ダブルタップで拡大・もとに戻す</div></div>
+<dialog id="pcdlg"><div><h2 style="margin:0 0 6px">ページを他の本へコピー</h2><p class="mut" id="pcm" style="margin:0 0 8px"></p><div id="pcl" class="stl" style="margin:6px 0"></div><div class="row"><button type="button" id="pcok" class="p">コピーする</button><button type="button" id="pccn">やめる</button></div></div></dialog>
 <dialog id="qdlg"><div><h2 id="qt" style="margin:0 0 6px">確認</h2><p id="qm"></p><div class="row"><button type="button" id="qok" class="p">削除する</button><button type="button" id="qcn">やめる</button></div></div></dialog>
 <dialog id="tdlg"><div><h2 style="margin:0 0 6px">文章を編集</h2>
 <p class="mut" style="margin:0 0 4px">かざりをつけたい文字を、下の入力欄で指でなぞって選んでから、ボタンを押します。</p>
@@ -290,9 +295,64 @@ T("見出し 能力",60,610,430,50,"能力・特技",34,{color:AC}),T("能力",6
 T("見出し 関係",510,610,430,50,"人間関係",34,{color:AC}),T("関係",510,665,430,300,"（記入例）\n師匠：（名前）\n相棒：（名前）\nライバル：（名前）",26),
 T("見出し プロンプト",60,1000,880,50,"画像生成プロンプトメモ",34,{color:AC}),T("プロンプト",60,1055,880,300,"（記入例）1boy, short black hair, amber eyes, deep green cloak, herbalist, soft lighting",24)])]}
 
-async function mkBook(title,pages,kind,cover=null){const book={id:uid("bk"),schema:1,title,author:"",description:"",tags:kind=="sample"?["サンプル","設定資料"]:[],coverAssetId:cover,pageIds:[],createdAt:NOW(),updatedAt:NOW(),kind};
+
+/* ===== テンプレート集（8ページの見本の本）。通常のページデータで、専用の固定画面ではない ===== */
+function templatePages(A){
+const BG=c=>S("背景",0,0,1000,1414,c),
+RS=(n,x,y,w,h,fill,rad,stroke="#000",sw=0)=>{const o=S(n,x,y,w,h,fill,stroke,sw);o.props.radius=rad;return o},
+IS=(n,x,y,w,h,aid,shape,ex={},view)=>{const o=I(n,x,y,w,h,aid,view);o.props.shape=shape;Object.assign(o.props,ex);return o},
+LN=(n,x1,y1,x2,y2,ex={})=>{const o=OB("shape",n,0,0,10,10,{kind:"line",stroke:"#2b2a28",strokeWidth:6,cap:"round",dash:"solid",arrow:"none",opacity:1,fill:"transparent",radius:0,a:[0,0],b:[1,1],...ex});return Object.assign(o,lineFit(o.props,x1,y1,x2,y2))},
+CT=(n,cx,cy,w,h,text,fs,ex={})=>T(n,cx-w/2,cy-h/2,w,h,text,fs,{align:"center",...ex});
+/* 1 表紙・目次 */
+const p1=mkPage([BG("#f4efe6"),S("外枠",40,40,920,1334,"transparent",AC,6),S("内枠",64,64,872,1286,"transparent",AC,2),S("タイトル帯",64,110,872,230,AC),
+T("タイトル",100,140,800,100,"テンプレート集",76,{align:"center",color:"#fff",lineHeight:1.3}),T("サブタイトル",100,262,800,50,"TEMPLATES — コピーして、自分の本づくりへ",28,{align:"center",color:"#dcebee"}),
+T("見出し 収録",110,400,780,56,"収録ページ",38,{color:AC}),S("区切り線",110,466,780,3,AC),
+T("目次",110,490,780,520,"P2–3　キャラクター設定資料集\nP4　LINE風の会話ノート\nP5　キャラクター相関図\nP6　ロアブック（世界観の本）\nP7　アルバム風\nP8　使い方（さわって試せるページ）",36,{lineHeight:2.1}),
+RS("案内枠",110,1040,780,260,"#fff",28,AC,3),T("案内",134,1060,732,220,"使いたいページを開き、編集画面の「他の本へコピー」を押すと、あなたの本に1ページだけ入れられます。文字・画像・色は、自由に書き換えてください。",30,{lineHeight:1.7})]);
+/* 2・3 設定資料集（サンプル本の2ページを再利用） */
+const sp=samplePages(A);
+/* 4 LINE風の会話ノート */
+const msgs=[["L","（名前A）","今日は何してる？",380],["R","","資料つくってる！",380],["L","（名前A）","見せてー！",300],["R","","まだ途中だけど、見る？",470],["L","（名前A）","見る見る！",300],["R","","じゃあ送るね",350],["L","（名前A）","（ここに会話を書く）",450]],chat=[BG("#dbe7d3"),S("ヘッダー",0,0,1000,130,"#4a6b57"),T("ログ見出し",60,34,600,70,"会話ログ",46,{color:"#fff",lineHeight:1.3,fontJa:"zen-maru-gothic"})];
+msgs.forEach(([side,nm,tx,w],i)=>{const y=170+i*150;if(side=="L"){chat.push(IS("アイコンA"+(i+1),50,y,100,100,A.face,"ellipse"),T("名前A"+(i+1),170,y-4,400,34,nm,22,{color:"#5a6b6f",fontJa:"zen-maru-gothic"}),T("吹き出しA"+(i+1),170,y+32,w,76,tx,30,{bg:"#ffffff",radius:38,fontJa:"zen-maru-gothic",lineHeight:1.65}))}
+else{chat.push(IS("アイコンB"+(i+1),850,y,100,100,A.full,"ellipse",{},{zoom:1.8,dx:0,dy:-.35}),T("吹き出しB"+(i+1),830-w,y+32,w,76,tx,30,{bg:"#8fe07c",radius:38,align:"right",fontJa:"zen-maru-gothic",lineHeight:1.65}))}});
+chat.push(S("入力バー",0,1320,1000,94,"#ffffff"),T("入力欄",40,1338,820,58,"メッセージを入力",26,{bg:"#eef1ee",radius:29,color:"#8a9590",fontJa:"zen-maru-gothic"}));
+const p4=mkPage(chat);
+/* 5 キャラクター相関図 */
+const nodes=[["師匠",500,360,"#6a5b8a",A.cover,{zoom:1.6,dx:0,dy:-.15}],["親友",190,620,AC,A.face],["ライバル",810,620,"#c85a54",A.face],["家族",190,1040,"#8a6a3a",A.full,{zoom:1.8,dx:0,dy:-.35}],["恋人",810,1040,"#d6708a",A.face],["主人公",500,820,INK,A.full,{zoom:1.8,dx:0,dy:-.35}]],byName=Object.fromEntries(nodes.map(n=>[n[0],n])),rel=[["主人公","師匠","師事","#6a5b8a","solid","end"],["親友","主人公","親友",AC,"solid","none"],["ライバル","主人公","敵対","#c85a54","dashed","none"],["家族","主人公","家族","#8a6a3a","solid","none"],["恋人","主人公","恋人","#d6708a","solid","both"]];
+const map=[...head("キャラクター相関図","RELATIONSHIP")];
+for(const[a,b,lb,col,dash,arrow]of rel){const A1=byName[a],B1=byName[b],dx=B1[1]-A1[1],dy=B1[2]-A1[2],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,r=92;map.push(LN("線："+lb,A1[1]+ux*r,A1[2]+uy*r,B1[1]-ux*r,B1[2]-uy*r,{stroke:col,dash,arrow,strokeWidth:7}));
+map.push(CT("関係："+lb,(A1[1]+B1[1])/2,(A1[2]+B1[2])/2,130,46,lb,26,{bg:"#f4efe6",radius:23,color:col,lineHeight:1.6}))}
+for(const[nm,x,y,col,aid,view]of nodes){map.push(S("ふち："+nm,x-80,y-80,160,160,"#ffffff",col,6),IS("顔："+nm,x-75,y-75,150,150,aid,"ellipse",{},view));map[map.length-2].props.radius=500;map.push(CT("名前："+nm,x,nm=="師匠"?y-112:y+112,200,46,nm,30,{color:col,lineHeight:1.4}))}
+map.push(T("使いかた",60,1240,880,130,"線は「追加」→「＋ 線」。両端の「●」をドラッグして長さと向きを変え、「詳細設定」で色・矢印・破線を選べます。人物は画像枠を差し替えて、名前を書き換えます。",24,{color:"#5a6b6f",lineHeight:1.7}));
+const p5=mkPage(map);
+/* 6 ロアブック */
+const F="zen-old-mincho",p6=mkPage([BG("#efe6d2"),S("外枠",36,36,928,1342,"transparent","#8a6a3a",4),S("内枠",56,56,888,1302,"transparent","#8a6a3a",1),
+CT("章番号",500,130,800,40,"CHAPTER  I",28,{color:"#8a6a3a",fontEn:"tangerine"}),CT("章タイトル",500,205,800,100,"月夜の湿地",76,{fontJa:F,color:"#3a2f26",lineHeight:1.3}),
+LN("飾り線",300,285,700,285,{stroke:"#8a6a3a",strokeWidth:3}),
+S("引用の縦線",110,330,8,150,"#8a6a3a"),T("引用",134,330,760,150,"「水辺に集う光は、夜明けとともに眠りにつく。」\n　　――（古い詩より）",32,{fontJa:F,italic:true,color:"#6a5b3a",lineHeight:1.7}),
+T("本文",110,510,780,380,"（記入例）月夜の湿地は、満ちる潮と沈む潮のあいだに生まれた、ごく小さな世界である。昼は霧に隠れて地図にも載らないが、日が沈むと水面に淡い光が浮かび、土地の者たちはそれを「道しるべ」と呼ぶ。旅人はその光をたどって、湿地の奥にある岩場の村へ向かう。",28,{fontJa:F,lineHeight:2}),
+T("見出し 年表",110,930,400,50,"年表",36,{fontJa:F,color:"#8a6a3a"}),LN("年表の線",140,1010,140,1310,{stroke:"#8a6a3a",strokeWidth:4}),
+...[["第一紀　湿地の誕生",1010],["第二紀　村のはじまり",1110],["第三紀　光の発見",1210],["現在　（ここに書く）",1310]].flatMap(([t,y])=>[RS("年表の点",126,y-14,28,28,"#8a6a3a",500),T("年表の文",176,y-24,360,48,t,26,{fontJa:F,lineHeight:1.6})]),
+RS("用語集の枠",560,930,340,400,"#f8f1e0",18,"#8a6a3a",3),T("見出し 用語",584,946,300,44,"用語集",32,{fontJa:F,color:"#8a6a3a"}),
+T("用語",584,1000,300,310,"道しるべ：夜の水面に浮かぶ光\n岩場の村：湿地の奥にある集落\n潮守：潮の満ち引きを読む者",24,{fontJa:F,lineHeight:1.9})]);
+/* 7 アルバム風 */
+const AF="klee-one",p7=mkPage([BG("#f1e8dc"),CT("アルバム見出し",500,120,800,90,"思い出アルバム",60,{fontJa:AF,color:"#6a5236",lineHeight:1.4}),CT("アルバム日付",500,190,800,40,"2026.10.26　（場所・できごと）",26,{fontJa:AF,color:"#8a7a66"}),
+S("写真の台紙1",80,250,430,520,"#ffffff"),IS("写真1",110,280,370,370,A.full,"chamfer",{cut:50},{zoom:1.9,dx:0,dy:-.3}),S("マスキングテープ1",215,236,160,40,"rgba(235,205,120,.8)"),CT("キャプション1",295,705,370,60,"（ひとこと）",28,{fontJa:AF,color:"#6a5236"}),
+S("写真の台紙2",560,250,350,350,"#ffffff",AC,0),IS("写真2",575,265,320,320,A.face,"ellipse"),CT("キャプション2",735,650,320,50,"（ひとこと）",28,{fontJa:AF,color:"#6a5236"}),
+RS("写真の台紙3",70,840,540,400,"#ffffff",70),IS("写真3",86,856,508,368,A.cover,"rect",{radius:56}),
+S("写真の台紙4",650,830,270,270,"#ffffff"),IS("写真4",665,845,240,240,A.face,"hex"),CT("キャプション4",785,1135,260,50,"（ひとこと）",26,{fontJa:AF,color:"#6a5236"}),
+T("アルバムメモ",70,1270,860,110,"画像枠を選び、「詳細設定」→「画像」の「枠の形」で、八角形・円・ひし形・六角形・角丸に変えられます。",24,{fontJa:AF,color:"#8a7a66",lineHeight:1.7})]);
+/* 8 使い方 */
+const rows=[["① 文字を書き換える","右の枠をタップして、「✎ 文章」を押します。"],["② 色を変える","右の四角をタップして、「⚙ 設定」→「色」。"],["③ 画像を入れる","右の画像枠をタップして、「差し替え」。"],["④ 形を変える","画像枠の「枠の形」で、円や八角形に。"],["⑤ 線を引く","「追加」→「＋ 線」。端の「●」で長さを変えます。"],["⑥ ほかの本へコピー","ページの「他の本へコピー」で、1ページ入れます。"]],how=[...head("使い方","HOW TO")];
+rows.forEach(([h,d],i)=>{const y=190+i*195;how.push(T("説明見出し"+(i+1),60,y,500,50,h,36,{color:AC}),T("説明"+(i+1),60,y+56,500,110,d,26,{lineHeight:1.7}))});
+how.push(T("練習の文字",620,190,320,110,"ここを書き換えてみよう",30,{bg:"#fff",radius:24,lineHeight:1.7}),RS("練習の四角",620,385,320,140,"#2f6f7a",36),IS("練習の画像",650,570,260,170,A.cover,"rect",{radius:30}),IS("練習の形",690,765,180,180,A.face,"chamfer",{cut:40}),
+LN("練習の線",640,1065,920,1000,{stroke:"#c85a54",strokeWidth:8,arrow:"end"}),RS("練習のコピー",620,1170,320,150,"#fff",24,AC,3),T("練習のコピー文",636,1186,288,120,"ページのコピーは、編集画面の上のほうのボタンから。",24,{lineHeight:1.6}));
+const p8=mkPage(how);
+return[p1,sp[1],sp[2],p4,p5,p6,p7,p8]}
+async function mkBook(title,pages,kind,cover=null){const book={id:uid("bk"),schema:1,title,author:"",description:"",tags:kind=="sample"?["サンプル","設定資料"]:kind=="template"?["テンプレート"]:[],coverAssetId:cover,pageIds:[],createdAt:NOW(),updatedAt:NOW(),kind};
 pages.forEach(p=>{p.bookId=book.id;book.pageIds.push(p.id)});await commit({put:{books:[book],pages},bump:uses(book,pages)});return book}
 const mkSample=async()=>{const A=await ensurePH();return mkBook("キャラクター設定資料集（サンプル）",samplePages(A),"sample",A.cover)};
+const mkTemplates=async()=>{const A=await ensurePH();return mkBook("テンプレート集",templatePages(A),"template")};
 const mkBlank=()=>mkBook("白紙の本",[mkPage([S("背景",0,0,1000,1414,"#ffffff")])],"blank");
 
 async function bundle(id){const book=await get("books",id),pages=await pagesOf(id);pages.sort((a,b)=>book.pageIds.indexOf(a.id)-book.pageIds.indexOf(b.id));return{book,pages}}
@@ -314,6 +374,17 @@ await commit({put:{books:[{...b,pageIds:ids,updatedAt:NOW()}],pages:[np]}});retu
 async function dupPage(bid,pid){const b=await get("books",bid),p=await get("pages",pid);if(!b||!p||p.bookId!=bid)throw new Error("ページが見つかりません");
 const q=structuredClone(p);q.id=uid("pg");q.updatedAt=NOW();q.objects.forEach(o=>o.id=uid("ob"));const ids=[...b.pageIds];ids.splice(ids.indexOf(pid)+1,0,q.id);
 await commit({put:{books:[{...b,pageIds:ids,updatedAt:NOW()}],pages:[q]},bump:uses({},[q])});return q.id}
+async function copyPageTo(srcBid,pid,target){const sb=await get("books",srcBid),p=await get("pages",pid);if(!sb||!p||p.bookId!=srcBid)throw new Error("ページが見つかりません");
+const q=structuredClone(p);q.id=uid("pg");q.updatedAt=NOW();q.objects.forEach(o=>{o.id=uid("ob");if(o.type=="text"&&sb.fonts){if(sb.fonts.ja&&!o.props.fontJa)o.props.fontJa=sb.fonts.ja;if(sb.fonts.en&&!o.props.fontEn)o.props.fontEn=sb.fonts.en}});
+if(target=="new"){q.bookId=null;const b=await mkBook("新しい本（"+sb.title+"から）",[q],"user");return b.title}
+const tb=await get("books",target);if(!tb)throw new Error("コピー先の本が見つかりません");q.bookId=tb.id;
+await commit({put:{books:[{...tb,pageIds:[...tb.pageIds,q.id],updatedAt:NOW()}],pages:[q]},bump:uses({},[q])});return tb.title}
+function pickCopyTarget(srcBid){return new Promise(async res=>{const d=$("pcdlg"),l=$("pcl");l.innerHTML="";const bs=(await getAll("books")).filter(b=>b.id!=srcBid);let val="new";
+$("pcm").textContent="このページを、ほかの本の「いちばん最後」にコピーします。元のページはそのまま残ります。";
+const add=(v,t,sub)=>{const lb=E("label",null),r=E("input");r.type="radio";r.name="pct";r.value=v;r.checked=v==val;r.onchange=()=>{val=v};lb.style.cssText="display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px";lb.append(r,E("span",null,t));if(sub)lb.append(E("span","mut",sub));l.append(lb)};
+add("new","＋ 新しい本をつくって入れる");for(const b of bs)add(b.id,b.title,b.pageIds.length+"ページ");let done=false;
+const fin=v=>{if(done)return;done=true;try{d.close()}catch(e){}d.removeAttribute("open");res(v)};
+$("pcok").onclick=()=>fin(val);$("pccn").onclick=()=>fin(null);d.oncancel=e=>{e.preventDefault();fin(null)};d.onclose=()=>fin(null);try{d.showModal()}catch(e){d.setAttribute("open","")}})}
 async function delPage(bid,pid){const b=await get("books",bid),p=await get("pages",pid);if(!b||!p||p.bookId!=bid)throw new Error("ページが見つかりません");
 if(b.pageIds.length<=1)throw new Error("最後の1ページは削除できません");const u=uses({},[p]),bump={};for(const k in u)bump[k]=-u[k];
 await commit({put:{books:[{...b,pageIds:b.pageIds.filter(x=>x!=pid),updatedAt:NOW()}]},del:{pages:[pid]},bump})}
@@ -452,11 +523,35 @@ const fin=()=>{try{d.close()}catch(e){}d.removeAttribute("open")};$("ccn").oncli
 go.onclick=async()=>{if(!ents)return;go.disabled=true;try{const tg=document.querySelector("#cdlg input[name=ctg]:checked").value,r=await importChimera(ents,tg);fin();cur=r.bookId;pi=r.first;mode="edit";ED.sel=null;await refresh();await renderBook();$("bk").scrollIntoView({behavior:"smooth"});toast(ents.length+"体（"+r.count+"ページ）を取り込みました")}catch(e){go.disabled=false;sm.className="mut err";sm.textContent="⚠ 取り込めませんでした（本のデータは変わっていません）："+e.message}};
 try{d.showModal()}catch(e){d.setAttribute("open","")}}
 const chimeraPagesCount=ents=>ents.reduce((n,e)=>n+chimeraPages(e,0).length,0);
+
+/* ===== 線（直線・矢印）：両端の位置を、枠の中の割合で持つ ===== */
+const isLine=o=>!!o&&o.type=="shape"&&o.props&&o.props.kind=="line";
+const linePad=q=>{const sw=q.strokeWidth||6,ah=q.arrow&&q.arrow!="none"?sw*3+8:0;return Math.max(14,sw*2+ah/2)};
+function lineAbs(o){const q=o.props;return[o.x+q.a[0]*o.w,o.y+q.a[1]*o.h,o.x+q.b[0]*o.w,o.y+q.b[1]*o.h]}
+function lineFit(q,ax,ay,bx,by){const P=(ED.page&&ED.page.size)||{w:1000,h:1414},pad=linePad(q);ax=clamp(ax,0,P.w);bx=clamp(bx,0,P.w);ay=clamp(ay,0,P.h);by=clamp(by,0,P.h);
+const x0=Math.max(0,Math.min(ax,bx)-pad),y0=Math.max(0,Math.min(ay,by)-pad),x1=Math.min(P.w,Math.max(ax,bx)+pad),y1=Math.min(P.h,Math.max(ay,by)+pad),w=Math.max(1,Math.round(x1-x0)),h=Math.max(1,Math.round(y1-y0));
+return{x:Math.round(x0),y:Math.round(y0),w,h,props:{...q,a:[(ax-Math.round(x0))/w,(ay-Math.round(y0))/h],b:[(bx-Math.round(x0))/w,(by-Math.round(y0))/h]}}}
+function lineSvg(o){const q=o.props,W=o.w,H=o.h,ax=q.a[0]*W,ay=q.a[1]*H,bx=q.b[0]*W,by=q.b[1]*H,sw=q.strokeWidth||6,col=q.stroke||"#333",op=q.opacity??1;
+const dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,ah=q.arrow&&q.arrow!="none"?sw*3+8:0,both=q.arrow=="both";let x1=ax,y1=ay,x2=bx,y2=by;
+if(ah){if(q.arrow=="end"||both){x2=bx-ux*ah*.8;y2=by-uy*ah*.8}if(both){x1=ax+ux*ah*.8;y1=ay+uy*ah*.8}}
+const NS="http://www.w3.org/2000/svg",svg=document.createElementNS(NS,"svg");svg.setAttribute("width",W);svg.setAttribute("height",H);svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.style.cssText="position:absolute;left:0;top:0;overflow:visible;pointer-events:none";
+const mk=(t,at)=>{const n=document.createElementNS(NS,t);for(const k in at)n.setAttribute(k,at[k]);return n};
+const dash=q.dash=="dashed"?`${sw*3} ${sw*2}`:q.dash=="dotted"?`0.1 ${sw*2}`:"",cap=q.dash=="dotted"?"round":(q.cap||"round");
+svg.append(mk("line",{x1:ax,y1:ay,x2:bx,y2:by,stroke:"transparent","stroke-width":Math.max(sw,30),"pointer-events":"stroke"}),mk("line",{x1,y1,x2,y2,stroke:col,"stroke-width":sw,"stroke-linecap":cap,...(dash?{"stroke-dasharray":dash}:{}),opacity:op,"pointer-events":"none"}));
+const head=(px,py,vx,vy)=>{const hx=-vy,hy=vx,s2=ah*.5;return mk("polygon",{points:`${px},${py} ${px-vx*ah+hx*s2},${py-vy*ah+hy*s2} ${px-vx*ah-hx*s2},${py-vy*ah-hy*s2}`,fill:col,opacity:op,"pointer-events":"none"})};
+if(ah&&(q.arrow=="end"||both))svg.append(head(bx,by,ux,uy));if(both)svg.append(head(ax,ay,-ux,-uy));return svg}
+function lineDrag(k,o,ev,h){ev.preventDefault();ev.stopPropagation();h.setPointerCapture(ev.pointerId);{const f=document.querySelector("#ctl .fb");if(f)f.style.display="none"}
+const sx=ev.clientX,sy=ev.clientY,s=ED.s,A=lineAbs(O(o.id)),key="ld:"+o.id+":"+(++GID);
+const mv=e=>{const dx=(e.clientX-sx)/s,dy=(e.clientY-sy)/s,c=O(o.id);let a=[A[0],A[1]],b=[A[2],A[3]];if(k=="la"){a=[A[0]+dx,A[1]+dy]}else if(k=="lb"){b=[A[2]+dx,A[3]+dy]}else{a=[A[0]+dx,A[1]+dy];b=[A[2]+dx,A[3]+dy];
+const P=ED.page.size,mx=Math.min(a[0],b[0]),Mx=Math.max(a[0],b[0]),my=Math.min(a[1],b[1]),My=Math.max(a[1],b[1]),fx=mx<0?-mx:Mx>P.w?P.w-Mx:0,fy=my<0?-my:My>P.h?P.h-My:0;a=[a[0]+fx,a[1]+fy];b=[b[0]+fx,b[1]+fy]}
+patch(c,lineFit(c.props,a[0],a[1],b[0],b[1]),k=="move"?"線の移動":"線の端を動かす",key);refreshEl(O(o.id));posCtl(O(o.id))};
+const up=()=>{h.removeEventListener("pointermove",mv);h.removeEventListener("pointerup",up);h.removeEventListener("pointercancel",up);renderProps();placeBar(O(o.id))};h.addEventListener("pointermove",mv);h.addEventListener("pointerup",up);h.addEventListener("pointercancel",up)}
 const CLIPS={diamond:"polygon(50% 0,100% 50%,50% 100%,0 50%)",hex:"polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)",tri:"polygon(50% 0,100% 100%,0 100%)"};
 function shapeVp(vp,q){const sh=q.shape||"rect";vp.style.borderRadius=sh=="ellipse"?"50%":sh=="rect"&&q.radius?q.radius+"px":"";let c=CLIPS[sh]||"";if(sh=="chamfer"){const k=Math.max(0,+q.cut||60)+"px";c=`polygon(${k} 0,calc(100% - ${k}) 0,100% ${k},100% calc(100% - ${k}),calc(100% - ${k}) 100%,${k} 100%,0 calc(100% - ${k}),0 ${k})`}vp.style.clipPath=c}
 async function hasAlpha(f){try{const b=await createImageBitmap(f),w=Math.min(64,b.width),h=Math.min(64,b.height),c=mkCv(w,h),x=c.getContext("2d");x.drawImage(b,0,0,w,h);const d=x.getImageData(0,0,w,h).data;if(b.close)b.close();for(let i=3;i<d.length;i+=4)if(d[i]<250)return true;return false}catch(e){return true}}
 function mkEl(o){const q=o.props,e=E("div","ob"+(o.type=="text"?" t":"")+(o.locked?" lk":""));e.dataset.id=o.id;posEl(o,e);e.style.transform=`rotate(${o.rot}deg)`;
-if(o.type=="shape"){e.style.background=q.fill;e.style.border=q.strokeWidth?q.strokeWidth+"px solid "+q.stroke:"none";e.style.opacity=q.opacity;e.style.borderRadius=(q.radius||0)+"px"}
+if(o.type=="shape"&&q.kind=="line"){e.style.pointerEvents="none";e.classList.add("ln");e.append(lineSvg(o))}
+else if(o.type=="shape"){e.style.background=q.fill;e.style.border=q.strokeWidth?q.strokeWidth+"px solid "+q.stroke:"none";e.style.opacity=q.opacity;e.style.borderRadius=(q.radius||0)+"px"}
 else if(o.type=="text"){const tx=E("div","tx");fillRich(tx,q);const fo=fontsOf(o);loadFont(fo.ja);loadFont(fo.en);Object.assign(tx.style,{fontSize:q.fontSize+"px",color:q.color,textAlign:q.align,lineHeight:q.lineHeight,padding:"0 12px",fontFamily:fontStack(fo.ja,fo.en),fontWeight:q.bold?"700":"400",fontStyle:q.italic?"italic":"normal",textDecoration:textDeco(q)});e.style.background=q.bg&&q.bg!="transparent"?q.bg:"";e.style.borderRadius=(q.radius||0)+"px";
 const cp=q.countPos||"br";if(cp!="none"&&mode=="edit"){const top=cp[0]=="t";const cc=E("span","cc",charCount(q.text)+"文字");cc.style[top?"top":"bottom"]="4px";cc.style[cp[1]=="l"?"left":"right"]="6px";e.append(tx,cc)}else e.append(tx)}
 else urlFor(q.assetId).then(u=>{if(u){const i=new Image();i.alt="";i.draggable=false;i.onload=()=>{layImg(o,i);if(ED.trim==o.id)ghost(o,e)};i.src=u;const vp=E("div","vp");shapeVp(vp,q);vp.append(i);e.append(vp);if(q.maskAssetId)urlFor(q.maskAssetId).then(m=>{if(m){const v=`url("${m}")`,st=vp.style;st.webkitMaskImage=st.maskImage=v;st.webkitMaskSize=st.maskSize="100% 100%";st.webkitMaskRepeat=st.maskRepeat="no-repeat";st.webkitMaskPosition=st.maskPosition="center"}})}});return e}
@@ -472,8 +567,8 @@ if(mode!="edit"){clearTimeout(LP.t);if(!f){select(null);return}const id=f.datase
 select(f?f.dataset.id:null)};if(ED.sel&&!O(ED.sel))ED.sel=null;ED.els.forEach((e,k)=>e.classList.toggle("sel",k==ED.sel));renderCtl();renderLayers()}
 function select(id){if(id!=ED.sel){exitTrim(true);closeColor()}if(!id&&ED.adj)exitAdjust(true);ED.sel=id;renderLayers();ED.els.forEach((e,k)=>e.classList.toggle("sel",k==id));renderCtl();renderProps();if(!$("sp3").hidden)renderFonts();if(id&&typeof revealSel=="function")setTimeout(revealSel,40)}
 function renderCtl(){const c=$("ctl");if(!c)return;c.innerHTML="";const o=ED.sel&&O(ED.sel);if(!o)return;const tr=ED.trim==o.id&&o.type=="image"&&mode=="edit"&&!o.locked;if(tr){const el=ED.els.get(o.id);if(el){el.classList.add("trim");el.onpointerdown=e=>trimDrag(o,e);ghost(o,el)}}else if(ED.trim)exitTrim(true);
-if(mode=="edit"&&!o.locked&&!tr)for(const[t,k]of[["✥","move"],["◢","size"]]){const h=E("div","hd",t);h.dataset.k=k;h.onpointerdown=e=>drag(k,o,e,h);c.append(h)}c.append(mkBar(o));posCtl(o);placeBar(o)}
-function posCtl(o){const s=ED.s,c=$("ctl");if(!c)return;for(const h of c.querySelectorAll(".hd")){if(h.dataset.k=="move"){h.style.left=o.x*s-32+"px";h.style.top=o.y*s-32+"px"}else{h.style.left=(o.x+o.w)*s-10+"px";h.style.top=(o.y+o.h)*s-10+"px"}}}
+if(mode=="edit"&&!o.locked&&!tr)for(const[t,k]of(isLine(o)?[["✥","move"],["●","la"],["●","lb"]]:[["✥","move"],["◢","size"]])){const h=E("div","hd",t);h.dataset.k=k;h.onpointerdown=e=>isLine(o)?lineDrag(k,o,e,h):drag(k,o,e,h);c.append(h)}c.append(mkBar(o));posCtl(o);placeBar(o)}
+function posCtl(o){const s=ED.s,c=$("ctl");if(!c)return;if(isLine(o)){const[ax,ay,bx,by]=lineAbs(o);for(const h of c.querySelectorAll(".hd")){const k=h.dataset.k,sz=k=="move"?42:32,px=k=="la"?ax:k=="lb"?bx:(ax+bx)/2,py=k=="la"?ay:k=="lb"?by:(ay+by)/2;h.style.width=h.style.height=sz+"px";h.style.fontSize=(k=="move"?28:14)+"px";h.style.left=px*s-sz/2+"px";h.style.top=py*s-sz/2+"px"}return}for(const h of c.querySelectorAll(".hd")){if(h.dataset.k=="move"){h.style.left=o.x*s-32+"px";h.style.top=o.y*s-32+"px"}else{h.style.left=(o.x+o.w)*s-10+"px";h.style.top=(o.y+o.h)*s-10+"px"}}}
 function patch(o,set,label,key){ED.hist.run(ED.page,label,[{k:"patch",id:o.id,set}],key);touch()}
 function drag(kind,o,ev,h){ev.preventDefault();ev.stopPropagation();h.setPointerCapture(ev.pointerId);{const f=document.querySelector("#ctl .fb");if(f)f.style.display="none"}const sx=ev.clientX,sy=ev.clientY,x0=o.x,y0=o.y,w0=o.w,h0=o.h,s=ED.s,P=ED.page.size,key=(kind=="move"?"mv:":"rs:")+o.id+":"+(++GID);
 const mv=e=>{const dx=(e.clientX-sx)/s,dy=(e.clientY-sy)/s;patch(o,kind=="move"?moveTo(o,P,x0+dx,y0+dy):sizeTo(o,P,w0+dx,h0+dy),kind=="move"?"移動":"サイズ変更",key);posEl(o);posCtl(o)};
@@ -525,7 +620,7 @@ const after=()=>{if(ED.sel&&(!O(ED.sel)||O(ED.sel).hidden))ED.sel=null;renderSta
 for(let i=L.length-1;i>=0;i--){const o=L[i],r=E("div","lr"+(ED.sel==o.id?" sel":"")+(o.hidden?" off":""));
 const eye=E("button",null,o.hidden?"🚫":"👁");eye.setAttribute("aria-label",o.hidden?"表示する":"非表示にする");eye.onclick=()=>{layerOp(o,"表示切替",{hidden:!o.hidden});after()};
 const lk=E("button",null,o.locked?"🔒":"🔓");lk.setAttribute("aria-label",o.locked?"ロックを解除":"ロックする");lk.onclick=()=>{layerOp(o,"ロック切替",{locked:!o.locked});after()};
-const nm=E("button","nm",`${TI[o.type]||"?"} ${o.name}`);nm.onclick=()=>{if(o.hidden)return;select(o.id);$("map").scrollIntoView({block:"center",behavior:"smooth"})};
+const nm=E("button","nm",`${isLine(o)?"╱":TI[o.type]||"?"} ${o.name}`);nm.onclick=()=>{if(o.hidden)return;select(o.id);$("map").scrollIntoView({block:"center",behavior:"smooth"})};
 const up=E("button",null,"↑"),dn=E("button",null,"↓");up.setAttribute("aria-label","手前へ");dn.setAttribute("aria-label","奥へ");up.disabled=i==L.length-1;dn.disabled=i==0;
 up.onclick=()=>{ED.hist.run(ED.page,"重なり順",[{k:"order",id:o.id,to:i+1}]);touch();after()};dn.onclick=()=>{ED.hist.run(ED.page,"重なり順",[{k:"order",id:o.id,to:i-1}]);touch();after()};
 r.append(eye,lk,nm,up,dn);d.append(r)}}
@@ -552,7 +647,7 @@ const nf=(label,k,min,max)=>{const box=E("div","nbox"),hd=E("div","nhd",label),r
 const stepB=n=>{const b=E("button",null,(n>0?"＋":"−")+Math.abs(n));b.type="button";b.onclick=()=>apply(k,Math.round(F()[k])+n);return b};
 inp.onchange=()=>apply(k,+inp.value);rg.oninput=()=>apply(k,+rg.value);
 row.append(stepB(-100),stepB(-10),stepB(-1),inp,stepB(1),stepB(10),stepB(100));box.append(hd,row,rg);reg.push(()=>{const v=Math.round(F()[k]);inp.value=v;rg.value=v});S1.append(box)};
-nf("横位置（左からの距離）","x",0,P.w);nf("縦位置（上からの距離）","y",0,P.h);nf("幅","w",10,P.w);nf("高さ","h",10,P.h);
+nf("横位置（左からの距離）","x",0,P.w);nf("縦位置（上からの距離）","y",0,P.h);if(!isLine(o)){nf("幅","w",10,P.w);nf("高さ","h",10,P.h)}
 const cr=E("div","crow");
 const bx=E("button",null,"↔ 左右の中央");bx.type="button";bx.onclick=()=>apply("x",(P.w-F().w)/2);
 const by=E("button",null,"↕ 上下の中央");by.type="button";by.onclick=()=>apply("y",(P.h-F().h)/2);
@@ -580,6 +675,13 @@ bx.onclick=()=>{const q={...o.props};delete q.maskAssetId;patch(o,{props:q},"切
 row.append(bs,bx);mb.append(h,t,row);IB.append(mb)}
 const inf=E("p","mut","素材を確認中…");IB.append(inf);(ED.imgs.has(o.props.assetId)?Promise.resolve(ED.imgs.get(o.props.assetId)):get("assets",o.props.assetId)).then(a=>{inf.textContent=a?`素材：${a.w}×${a.h}px／${Math.round(a.size/1024)}KB`:"素材が見つかりません"});
 const rw=E("div","row"),tb1=E("button",null,"✂ 位置を調整"),tb2=E("button",null,"📚 本の表紙にする");tb1.onclick=()=>{enterTrim(o)};tb2.onclick=()=>setCover(o.props.assetId);rw.append(tb1,tb2);IB.append(rw)}
+else if(isLine(o)){const g5=sec("📏 線","shp"),F2=()=>O(o.id)||o,setl=(ch,key)=>{const c=F2(),A=lineAbs(c);patch(c,lineFit({...c.props,...ch},A[0],A[1],A[2],A[3]),"線の設定",key||"ls:"+o.id+":"+Object.keys(ch)[0]+":"+(++GID));refreshEl(F2());posCtl(F2())};
+g5.classList.add("g");g5.append(colorBtn("線の色",()=>F2().props.stroke,(c,key)=>setl({stroke:c},key)));
+const mkSel=(label,k,opts)=>{const l=E("label",null,label),i=E("select");opts.forEach(([v,n])=>{const x=E("option",null,n);x.value=v;i.append(x)});i.value=o.props[k]||opts[0][0];i.onchange=()=>setl({[k]:i.value});l.append(i);g5.append(l)};
+{const l=E("label",null,"線の太さ（1〜60）"),i=E("input");i.type="number";i.min=1;i.max=60;i.step=1;i.value=o.props.strokeWidth;i.onchange=()=>{const v=+i.value;if(!Number.isFinite(v)||v<1||v>60){i.value=F2().props.strokeWidth;return}setl({strokeWidth:v})};l.append(i);g5.append(l)}
+mkSel("線の種類","dash",[["solid","実線"],["dashed","破線"],["dotted","点線"]]);mkSel("矢印","arrow",[["none","なし"],["end","終わりの端だけ"],["both","両端"]]);mkSel("線の端の形","cap",[["round","丸"],["butt","四角（まっすぐ）"]]);
+{const l=E("label",null,"不透明度（0.05〜1）"),i=E("input");i.type="number";i.min=.05;i.max=1;i.step=.05;i.value=o.props.opacity??1;i.onchange=()=>{const v=+i.value;if(!Number.isFinite(v)||v<.05||v>1){i.value=F2().props.opacity??1;return}setl({opacity:v})};l.append(i);g5.append(l)}
+{const hp=E("p","mut","線の両端の「●」をドラッグして、長さと向きを変えます。真ん中の「✥」で、線ぜんたいを動かします。");hp.style.gridColumn="1/-1";g5.append(hp)}}
 else if(o.type=="shape"){const g3=sec("🎨 色と形","shp"),setp=(k,v,key)=>{patch(o,{props:{...o.props,[k]:v}},"図形の設定",key||"sp:"+o.id+":"+k+":"+(++GID));refreshEl(o)};
 g3.append(colorBtn("塗りつぶしの色",()=>o.props.fill,(c,key)=>setp("fill",c,key),{transparent:true}),colorBtn("ふち（線）の色",()=>o.props.stroke,(c,key)=>setp("stroke",c,key)));
 const nu2=(label,k,min,max,step)=>{const l=E("label",null,label),i=E("input");i.type="number";i.min=min;i.max=max;i.step=step;i.value=o.props[k];i.onchange=()=>{const v=+i.value;if(!Number.isFinite(v)||v<min||v>max){i.value=o.props[k];return}setp(k,v)};l.append(i);g3.append(l)};
@@ -735,6 +837,7 @@ function editBackground(){if(!ED.page)return;let bg=bgOf(ED.page);if(!bg){bg=S("
 openColor({title:"背景の色",value:bg.props.fill,transparent:false,onChange:(c,key)=>{patch(bg,{props:{...bg.props,fill:c}},"背景色",key);refreshEl(bg)}})}
 $("addb").onclick=()=>{if(ED.page)addShapeObj(S("帯",100,120,800,140,"#2f6f7a"),"帯を追加")};
 $("addf").onclick=()=>{if(ED.page)addShapeObj(S("枠線",80,80,840,600,"transparent","#2f6f7a",8),"枠線を追加")};
+$("addl").onclick=()=>{if(!ED.page)return;const q={kind:"line",stroke:"#2b2a28",strokeWidth:6,cap:"round",dash:"solid",arrow:"none",opacity:1,fill:"transparent",radius:0,a:[0,0],b:[1,1]},o=OB("shape","線",0,0,10,10,q);Object.assign(o,lineFit(o.props,300,700,700,700));addShapeObj(o,"線を追加")};
 $("addbg").onclick=editBackground;$("addch").onclick=()=>{narrowClose();chimeraDlg()};$("tbm").onclick=()=>sideOpen(true,0);
 function helpOpen(){const d=$("hdlg");try{d.showModal()}catch(e){d.setAttribute("open","")}}
 $("hlp").onclick=helpOpen;$("shl").onclick=helpOpen;$("hcl").onclick=()=>{const d=$("hdlg");try{d.close()}catch(e){}d.removeAttribute("open")};$("hdlg").oncancel=e=>{e.preventDefault();$("hcl").click()};
@@ -757,7 +860,7 @@ w.addEventListener("touchmove",e=>{if(mode=="edit"||e.touches.length!=2||!d0)ret
 w.addEventListener("touchend",e=>{if(e.touches.length<2)d0=0})})();
 /* 画面の外（暗い部分）を押したら閉じる。入力のある画面では使わない */
 function outsideClose(d,fn){let dn=false;const inside=e=>{const r=d.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom};d.addEventListener("pointerdown",e=>{dn=!inside(e)});d.addEventListener("click",e=>{if(dn&&!inside(e))fn();dn=false})}
-outsideClose($("hdlg"),()=>$("hcl").click());outsideClose($("qdlg"),()=>$("qcn").click());
+outsideClose($("hdlg"),()=>$("hcl").click());outsideClose($("qdlg"),()=>$("qcn").click());outsideClose($("pcdlg"),()=>$("pccn").click());
 const afterHist=()=>{if(ED.sel&&!O(ED.sel))ED.sel=null;if(ED.bfDirty){ED.bfDirty=false;saveBookFonts({...ED.bf}).catch(e=>toast("⚠ "+e.message));for(const k of["ja","en"])if(ED.bf[k])loadFont(FONTMAP.get(ED.bf[k]));renderFonts()}renderStage();renderProps()};
 $("un").onclick=()=>{if(ED.page&&ED.hist.undo(ED.page)){touch();afterHist()}};$("rd").onclick=()=>{if(ED.page&&ED.hist.redo(ED.page)){touch();afterHist()}};
 $("addt").onclick=()=>{if(!ED.page)return;narrowClose();const o=T("新しいテキスト枠",150,150,600,320,"ここに文章を入力します。",30);ED.hist.run(ED.page,"枠を追加",[{k:"add",o}]);touch();renderStage();select(o.id)};
@@ -781,6 +884,7 @@ if(mode!="edit"){const fv=E("button","p","📖 全画面で読む");fv.onclick=(
 else{go("📖 閲覧に戻る","read","p");
 bt("ページを追加",async()=>{await addPage(b.id,i+1);pi=i+1},"白紙のページを追加しました");
 bt("このページを複製",async()=>{await dupPage(b.id,p.id);pi=i+1},"ページを複製しました（IDは新規、画像素材は共有）");
+bt("他の本へコピー",async()=>{const t=await pickCopyTarget(b.id);if(!t)return false;const nm=await copyPageTo(b.id,p.id,t);toast("「"+nm+"」にコピーしました")},"ページを他の本へコピーしました（元のページはそのままです）");
 bt("← 前へ移動",async()=>{await movePage(b.id,p.id,-1);pi=i-1},"ページを前へ移動しました",i==0);
 bt("後ろへ移動 →",async()=>{await movePage(b.id,p.id,1);pi=i+1},"ページを後ろへ移動しました",i==pages.length-1);
 bt("このページを削除",async()=>{if(!await askConfirm(`ページ${i+1}を削除します。元に戻せません。`,"このページを削除する","ページを削除"))return false;await delPage(b.id,p.id);pi=Math.max(0,i-1)},"ページを削除しました",pages.length<=1)}
@@ -1022,6 +1126,7 @@ $("run").onclick=async()=>{await flush();const box=$("res");box.innerHTML="";$("
 for(const[n,f]of TESTS){const r=E("p");try{const[ok,d]=await f();r.className=ok?"ok":"ng";r.textContent=(ok?"✓ ":"✗ ")+n+"　"+d;if(!ok)ng++}catch(e){r.className="ng";r.textContent="✗ "+n+"　例外："+e.message;ng++}box.append(r)}
 box.append(E("p","mut","保存の永続性は、ページを再読み込みしても本が残ることで確認します。"));msg(ng?ng+"件のテストが失敗しました":"すべてのテストに成功しました",ng);$("run").disabled=false;await refresh()};
 $("seed").onclick=async()=>{try{const b=await mkSample();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("サンプル本を作りました（4ページ）")}catch(e){msg(e.message,1)}};
+$("tplb").onclick=async()=>{try{const b=await mkTemplates();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("テンプレート集を作りました（8ページ）")}catch(e){msg(e.message,1)}};
 $("blank").onclick=async()=>{try{const b=await mkBlank();cur=b.id;pi=0;mode="edit";ED.sel=null;await refresh();msg("白紙の本を作りました")}catch(e){msg(e.message,1)}};
 $("per").onclick=async()=>{try{msg(await navigator.storage.persist()?"お願いが通りました。データが消えにくくなりました。":"ブラウザに断られました。使い方は変わりませんが、バックアップをこまめにとってください。")}catch(e){msg("このブラウザでは、お願いできませんでした。バックアップをこまめにとってください。")}showStore()};
 $("q").oninput=()=>renderShelf();$("tg").onchange=()=>renderShelf();$("so").onchange=()=>renderShelf();
