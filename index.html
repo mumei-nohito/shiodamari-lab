@@ -68,6 +68,7 @@ footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(
 <mask id="tlm" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><path d="M36 22Q50 33 64 22M37 36Q50 47 63 36M41 49Q50 57 59 49" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/></mask>
 <symbol id="pumpkin" viewBox="0 0 100 100"><path d="M47 27Q44 16 55 12" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M50 30C31 17 8 31 8 55c0 24 19 35 42 35s42-11 42-35c0-24-23-38-42-25Z"/><path d="M35 30Q18 55 35 85M65 30Q82 55 65 85" fill="none" stroke="var(--card,#fff)" stroke-width="3" opacity=".55"/><path d="m22 51 18-10-3 19Zm56 0L60 41l3 19ZM22 68Q50 91 78 68L66 70l-8-8-8 10-9-10-8 8Z" fill="var(--card,#fff)"/></symbol>
 <symbol id="globe" viewBox="0 0 100 100"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><circle cx="50" cy="50" r="35"/><ellipse cx="50" cy="50" rx="15" ry="35"/><path d="M15 50H85M21 31Q50 40 79 31M21 69Q50 60 79 69"/></g></symbol>
+<symbol id="book" viewBox="0 0 100 100"><path d="M12 24C30 17 43 19 50 28 57 19 70 17 88 24V78C70 71 57 73 50 82 43 73 30 71 12 78Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/><path d="M50 28V82" stroke="currentColor" stroke-width="6" fill="none"/></symbol>
 <symbol id="tail" viewBox="0 0 100 100"><path mask="url(#tlm)" d="M50 6C68 6 76 26 64 44C60 50 56 56 54 62C62 68 72 78 80 92C66 88 56 84 50 76C44 84 34 88 20 92C28 78 38 68 46 62C44 56 40 50 36 44C24 26 32 6 50 6Z"/></symbol>
 </defs></svg>
 <header class="hero">
@@ -92,7 +93,8 @@ const SITE=[{name:"画像生成",desc:"プロンプトと抽選で、一枚の�
 {n:"マーメイドガチャ抽選機",d:"水棲生物と構図をブラウザの乱数で抽選し、画像生成AIに貼れる完成プロンプトまで作ります。",u:"mermaid-gacha/",t:["抽選","人魚","プロンプト"],i:"tail"},
 {n:"ハロウィン仮装ガチャ抽選機",d:"ハロウィンの仮装テーマを抽選して、画像生成AI向けのプロンプトを作る季節限定ガチャです。",u:"halloween-gacha/",t:["抽選","ハロウィン","仮装"],i:"pumpkin"},
 {n:"世界の伝統衣装ガチャ抽選機",d:"世界の40の衣装文化から、男性衣装・女性衣装を抽選。4連やコレクションカード風にも対応した完成プロンプトを作ります。",u:"costume-gacha/",t:["抽選","伝統衣装","4連"],i:"globe"},
-{soon:1,n:"次のなにか",d:"制作中、または思案中です。ここに新しいものが並びます。",i:"jelly"}]}];
+{soon:1,n:"次のなにか",d:"制作中、または思案中です。ここに新しいものが並びます。",i:"jelly"}]},{name:"ものづくり",desc:"本や資料を、自分の手でかたちにする。",tools:[
+{n:"本棚ラボ",d:"文字・画像・図形を自由に並べて、電子書籍や設定資料集をつくるツール。本棚に並べて、バックアップもできます。",u:"bookshelf-lab/",t:["電子書籍","本棚","編集"],i:"book"}]}];
 const main=$("#tools");let k=0;
 SITE.forEach(c=>{const s=E("section","cat"),n=c.tools.filter(t=>!t.soon).length;
 s.innerHTML=`<div class="ch rv"><h2>${c.name}</h2><p>${c.desc}</p><span class="cnt">${n}点</span></div>`;
