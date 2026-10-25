@@ -59,7 +59,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border-bottom:1
 #props .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0}
 #props label{font-size:.82rem;display:block}#props input[type=number],#props select{width:100%;box-sizing:border-box}#props input[type=color]{width:100%;height:36px;padding:2px}
 .pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:4px;margin:6px 0}.pad button{min-height:48px;padding:0;font-size:1.1rem;touch-action:none;user-select:none}
-#tbl td,#tbl th{white-space:nowrap}#tdlg{width:min(640px,94vw)}#tt{height:46vh;resize:none}
+#tbl td,#tbl th{white-space:nowrap}#tdlg{width:min(640px,94vw)}#tt{height:46vh;resize:vertical;min-height:90px}#tdlg .thint{margin:0 0 4px}#tdlg .thint summary{cursor:pointer;color:var(--mut);font-size:.85rem;padding:2px 0}#tdlg h2{cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}#tdlg .th{display:flex;align-items:center;gap:10px;margin:0 0 6px}.gr2{cursor:grab;color:#0a84a0;font-size:1.5rem;line-height:1;width:48px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e3f3f6;border:1px dashed #0a84a0;border-radius:10px;touch-action:none;position:relative;flex:none;user-select:none;-webkit-user-select:none}.gr2 small{font-size:.62rem;line-height:1.1;margin-top:2px}.gr2::after{content:"";position:absolute;inset:-6px}#tgrip{position:relative;margin-left:auto;flex:none;width:44px;height:44px;display:grid;place-items:center;color:#0a84a0;font-size:1.2rem;cursor:nwse-resize;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;background:#e3f3f6;border:1px dashed #0a84a0}#tgrip::after{content:"";position:absolute;inset:-6px}@media(max-width:700px){#tt{height:26dvh}#trb{gap:3px}#trb button{min-width:34px;padding:0 7px}#trb6{font-size:.78rem;padding:0 6px}#tc{font-size:.78rem}}
 .sh{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:8px}
 .bc{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);display:flex;flex-direction:column;gap:6px}
 .bc .cv{aspect-ratio:1/1.414;background:var(--ac);color:#fff;border-radius:6px;overflow:hidden;display:grid;place-items:center;text-align:center;font-size:.85rem;padding:8px;word-break:break-all}
@@ -208,11 +208,11 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <div id="vws"><div id="vwp"></div></div><button type="button" class="vwa" id="vwl" aria-label="前のページ">◀</button><button type="button" class="vwa" id="vwr" aria-label="次のページ">▶</button><div id="vwh">左右にスワイプでページをめくる／ダブルタップで拡大・もとに戻す</div></div>
 <dialog id="pcdlg"><div><h2 style="margin:0 0 6px">ページを他の本へコピー</h2><p class="mut" id="pcm" style="margin:0 0 8px"></p><div id="pcl" class="stl" style="margin:6px 0"></div><div class="row"><button type="button" id="pcok" class="p">コピーする</button><button type="button" id="pccn">やめる</button></div></div></dialog>
 <dialog id="qdlg"><div><h2 id="qt" style="margin:0 0 6px">確認</h2><p id="qm"></p><div class="row"><button type="button" id="qok" class="p">削除する</button><button type="button" id="qcn">やめる</button></div></div></dialog>
-<dialog id="tdlg"><div><h2 style="margin:0 0 6px">文章を編集</h2>
-<p class="mut" style="margin:0 0 4px">かざりをつけたい文字を、下の入力欄で指でなぞって選んでから、ボタンを押します。</p>
-<div class="fst" id="trb"><button type="button" id="trb1" title="太字" aria-label="太字" style="font-weight:700">B</button><button type="button" id="trb2" title="斜め" aria-label="斜め" style="font-style:italic">I</button><button type="button" id="trb3" title="取り消し線" aria-label="取り消し線" style="text-decoration:line-through">S</button><button type="button" id="trb4" title="下線" aria-label="下線" style="text-decoration:underline">U</button><button type="button" id="trb5" title="選んだ文字の色">🎨 色</button><button type="button" id="trb6" title="選んだ文字のかざりを消す">かざりを消す</button></div>
-<textarea id="tt" maxlength="200000"></textarea><p id="tc" class="mut"></p><div class="mut" style="margin:4px 0 2px">見え方（プレビュー）</div><div id="tprev"></div>
-<div class="row"><button type="button" id="tok" class="p">保存</button><button type="button" id="tcn">キャンセル</button></div></div></dialog>
+<dialog id="tdlg"><div><div class="th"><div class="gr2" id="tgr" title="窓を動かす（つかんでドラッグ）">⠿<small>動かす</small></div><h2 style="margin:0">文章を編集</h2></div>
+<details class="thint"><summary>ℹ 使い方（タップで開く）</summary><p class="mut" style="margin:4px 0 4px">かざりをつけたい文字を、入力欄で指でなぞって選んでから、入力欄の下のボタンを押します。<span class="pcx">　左上の「⠿ 動かす」（うすい青の四角）をドラッグすると窓を動かせます。右下の「◢」で大きさを変えられます。</span><span class="phx">　左上の「⠿ 動かす」（うすい青の四角）をなぞると窓を動かせます。右下の「◢」で大きさを変えられます。</span></p></details>
+<textarea id="tt" maxlength="200000"></textarea>
+<div class="fst" id="trb"><button type="button" id="trb1" title="太字" aria-label="太字" style="font-weight:700">B</button><button type="button" id="trb2" title="斜め" aria-label="斜め" style="font-style:italic">I</button><button type="button" id="trb3" title="取り消し線" aria-label="取り消し線" style="text-decoration:line-through">S</button><button type="button" id="trb4" title="下線" aria-label="下線" style="text-decoration:underline">U</button><button type="button" id="trb5" title="選んだ文字の色">🎨 色</button><button type="button" id="trb6" title="選んだ文字のかざりを消す">かざりを消す</button><span id="tc" class="mut" style="margin:0 0 0 auto;white-space:nowrap;align-self:center"></span></div><details class="thint" id="tpd"><summary>👁 見え方（プレビュー）を見る</summary><div id="tprev"></div></details>
+<div class="row" style="align-items:center"><button type="button" id="tok" class="p">保存</button><button type="button" id="tcn">キャンセル</button><div id="tgrip" title="窓の大きさを変える（つかんでドラッグ）" aria-label="窓の大きさを変える">◢</div></div></div></dialog>
 
 <section hidden><details class="acc"><summary><h2>開発用：自動テスト</h2></summary><p class="mut">ふだんは使いません（作った人が動作を確かめるためのものです）。</p>
 <div class="row"><button id="run" class="p">テストを実行</button></div>
@@ -579,7 +579,8 @@ b.onpointerdown=e=>{e.preventDefault();const key="nd:"+(++GID);t0=Date.now();nud
 b.onpointerup=b.onpointerleave=b.onpointercancel=stop;b.onclick=e=>{if(e.detail===0){nudge(dx,dy,"nd:"+(++GID));renderProps()}};return b}
 function editText(o){return new Promise(res=>{const d=$("tdlg"),t=$("tt");t.value=o.props.text;let sp=(o.props.spans||[]).map(r=>({...r})),last=t.value,sel=[0,0];
 const pv=$("tprev"),fo=fontsOf(o);loadFont(fo.ja);loadFont(fo.en);
-const prev=()=>{pv.style.cssText="";Object.assign(pv.style,{fontFamily:fontStack(fo.ja,fo.en),fontWeight:o.props.bold?"700":"400",fontStyle:o.props.italic?"italic":"normal",textDecoration:textDeco(o.props),textAlign:o.props.align,color:o.props.color});fillRich(pv,{text:t.value,spans:sp})};
+const pvBg=c=>{let h=String(c||"").replace("#","");if(/^[0-9a-f]{3}$/i.test(h))h=h.replace(/./g,"$&$&");if(!/^[0-9a-f]{6}$/i.test(h))return"";const n=parseInt(h,16);return .299*(n>>16)+.587*(n>>8&255)+.114*(n&255)>150?"#2c3236":"#fff"};
+const prev=()=>{pv.style.cssText="";Object.assign(pv.style,{fontFamily:fontStack(fo.ja,fo.en),fontWeight:o.props.bold?"700":"400",fontStyle:o.props.italic?"italic":"normal",textDecoration:textDeco(o.props),textAlign:o.props.align,color:o.props.color,backgroundColor:pvBg(o.props.color)});fillRich(pv,{text:t.value,spans:sp})};
 const cnt=()=>$("tc").textContent=charCount(t.value)+"文字";
 const rng=()=>{const s0=t.selectionStart,e0=t.selectionEnd;if(s0!=e0)sel=[s0,e0];return sel};
 const need=()=>{const[x,y]=rng();if(x==y){toast("先に、かざりをつけたい文字をなぞって選んでください");return null}return[x,y]};
@@ -858,6 +859,18 @@ $("zi").onclick=()=>{const z=ED.Z||1;setZoom(ZSTEPS.find(v=>v>z+.01)||4)};$("zo"
 w.addEventListener("touchstart",e=>{if(mode=="edit"||e.touches.length!=2)return;d0=dist(e.touches);z0=ED.Z||1},{passive:true});
 w.addEventListener("touchmove",e=>{if(mode=="edit"||e.touches.length!=2||!d0)return;e.preventDefault();setZoom(z0*dist(e.touches)/d0)},{passive:false});
 w.addEventListener("touchend",e=>{if(e.touches.length<2)d0=0})})();
+/* 「文章を編集」の窓：題名をつかんで縦横に動かせる／右下の角をつかんで大きさを変えられる（キーボードや選択メニューをよける） */
+(()=>{const d=$("tdlg"),hs=[d.querySelector("h2"),$("tgr")],g=$("tgrip"),tt=$("tt");let st=null,rs=null;
+const vh=()=>(window.visualViewport?visualViewport.height:innerHeight);
+const put=(x,y)=>{d._x=x;d._y=y;d.style.transform=`translate(${x}px,${y}px)`};
+const lim=(x,y)=>{const r=d.getBoundingClientRect(),cx=r.left-(d._x||0),cy=r.top-(d._y||0),W=innerWidth,H=vh(),K=90;return[Math.min(Math.max(x,K-r.width-cx),W-K-cx),Math.min(Math.max(y,-cy),H-44-cy)]};
+for(const h of hs){h.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();st={x:e.clientX,y:e.clientY,ox:d._x||0,oy:d._y||0,id:e.pointerId,h};try{h.setPointerCapture(e.pointerId)}catch(_){}});
+h.addEventListener("pointermove",e=>{if(!st||e.pointerId!=st.id)return;const[x,y]=lim(st.ox+e.clientX-st.x,st.oy+e.clientY-st.y);put(x,y)});
+const end=()=>{st=null};h.addEventListener("pointerup",end);h.addEventListener("pointercancel",end)}
+g.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();e.stopPropagation();rs={x:e.clientX,y:e.clientY,w:d.getBoundingClientRect().width,h:tt.getBoundingClientRect().height,id:e.pointerId};try{g.setPointerCapture(e.pointerId)}catch(_){}});
+g.addEventListener("pointermove",e=>{if(!rs||e.pointerId!=rs.id)return;d.style.width=Math.min(innerWidth-8,Math.max(250,rs.w+e.clientX-rs.x))+"px";tt.style.height=Math.min(vh()*.8,Math.max(70,rs.h+e.clientY-rs.y))+"px"});
+const end2=()=>{rs=null};g.addEventListener("pointerup",end2);g.addEventListener("pointercancel",end2);
+const reset=()=>{put(0,0);d.style.width="";tt.style.height=""};d.addEventListener("close",reset);d.addEventListener("cancel",reset)})();
 /* PCで拡大したときの横移動：Shift＋ホイール／マウスのホイールボタンを押しながらドラッグ */
 (()=>{const w=$("mapw");let dr=null;const zoomed=()=>(ED.Z||1)>1.001;
 w.addEventListener("wheel",e=>{if(!zoomed()||!e.shiftKey)return;const d=e.deltaX||e.deltaY;if(!d)return;e.preventDefault();w.scrollLeft+=d},{passive:false});
