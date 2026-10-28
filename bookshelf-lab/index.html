@@ -81,7 +81,7 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border-bottom:1
 .stl{display:flex;flex-direction:column;gap:8px;margin:8px 0}.stl .it{border:1px solid var(--line);border-radius:10px;padding:8px 10px}.stl .it b{display:block}.stl .it .ex{display:block;color:var(--mut);font-size:.85rem;line-height:1.6}.stl .ok{color:var(--ok)}.stl .wn{color:var(--ng)}.sub{margin-top:8px}.sub>summary{cursor:pointer;font-size:.85rem;color:var(--mut)}
 #qdlg{width:min(420px,92vw)}#qdlg p{line-height:1.7}
 #intro .steps{margin:6px 0;padding-left:1.4em}#intro .steps li{margin:3px 0}#intro .acc>summary h2{font-size:1.1rem}
-#zbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 0}#zbar button{min-width:42px;min-height:42px}#zv{min-width:68px;text-align:center;color:var(--fg)}
+#zbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 0}#zbar button{min-width:42px;min-height:42px}#zbar .zpn{display:flex;gap:6px;align-items:center}@media(max-width:699px){#zbar .zsep{display:none}#zbar .zpn{flex:1 1 100%;justify-content:space-between}#zbar .zpn button{flex:1}}#zbar .zsep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}#zv{min-width:68px;text-align:center;color:var(--fg)}
 #map.rd{margin:8px auto}#mapw.z{overflow-x:auto;overflow-y:hidden;padding:60px 0 150px}#mapw.pang,#mapw.pang *{cursor:grabbing!important}#mapw.z.rdm{padding:0}#mapw.z #map{margin:26px}#mapw.z.rdm #map{margin:8px}
 @media (max-width:700px){main{padding:10px 6px 60px}#bk{margin-left:-2px;margin-right:-2px;padding:8px 4px;border-radius:10px}}
 #map.rd .tx{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}#rdhint{margin:4px 0 0}
@@ -96,7 +96,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 .nbox{margin:6px 0}.nhd{font-size:.82rem;color:var(--mut)}.nrow{display:flex;gap:3px;align-items:stretch}.nrow button{flex:0 0 auto;min-width:34px;padding:6px 2px;font-size:.78rem}.nrow input[type=number]{flex:1 1 60px;min-width:0;text-align:center}.nbox input[type=range]{width:100%;margin:4px 0 0;accent-color:var(--ac)}.crow{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.crow button{flex:1 1 auto}
 #vw{position:fixed;inset:0;z-index:90;background:#0d0f11;color:#fff;display:flex;flex-direction:column}#vw[hidden]{display:none}
 #vwb{display:flex;gap:8px;align-items:center;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top))}#vwb .sp{flex:1}#vwb button,.vwa{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);min-height:40px}
-#vws{flex:1;min-height:0;overflow:auto;display:flex;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}#vwp{margin:auto;flex:none;position:relative;background:#fff}
+#vws{flex:1;min-height:0;overflow:auto;display:flex;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}#vwp{margin:auto;flex:none;position:relative;background:transparent}#vwp .vwsl{box-shadow:0 2px 14px rgba(0,0,0,.45)}#vwp.sp::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:22px;margin-left:-11px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.22),transparent);pointer-events:none}#bindrow button,#imgrow button{min-height:36px;padding:0 10px}#imgrow select{width:auto;min-height:36px}
 #vwp .ob.t{outline:none;cursor:default}
 .vwa{position:absolute;top:50%;width:44px;height:64px;margin-top:-32px;padding:0;font-size:1.2rem;opacity:.75}#vwl{left:6px}#vwr{right:6px}.vwa:disabled{opacity:.15}@media (hover:none){.vwa{display:none}}
 #vwh{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;font-size:.8rem;padding:6px 12px;border-radius:14px;width:max-content;max-width:90vw;text-align:center;pointer-events:none;opacity:0}#vwh.on{animation:vwf 4s ease forwards}@keyframes vwf{0%{opacity:0}8%,75%{opacity:1}100%{opacity:0}}
@@ -134,15 +134,16 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <dialog id="dlg"><div id="df"><h2 style="margin:0 0 6px">本の情報</h2>
 <label for="f1">タイトル</label><input id="f1" maxlength="100"><label for="f2">作者名（任意）</label><input id="f2" maxlength="60">
 <label for="f3">説明文</label><textarea id="f3" rows="3" maxlength="500"></textarea><label for="f4">タグ（カンマ区切り）</label><input id="f4">
+<fieldset id="bdf"><legend>綴じ方向</legend><div class="cvr"><label class="rl"><input type="radio" name="bdt" value="ltr">左綴じ（右へ開く）</label><label class="rl"><input type="radio" name="bdt" value="rtl">右綴じ（左へ開く）</label></div><p class="mut" style="margin:4px 0 0">横書きの本は「左綴じ」、縦書きや漫画は「右綴じ」が合います。</p></fieldset>
 <fieldset id="cvf"><legend>表紙</legend><div class="cvr"><label class="rl"><input type="radio" name="cvt" value="text">文字と色</label><label class="rl"><input type="radio" name="cvt" value="image">画像</label></div>
 <div class="cvbody"><div id="cvpv" class="bc"><div class="cv" id="cvpvc"></div></div><div class="cvctl"><div id="cvtx"></div><div id="cvim"><button type="button" id="cvpick">画像をファイルから選ぶ</button><p class="mut" id="cvnm"></p></div></div></div></fieldset>
 <div class="row" style="margin-top:12px"><button type="button" id="dok" class="p">保存</button><button type="button" id="dcn">キャンセル</button></div></div></dialog>
 
 <section id="bk" hidden><h2>開いた本：<span id="bt"></span></h2>
-<div id="tabs" class="row"></div><div id="pbar" class="row"></div>
+<div id="tabs" class="row"></div><div id="pbar" class="row"></div><div id="imgrow" class="row"><span class="mut" style="margin:0">画像で保存</span><button type="button" id="imgb1">🖼 このページ（PNG）</button><button type="button" id="imgb2">全ページ（ZIP）</button><select id="imgsc" aria-label="画像の大きさ"><option value="1">標準（幅1000px）</option><option value="2">高画質（幅2000px）</option></select></div><div id="bindrow" class="row"><span class="mut" style="margin:0">綴じ方向</span><button type="button" id="bdl">左綴じ（右へ開く）</button><button type="button" id="bdr">右綴じ（左へ開く）</button></div>
 <div class="edonly"><div class="row" id="tb"><button id="tbm" class="p" type="button">☰ 追加・レイヤー・設定</button><span id="sv" class="mut">保存済み</span></div>
 <p class="mut">文字枠・画像枠・図形をタップすると選べて、そばに操作パネルが出ます。文字や画像を追加するときは「☰ 追加・レイヤー・設定」から。背景の色を変えるときも、ここです。くわしい使い方は、ページ上のほうの「？ ヘルプ」へ。変更は自動で保存されます。</p>
-</div><div id="zbar"><span class="mut" style="margin:0">拡大</span><button type="button" id="zo" aria-label="縮小">－</button><button type="button" id="zv" disabled>100%</button><button type="button" id="zi" aria-label="拡大">＋</button><button type="button" id="zf">ぴったり</button><span class="mut" id="zh" style="margin:0"></span></div><p class="mut" id="rdhint" hidden>文字をコピーしたいときは、その文字の枠を<b>長押し</b>します。</p><div id="mapw"><div id="map"></div></div><div class="edonly"><details style="margin-top:10px"><summary>開発用：オブジェクトの一覧</summary><div style="overflow-x:auto;margin-top:8px"><table id="tbl"></table></div></details></div><div class="edonly" id="sidew"><button type="button" id="sbt" title="編集メニュー（レイヤー・詳細設定・画像）" aria-label="編集メニュー（レイヤー・詳細設定・画像）を開く">☰</button>
+</div><div id="zbar"><span class="mut" style="margin:0">拡大</span><button type="button" id="zo" aria-label="縮小">－</button><button type="button" id="zv" disabled>100%</button><button type="button" id="zi" aria-label="拡大">＋</button><button type="button" id="zf">ぴったり</button><span class="zsep" aria-hidden="true"></span><span class="zpn"><button type="button" id="zpv" aria-label="前のページ">◀ 前へ</button><span class="mut" id="zpg" style="margin:0;white-space:nowrap"></span><button type="button" id="znx" aria-label="次のページ">次へ ▶</button></span><span class="mut" id="zh" style="margin:0"></span></div><p class="mut" id="rdhint" hidden>文字をコピーしたいときは、その文字の枠を<b>長押し</b>します。</p><div id="mapw"><div id="map"></div></div><div class="edonly"><details style="margin-top:10px"><summary>開発用：オブジェクトの一覧</summary><div style="overflow-x:auto;margin-top:8px"><table id="tbl"></table></div></details></div><div class="edonly" id="sidew"><button type="button" id="sbt" title="編集メニュー（レイヤー・詳細設定・画像）" aria-label="編集メニュー（レイヤー・詳細設定・画像）を開く">☰</button>
 <aside id="side" aria-label="追加・レイヤー・詳細設定"><div class="sh"><button type="button" id="st0" class="p">追加</button><button type="button" id="st1">レイヤー</button><button type="button" id="st2">詳細設定</button><button type="button" id="st3">フォント</button><span class="sp"></span><button type="button" id="shl" aria-label="ヘルプ">？</button><button type="button" id="sx" aria-label="閉じる">✕</button></div>
 <div class="sh2"><button type="button" id="un">↶ 元に戻す</button><button type="button" id="rd">↷ やり直し</button><button type="button" id="szb">▲ 広げる</button></div>
 <div class="sb" id="sp0"><p class="mut">ページに新しいものを追加します。追加したものは、そのままページ上で動かせます。</p>
@@ -173,7 +174,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <input type="file" id="rf" hidden></details></section>
 <dialog id="hdlg"><div class="row" style="justify-content:space-between"><h2 style="margin:0">ヘルプ（使い方）</h2><button type="button" id="hcl" class="p">閉じる</button></div>
 <div class="hb"><p class="mut">気になる項目をタップすると、説明が開きます。</p>
-<details open><summary>① このツールでできること・はじめに</summary><p><b>目的：</b>文字・画像・図形をページに自由に並べて、キャラクター設定資料集や世界観の本などの「電子書籍」をつくり、本棚にまとめるためのツールです。</p><ol><li>「本棚」の「サンプル本を作る」（見本つき）か「白紙の本を作る」を押します。</li><li>できた本の「編集」ボタンを押すと、編集画面になります。</li><li>ページ上の文字や画像をタップして、直したり動かしたりします。変更は<b>自動で保存</b>されます。</li></ol><p>本棚の「開く」は<b>読むだけ</b>の画面です。うっかり書き換えないので、見せるときや読むときはこちらを使います。文字をコピーしたいときは、その文字の枠を<b>長押し</b>すると、コピーのボタンが出ます。</p></details>
+<details open><summary>① このツールでできること・はじめに</summary><p><b>目的：</b>文字・画像・図形をページに自由に並べて、キャラクター設定資料集や世界観の本などの「電子書籍」をつくり、本棚にまとめるためのツールです。</p><ol><li>「本棚」の「サンプル本を作る」（見本つき）、「白紙の本を作る」、「テンプレート集を作る」のどれかを押します。</li><li>できた本の「編集」ボタンを押すと、編集画面になります。</li><li>ページ上の文字や画像をタップして、直したり動かしたりします。変更は<b>自動で保存</b>されます。</li></ol><p>本棚の「開く」は<b>読むだけ</b>の画面です。うっかり書き換えないので、見せるときや読むときはこちらを使います。文字をコピーしたいときは、その文字の枠を<b>長押し</b>すると、コピーのボタンが出ます。</p></details>
 <details><summary>② 画面の見かた（閲覧と編集）</summary><ul><li><b>閲覧</b>：ページをめくって読む画面。文字枠をタップすると「コピー」ができます。</li><li><b>編集</b>：文字・画像・図形を動かす画面。見出しに「【編集中】」と出ます。</li><li>閲覧→編集は「✎ 編集する」、編集→閲覧は「📖 閲覧に戻る」です。</li></ul></details>
 <details><summary>③ 追加メニュー（☰）の開きかた</summary><p><span class="pcx">編集画面で、画面の右端の「☰」、または「☰ 追加・レイヤー・設定」を押すと、<b>右から</b>メニューが出ます。</span><span class="phx">編集画面で、「☰ 追加・レイヤー・設定」を押すと、<b>画面の下から</b>メニューが出ます（画面の下の3分の1ほど）。メニューが出ている間も、上のページをさわって編集できます。</span>タブは4つあります。</p><ul><li><b>追加</b>：テキスト枠・画像枠・帯・枠線の追加、背景の色の変更</li><li><b>レイヤー</b>：重なり順・表示/非表示・ロック</li><li><b>詳細設定</b>：選んだ枠の位置・大きさ・色・文字の設定など（項目をたたんだり開いたりできます）</li><li><b>フォント</b>：文字のフォントの選択</li></ul><p>メニューの上の「↶ 元に戻す」「↷ やり直し」も、いつでも使えます。<span class="pcx">「✕」か Esc キーで閉じます。</span><span class="phx">「▲ 広げる」でメニューを大きく、「▼ せばめる」で小さくできます。「✕」で閉じます。</span></p></details>
 <details><summary>④ 文字を入れる（テキスト枠）</summary><ol><li>メニュー →「追加」→「＋ テキスト枠」。</li><li>枠をタップして選び、そばに出る操作パネルの「✎ 文章」で文章を入力します。</li><li>枠の左上の外にある「✥」をドラッグすると移動、右下の外にある「◢」をドラッグすると大きさが変わります。</li><li>「詳細設定」で、文字の大きさ・行の高さ・揃え・色・文字数の表示位置を変えられます。</li></ol><p>枠の大きさは、文章が長くなっても変わりません。はみ出した分は、枠の中でスクロールして読めます。文字数は編集画面にだけ表示されます。</p></details>
@@ -190,7 +191,13 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <details><summary>⑮ ページを他の本へコピー</summary><ol><li>コピーしたいページを、編集画面で開きます。</li><li>上のほうのボタン「他の本へコピー」を押します。</li><li>入れたい本を選ぶと、その本の最後に1ページ増えます。</li></ol><p class="mut">画像も一緒に入ります。コピー元のページは、そのままです。「テンプレート集」から好きな1ページだけ持っていくのにも使えます。</p></details>
 <details><summary>⑯ 線を引く</summary><ol><li>「追加」の中の「＋ 線」を押します。</li><li>線の両端に出る「●」をドラッグすると、長さと向きを変えられます。</li><li>「詳細設定」で、色・太さ・破線・矢印を選べます。</li></ol><p class="mut">相関図の矢印や、年表の線づくりに便利です。</p></details>
 <details><summary>⑰ 画像の枠の形・切り抜き</summary><ul><li><b>枠の形</b>：画像の枠を選び、「詳細設定」→「画像」の「枠の形」で、四角・円・ひし形・六角形・八角形（角を切った形）・角丸を選べます。</li><li><b>切り抜きの型</b>：透明部分のある画像（PNG）を「型」に使うと、その形に画像が切り抜かれます。</li></ul></details>
-<details><summary>⑱ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
+<details><summary>⑱ 全画面で読む（見開き・ページめくり）</summary><ol><li>本を「開く」→「📖 全画面で読む」を押します。</li><li>めくりかた：<span class="pcx">画面の左右の「◀ ▶」、キーボードの「← →」、</span>左右へのスワイプ。<span class="pcx">広い画面（PC）では、</span>ダブルタップ（またはダブルクリック）で拡大、<span class="phx">2本指のピンチでも拡大できます。</span><span class="pcx">Ctrl＋ホイール、または右上の「＋ －」でも拡大できます。</span></li><li>閉じるときは、左上の「✕ 閉じる」（<span class="pcx">Escキーでも閉じます）。</span></li></ol><ul><li><b>見開き</b>：横に広い画面（PCなど）では、本のように2ページを並べて表示します。1ページ目（表紙）は1枚だけ出て、2ページ目からは2ページずつ並びます。</li><li><b>縦長の画面（スマホの縦向きなど）</b>では、1ページずつ表示します。</li><li>上の「左綴じ／右綴じ」のボタンで、綴じ方向をその場で切り替えられます。くわしくは「⑲ 綴じ方向と本の情報」。</li></ul></details>
+<details><summary>⑲ 綴じ方向と本の情報</summary><ul><li><b>綴じ方向</b>：本ごとに選べます。「左綴じ（右へ開く）」は横書きの本向き、「右綴じ（左へ開く）」は縦書きや漫画向きです。</li><li>変える場所は、本を開いた画面の「綴じ方向」のボタン、本棚の「情報」、全画面で読む画面の上のボタンの3か所です。</li><li>右綴じにすると、見開きでは右のページから左へ進みます。スワイプや「← →」キー、「◀ ▶」ボタンの向きも、逆になります。表紙は左綴じなら右側、右綴じなら左側に置かれます。</li><li><b>本の情報</b>：本棚の「情報」で、タイトル・作者名・説明文・タグ・表紙（文字と色、または画像）・綴じ方向を変えられます。</li><li>前からある本は「左綴じ」として扱われます。</li></ul></details>
+<details><summary>⑳ 本棚の使いかた</summary><ul><li><b>本をつくる</b>：「サンプル本を作る」（見本つき）、「白紙の本を作る」、「テンプレート集を作る」（キャラ設定・LINE風の会話・相関図・ロアブック・アルバム風などの8ページ）があります。</li><li><b>さがす・ならべる</b>：「タイトル・作者・タグで探す」の入力欄、タグの選択、並べ替え（更新が新しい順・作成が新しい順・タイトル順・ページ数が多い順）が使えます。</li><li><b>各本のボタン</b>：「開く」（読むだけ）、「編集」、「情報」、「書き出し」（その本だけをZIPに）、「複製」、「削除」です。</li><li><b>保存の場所</b>：作った本は、いま使っているブラウザの中にだけ保存されます。サーバーや、ほかの人には送られません。</li></ul></details>
+<details><summary>㉑ 拡大して見る・前へ／次へ（本の画面）</summary><ul><li>ページの上にある「拡大」の「－ ＋ ぴったり」で、ページの大きさを変えられます（最大400%）。</li><li>拡大すると、ページが画面からはみ出します。<span class="pcx">PCでは、「Shiftを押しながらホイールを回す」か「マウスのホイールボタンを押しながらドラッグ」で、横に動かせます（上下はふつうのスクロール）。</span><span class="phx">スマホでは、指で上下左右にスワイプして動かせます。</span></li><li>拡大の横の「◀ 前へ」「次へ ▶」で、ページを切り替えられます。ページ数（1 / 4）も出ます。</li></ul></details>
+<details><summary>㉒ 「文章を編集」の窓</summary><ul><li>操作パネルの「✎ 文章」を押すと、この窓が開きます。左上の「⠿ 動かす」（うすい青の四角）をドラッグすると、窓を縦にも横にも動かせます。キーボードや選択メニューにかかるときに使ってください。</li><li>右下の「◢」をドラッグすると、窓の幅と入力欄の高さを変えられます。はじめは入力欄が小さく、必要なときに広げます。閉じると、元の位置と大きさに戻ります。</li><li>かざり（B・I・S・U・色・かざりを消す）は、入力欄の下です。文字を指でなぞって選んでから、押します。文字数は、その右に出ます。</li><li>「ℹ 使い方」「👁 見え方（プレビュー）を見る」は、たたんでいます。押すと開きます。</li></ul></details>
+<details><summary>㉓ ページを画像で保存（PNG・ZIP）</summary><ol><li>本を開いた画面の「画像で保存」の行で、大きさを選びます。「標準（幅1000px）」か「高画質（幅2000px）」です。印刷や拡大して見たいときは、高画質が向いています。</li><li>「🖼 このページ（PNG）」を押すと、いま見ているページが1枚の画像になります。</li><li>「全ページ（ZIP）」を押すと、全部のページが1枚ずつの画像になり、ZIPにまとまります。</li></ol><ul><li>画面と同じ文字の形・色・配置で保存されます。画像枠の形や切り抜きも、そのまま入ります。</li><li>非表示にしたものは、画像に入りません。編集中にだけ出る「文字数」の表示も入りません。</li><li>フォントを読み込めなかったときは、画面と同じように、代わりの書体で描かれます。</li><li>ファイル名は、本のタイトルの英数字の部分と、日時になります（日本語だけのタイトルは、本の番号になります）。</li></ul></details>
+<details><summary>㉔ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
 </div></dialog>
 <dialog id="rdlg"><div><h2 style="margin:0 0 6px">バックアップから復元</h2><div id="rsum"></div>
 <div id="rmode" hidden style="margin:8px 0"><p class="mut" style="margin:0 0 4px">同じ本がすでにあります。どうしますか？</p>
@@ -204,7 +211,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <textarea id="cjs" rows="8" spellcheck="false" placeholder="ここにJSONを貼りつけます" style="font-family:monospace;font-size:.8rem"></textarea><p id="csum" class="mut"></p>
 <div class="cvr"><label class="rl"><input type="radio" name="ctg" value="cur" id="ctgc">いま開いている本の後ろに足す</label></div><div class="cvr"><label class="rl"><input type="radio" name="ctg" value="new">新しい本「キメラ図鑑」を作る</label></div>
 <div class="row"><button type="button" id="cgo" class="p" disabled>取り込む</button><button type="button" id="ccn">キャンセル</button></div></div></dialog>
-<div id="vw" hidden role="dialog" aria-label="全画面で読む"><div id="vwb"><button type="button" id="vwx">✕ 閉じる</button><span id="vwc">1 / 1</span><span class="sp"></span><button type="button" id="vwzo" aria-label="縮小">－</button><button type="button" id="vwzi" aria-label="拡大">＋</button></div>
+<div id="vw" hidden role="dialog" aria-label="全画面で読む"><div id="vwb"><button type="button" id="vwx">✕ 閉じる</button><span id="vwc">1 / 1</span><button type="button" id="vwbd" title="綴じ方向を切り替える">左綴じ（右へ開く）</button><span class="sp"></span><button type="button" id="vwzo" aria-label="縮小">－</button><button type="button" id="vwzi" aria-label="拡大">＋</button></div>
 <div id="vws"><div id="vwp"></div></div><button type="button" class="vwa" id="vwl" aria-label="前のページ">◀</button><button type="button" class="vwa" id="vwr" aria-label="次のページ">▶</button><div id="vwh">左右にスワイプでページをめくる／ダブルタップで拡大・もとに戻す</div></div>
 <dialog id="pcdlg"><div><h2 style="margin:0 0 6px">ページを他の本へコピー</h2><p class="mut" id="pcm" style="margin:0 0 8px"></p><div id="pcl" class="stl" style="margin:6px 0"></div><div class="row"><button type="button" id="pcok" class="p">コピーする</button><button type="button" id="pccn">やめる</button></div></div></dialog>
 <dialog id="qdlg"><div><h2 id="qt" style="margin:0 0 6px">確認</h2><p id="qm"></p><div class="row"><button type="button" id="qok" class="p">削除する</button><button type="button" id="qcn">やめる</button></div></div></dialog>
@@ -349,7 +356,7 @@ how.push(T("練習の文字",620,190,320,110,"ここを書き換えてみよう"
 LN("練習の線",640,1065,920,1000,{stroke:"#c85a54",strokeWidth:8,arrow:"end"}),RS("練習のコピー",620,1170,320,150,"#fff",24,AC,3),T("練習のコピー文",636,1186,288,120,"ページのコピーは、編集画面の上のほうのボタンから。",24,{lineHeight:1.6}));
 const p8=mkPage(how);
 return[p1,sp[1],sp[2],p4,p5,p6,p7,p8]}
-async function mkBook(title,pages,kind,cover=null){const book={id:uid("bk"),schema:1,title,author:"",description:"",tags:kind=="sample"?["サンプル","設定資料"]:kind=="template"?["テンプレート"]:[],coverAssetId:cover,pageIds:[],createdAt:NOW(),updatedAt:NOW(),kind};
+async function mkBook(title,pages,kind,cover=null){const book={id:uid("bk"),schema:1,title,author:"",description:"",tags:kind=="sample"?["サンプル","設定資料"]:kind=="template"?["テンプレート"]:[],coverAssetId:cover,pageIds:[],createdAt:NOW(),updatedAt:NOW(),kind,binding:"ltr"};
 pages.forEach(p=>{p.bookId=book.id;book.pageIds.push(p.id)});await commit({put:{books:[book],pages},bump:uses(book,pages)});return book}
 const mkSample=async()=>{const A=await ensurePH();return mkBook("キャラクター設定資料集（サンプル）",samplePages(A),"sample",A.cover)};
 const mkTemplates=async()=>{const A=await ensurePH();return mkBook("テンプレート集",templatePages(A),"template")};
@@ -871,6 +878,67 @@ g.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();e.s
 g.addEventListener("pointermove",e=>{if(!rs||e.pointerId!=rs.id)return;d.style.width=Math.min(innerWidth-8,Math.max(250,rs.w+e.clientX-rs.x))+"px";tt.style.height=Math.min(vh()*.8,Math.max(70,rs.h+e.clientY-rs.y))+"px"});
 const end2=()=>{rs=null};g.addEventListener("pointerup",end2);g.addEventListener("pointercancel",end2);
 const reset=()=>{put(0,0);d.style.width="";tt.style.height=""};d.addEventListener("close",reset);d.addEventListener("cancel",reset)})();
+/* ===== ページを画像（PNG）にして保存する ===== */
+/* 画面と同じ見た目にするため、文字は「ブラウザが実際に並べた位置」を読み取って描きます */
+const XR={};
+const xRR=(p,x,y,w,h,r)=>{r=Math.max(0,Math.min(r,w/2,h/2));p.moveTo(x+r,y);p.lineTo(x+w-r,y);r&&p.arcTo(x+w,y,x+w,y+r,r);p.lineTo(x+w,y+h-r);r&&p.arcTo(x+w,y+h,x+w-r,y+h,r);p.lineTo(x+r,y+h);r&&p.arcTo(x,y+h,x,y+h-r,r);p.lineTo(x,y+r);r&&p.arcTo(x,y,x+r,y,r);p.closePath();return p};
+function xShapePath(sh,q,W,H){const p=new Path2D(),poly=a=>{a.forEach(([x,y],i)=>i?p.lineTo(x,y):p.moveTo(x,y));p.closePath();return p};
+if(sh=="ellipse"){p.ellipse(W/2,H/2,W/2,H/2,0,0,Math.PI*2);return p}
+if(sh=="diamond")return poly([[W/2,0],[W,H/2],[W/2,H],[0,H/2]]);
+if(sh=="hex")return poly([[W*.25,0],[W*.75,0],[W,H/2],[W*.75,H],[W*.25,H],[0,H/2]]);
+if(sh=="tri")return poly([[W/2,0],[W,H],[0,H]]);
+if(sh=="chamfer"){const k=Math.max(0,+q.cut||60);return poly([[k,0],[W-k,0],[W,k],[W,H-k],[W-k,H],[k,H],[0,H-k],[0,k]])}
+return xRR(p,0,0,W,H,sh=="rect"||!sh?(q.radius||0):0)}
+const xLoad=url=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error("画像を読み込めませんでした"));i.src=url});
+async function xImg(id){if(!id)return null;if(!XR[id]){const u=await urlFor(id);XR[id]=u?await xLoad(u):null}return XR[id]}
+function xXf(ctx,o){ctx.translate(o.x+o.w/2,o.y+o.h/2);ctx.rotate((o.rot||0)*Math.PI/180);ctx.translate(-o.w/2,-o.h/2)}
+function xLine(ctx,o){const q=o.props,W=o.w,H=o.h,ax=q.a[0]*W,ay=q.a[1]*H,bx=q.b[0]*W,by=q.b[1]*H,sw=q.strokeWidth||6,col=q.stroke||"#333",op=q.opacity??1,dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,ah=q.arrow&&q.arrow!="none"?sw*3+8:0,both=q.arrow=="both";let x1=ax,y1=ay,x2=bx,y2=by;
+if(ah){if(q.arrow=="end"||both){x2=bx-ux*ah*.8;y2=by-uy*ah*.8}if(both){x1=ax+ux*ah*.8;y1=ay+uy*ah*.8}}
+ctx.globalAlpha=op;ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=sw;ctx.lineCap=q.dash=="dotted"?"round":(q.cap||"round");ctx.setLineDash(q.dash=="dashed"?[sw*3,sw*2]:q.dash=="dotted"?[.1,sw*2]:[]);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);
+const head=(px,py,vx,vy)=>{const hx=-vy,hy=vx,s2=ah*.5;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-vx*ah+hx*s2,py-vy*ah+hy*s2);ctx.lineTo(px-vx*ah-hx*s2,py-vy*ah-hy*s2);ctx.closePath();ctx.fill()};
+if(ah&&(q.arrow=="end"||both))head(bx,by,ux,uy);if(both)head(ax,ay,-ux,-uy)}
+async function xImage(ctx,o){const q=o.props,img=await xImg(q.assetId);if(!img)return;const iw=img.naturalWidth,ih=img.naturalHeight,W=o.w,H=o.h;if(!iw||!ih)return;const c=q.fit=="contain"?Math.min(W/iw,H/ih):Math.max(W/iw,H/ih),dw=iw*c,dh=ih*c,v=q.view||{zoom:1,dx:0,dy:0},sh=q.shape||"rect";
+const draw=g=>{g.save();g.clip(xShapePath(sh,q,W,H));g.translate(W/2,H/2);g.scale(v.zoom,v.zoom);g.translate(v.dx*W,v.dy*H);g.drawImage(img,-dw/2,-dh/2,dw,dh);g.restore()};
+const m=q.maskAssetId?await xImg(q.maskAssetId):null;
+if(m){const t=document.createElement("canvas");t.width=Math.max(1,Math.ceil(W*XR.sc));t.height=Math.max(1,Math.ceil(H*XR.sc));const g=t.getContext("2d");g.scale(XR.sc,XR.sc);draw(g);g.globalCompositeOperation="destination-in";g.drawImage(m,0,0,W,H);ctx.drawImage(t,0,0,W,H)}else draw(ctx)}
+async function xText(ctx,o,e,er){const q=o.props,tx=e.querySelector(".tx");if(!tx)return;const W=o.w,H=o.h;
+if(q.bg&&q.bg!="transparent"){ctx.fillStyle=q.bg;ctx.fill(xRR(new Path2D(),0,0,W,H,q.radius||0))}
+ctx.save();ctx.clip(xRR(new Path2D(),0,0,W,H,q.radius||0));ctx.textBaseline="alphabetic";ctx.textAlign="left";
+const wk=document.createTreeWalker(tx,NodeFilter.SHOW_TEXT);let n,run=null;
+const deco=el=>{const s=new Set();for(let x=el;x&&x!=tx.parentNode;x=x.parentElement){const d=getComputedStyle(x).textDecorationLine;if(d)d.split(" ").forEach(k=>s.add(k))}return s};
+const flush=()=>{if(!run)return;ctx.font=run.font;ctx.fillStyle=run.color;const y=run.top+run.asc;ctx.fillText(run.text,run.x,y);const sz=run.size,th=Math.max(1,sz/16);
+if(run.d.has("underline")){ctx.fillRect(run.x,y+sz*.1,run.right-run.x,th)}if(run.d.has("line-through")){ctx.fillRect(run.x,y-sz*.3,run.right-run.x,th)}run=null};
+while(n=wk.nextNode()){const el=n.parentElement,cs=getComputedStyle(el),font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`,size=parseFloat(cs.fontSize),color=cs.color,d=deco(el);ctx.font=font;ctx.letterSpacing=cs.letterSpacing=="normal"?"0px":cs.letterSpacing;let asc=ctx.measureText("あ").fontBoundingBoxAscent||size*.88;const txt=n.data;let k=0;
+{const pr=document.createElement("span");pr.style.cssText="display:inline-block;width:0;height:0;vertical-align:baseline";const r0=document.createRange();r0.setStart(n,0);r0.setEnd(n,Math.min(1,txt.length));const q0=r0.getClientRects()[0];if(q0){n.parentNode.insertBefore(pr,n);const pb=pr.getBoundingClientRect().bottom,q1=r0.getClientRects()[0]||q0;pr.remove();const a2=pb-q1.top;if(a2>size*.5&&a2<size*1.6)asc=a2}}
+for(const ch of txt){const len=ch.length;if(ch=="\n"||ch=="\r"){k+=len;continue}const r=document.createRange();r.setStart(n,k);r.setEnd(n,k+len);const rs=r.getClientRects();k+=len;if(!rs.length)continue;const rc=rs[0],x=rc.left-er.left,top=rc.top-er.top;
+if(run&&run.font==font&&run.color==color&&Math.abs(run.top-top)<1.5&&Math.abs(x-run.right)<2&&[...run.d].join()==[...d].join()){run.text+=ch;run.right=x+rc.width}else{flush();run={font,color,size,asc,top,x,right:x+rc.width,text:ch,d}}}
+flush()}
+flush();ctx.letterSpacing="0px";ctx.restore()}
+async function xFontsReady(){for(const l of document.querySelectorAll("link[data-font]"))if(!l.sheet)await new Promise(r=>{l.addEventListener("load",r,{once:true});l.addEventListener("error",r,{once:true});setTimeout(r,5000)})}
+/* 1ページを描いて canvas を返す（scale=1で1000px幅、2で2000px幅） */
+async function pageToCanvas(page,sc){XR.sc=sc;const P=page.size,cv=document.createElement("canvas");cv.width=Math.round(P.w*sc);cv.height=Math.round(P.h*sc);const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);
+const host=E("div");host.style.cssText="position:fixed;left:-30000px;top:0;visibility:hidden;pointer-events:none";const g=E("div");g.style.cssText=`position:absolute;left:0;top:0;width:${P.w}px;height:${P.h}px;overflow:hidden`;host.append(g);document.body.append(host);
+try{const els=new Map();for(const o of page.objects){if(o.hidden||o.type!="text")continue;const e=mkEl(o);e.style.transform="none";els.set(o.id,e);g.append(e)}
+await xFontsReady();const ps=[];for(const e of els.values()){const wk=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let n;while(n=wk.nextNode()){const cs=getComputedStyle(n.parentElement);ps.push(document.fonts.load(`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`,n.data.slice(0,200)).catch(()=>{}))}}
+await Promise.race([Promise.all(ps),new Promise(r=>setTimeout(r,6000))]);await document.fonts.ready;await new Promise(r=>requestAnimationFrame(r));
+const gr=g.getBoundingClientRect();
+for(const o of page.objects){if(o.hidden)continue;ctx.save();ctx.scale(sc,sc);xXf(ctx,o);const q=o.props;
+if(o.type=="shape"&&q.kind=="line")xLine(ctx,o);
+else if(o.type=="shape"){ctx.globalAlpha=q.opacity??1;const r=Math.min(q.radius||0,o.w/2,o.h/2);if(q.fill&&q.fill!="transparent"){ctx.fillStyle=q.fill;ctx.fill(xRR(new Path2D(),0,0,o.w,o.h,r))}if(q.strokeWidth){const sw=q.strokeWidth;ctx.lineWidth=sw;ctx.strokeStyle=q.stroke;ctx.stroke(xRR(new Path2D(),sw/2,sw/2,o.w-sw,o.h-sw,Math.max(0,r-sw/2)))}}
+else if(o.type=="image")await xImage(ctx,o);
+else{const e=els.get(o.id);if(e){const er=e.getBoundingClientRect();await xText(ctx,o,e,er)}}
+ctx.restore()}
+}finally{host.remove()}
+return cv}
+const canvasBlob=cv=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error("画像にできませんでした（ページが大きすぎるかもしれません）")),"image/png"));
+async function saveFileBlob(blob,name){let dls=null;try{dls=window.claude&&claude.use?await claude.use("downloads"):null}catch(e){}
+if(dls){try{await dls.save({filename:name,data:blob})}catch(e){toast(e&&e.code=="declined"?"保存をキャンセルしました":"保存できませんでした："+((e&&e.message)||e),1);return false}}
+else{const a=E("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000)}return true}
+async function exportImages(all){const sc=+($("imgsc").value||1);try{await flush();const{book,pages}=await bundle(cur),safe="shiodamari-"+((book.title||"").replace(/[^A-Za-z0-9_-]+/g,"_").replace(/^_+|_+$/g,"").slice(0,24)||book.id.slice(-6)),st=stampOf();$("imgb1").disabled=$("imgb2").disabled=true;
+if(!all){const i=Math.min(pi,pages.length-1);msg("画像を作っています…");const cv=await pageToCanvas(pages[i],sc),blob=await canvasBlob(cv),name=`${safe}-p${i+1}-${st}.png`;if(await saveFileBlob(blob,name)){msg(`ページ${i+1}を画像にしました（${cv.width}×${cv.height}）`);toast("画像を書き出しました")}}
+else{const files=[];for(let i=0;i<pages.length;i++){msg(`画像を作っています…（${i+1} / ${pages.length}）`);const cv=await pageToCanvas(pages[i],sc),blob=await canvasBlob(cv);files.push({name:`${safe}-p${String(i+1).padStart(2,"0")}.png`,data:new Uint8Array(await blob.arrayBuffer())});cv.width=cv.height=1}
+const z=zipWrite(files),name=`${safe}-images-${st}.zip`;if(await saveFileBlob(z,name)){msg(`全${pages.length}ページを画像にしました（ZIP）`);toast("画像（ZIP）を書き出しました")}}}
+catch(e){msg(e.message,1);toast("⚠ "+e.message)}finally{$("imgb1").disabled=$("imgb2").disabled=false}}
 /* PCで拡大したときの横移動：Shift＋ホイール／マウスのホイールボタンを押しながらドラッグ */
 (()=>{const w=$("mapw");let dr=null;const zoomed=()=>(ED.Z||1)>1.001;
 w.addEventListener("wheel",e=>{if(!zoomed()||!e.shiftKey)return;const d=e.deltaX||e.deltaY;if(!d)return;e.preventDefault();w.scrollLeft+=d},{passive:false});
@@ -893,12 +961,14 @@ async function urlFor(id){if(!URLS.has(id)){const a=(ED.imgs&&ED.imgs.get(id))||
 async function thumbFor(id){if(!THUMBS.has(id)){const a=(ED.imgs&&ED.imgs.get(id))||await get("assets",id);if(!a)return"";THUMBS.set(id,URL.createObjectURL(a.thumb||a.blob))}return THUMBS.get(id)}
 function table(p,assets){const t=$("tbl");t.innerHTML="<tr><th>名前</th><th>種類</th><th>x</th><th>y</th><th>幅</th><th>高さ</th><th>オブジェクトID</th><th>画像素材（短縮ID／参照数）</th></tr>";
 for(const o of p.objects){const r=E("tr"),a=o.type=="image"?assets.get(o.props.assetId):null;[o.name,o.type,o.x,o.y,o.w,o.h,o.id.slice(-8),a?a.id.slice(-8)+"／"+a.refCount:""].forEach(v=>r.append(E("td",null,v)));t.append(r)}}
+async function setBinding(id,v){try{await flush();const b=await get("books",id);if(!b)return;const nv=v=="rtl"?"rtl":"ltr";if((b.binding=="rtl"?"rtl":"ltr")==nv)return;await commit({put:{books:[{...b,binding:nv,updatedAt:NOW()}]}});if(VW.open&&VW.bid==id)VW.rtl=nv=="rtl";await refresh();msg(nv=="rtl"?"右綴じ（左へ開く）にしました":"左綴じ（右へ開く）にしました")}catch(e){msg(e.message,1);toast("⚠ "+e.message)}}
 async function renderBook(){await flush();$("bk").hidden=!cur;if(!cur){ED.page=null;sideOpen(false);closeColor();return}const b=await get("books",cur);if(!b){cur=null;ED.page=null;$("bk").hidden=true;return}
 if(ED.zBook!==cur){ED.zBook=cur;ED.Z=1}ED.bf={ja:null,en:null,...(b.fonts||{})};const{pages}=await bundle(cur),i=Math.min(pi,pages.length-1),p=pages[i];$("bt").textContent=`${mode=="edit"?"【編集中】":"【閲覧】"}${b.title}（${pages.length}ページ）`;document.querySelectorAll(".edonly").forEach(e=>e.hidden=mode!="edit");if(mode!="edit")sideOpen(false);$("map").classList.toggle("rd",mode!="edit");
 const tabs=$("tabs");tabs.innerHTML="";pages.forEach((_,k)=>{const x=E("button",k==i?"p":"",`ページ${k+1}`);x.onclick=()=>{pi=k;renderBook()};tabs.append(x)});
+{const rt=b.binding=="rtl";$("bdl").className=rt?"":"p";$("bdr").className=rt?"p":"";$("bdl").setAttribute("aria-pressed",!rt);$("bdr").setAttribute("aria-pressed",rt);$("bdl").onclick=()=>setBinding(b.id,"ltr");$("bdr").onclick=()=>setBinding(b.id,"rtl")}
 const pb=$("pbar");pb.innerHTML="";const act=async(f,m)=>{try{await flush();if(await f()===false)return;await refresh();msg(m);toast(m)}catch(e){msg(e.message,1);toast("⚠ "+e.message)}},
 bt=(n,f,m,dis)=>{const x=E("button",null,n);x.disabled=!!dis;x.onclick=()=>act(f,m);pb.append(x)};
-pb.append(E("span","mut",`${i+1} / ${pages.length} ページ`));
+pb.append(E("span","mut",`${i+1} / ${pages.length} ページ`));{const zp=$("zpv"),zn=$("znx");$("zpg").textContent=`${i+1} / ${pages.length}`;zp.disabled=i==0;zn.disabled=i==pages.length-1;const step=d=>async()=>{try{await flush();pi=i+d;await renderBook()}catch(e){msg(e.message,1)}};zp.onclick=step(-1);zn.onclick=step(1)}
 bt("◀ 前へ",async()=>{pi=i-1},"",i==0);bt("次へ ▶",async()=>{pi=i+1},"",i==pages.length-1);
 const go=(n,m,c)=>{const x=E("button",c||null,n);x.onclick=async()=>{try{await flush();mode=m;ED.sel=null;await renderBook();$("bk").scrollIntoView({behavior:"smooth"})}catch(e){msg(e.message,1)}};pb.append(x)};
 if(mode!="edit"){const fv=E("button","p","📖 全画面で読む");fv.onclick=()=>openViewer(i);pb.append(fv);go("✎ 編集する","edit");const cl=E("button",null,"本を閉じる");cl.onclick=()=>{cur=null;renderBook()};pb.append(cl)}
@@ -916,12 +986,12 @@ let r=bs.filter(b=>(!tag||(b.tags||[]).includes(tag))&&(!q||[b.title,b.author,..
 const cmp={upd:(a,b)=>b.updatedAt.localeCompare(a.updatedAt),new:(a,b)=>b.createdAt.localeCompare(a.createdAt),ttl:(a,b)=>a.title.localeCompare(b.title,"ja"),pgs:(a,b)=>b.pageIds.length-a.pageIds.length}[sort]||(()=>0);return r.sort(cmp)}
 const parseTags=t=>[...new Set(t.split(/[,、，]/).map(x=>x.trim()).filter(Boolean))].slice(0,20);
 /* 本の情報だけを書き換える。ID・ページ・画像の参照数には触れない */
-async function updateBook(id,f){const b=await get("books",id);if(!b)throw new Error("本が見つかりません");const nb={...b,title:(f.title||"").trim()||"無題の本",author:(f.author||"").trim(),description:(f.description||"").trim(),tags:parseTags(f.tags||""),updatedAt:NOW()};const plan={put:{books:[nb]}};
+async function updateBook(id,f){const b=await get("books",id);if(!b)throw new Error("本が見つかりません");const nb={...b,title:(f.title||"").trim()||"無題の本",author:(f.author||"").trim(),description:(f.description||"").trim(),tags:parseTags(f.tags||""),updatedAt:NOW(),binding:f.binding=="rtl"?"rtl":f.binding=="ltr"?"ltr":(b.binding=="rtl"?"rtl":"ltr")};const plan={put:{books:[nb]}};
 if(f.coverStyle&&(f.coverStyle.type=="text"||f.coverStyle.type=="image")){const c=f.coverStyle;nb.coverStyle={type:c.type,bg:normHex(c.bg)||COV0.bg,fg:normHex(c.fg)||COV0.fg}}
 if(f.coverAsset&&f.coverAsset.id&&f.coverAsset.id!=b.coverAssetId){const a=ED.imgs.get(f.coverAsset.id)||f.coverAsset,ex=await get("assets",a.id);if(!ex)plan.put.assets=[{...a,refCount:0}];ED.imgs.set(a.id,ex||a);nb.coverAssetId=a.id;plan.bump={[a.id]:1};if(b.coverAssetId)plan.bump[b.coverAssetId]=(plan.bump[b.coverAssetId]||0)-1}
 if(nb.coverStyle&&nb.coverStyle.type=="image"&&!nb.coverAssetId)nb.coverStyle.type="text";
 await commit(plan);return nb}
-function editDlg(b){return new Promise(res=>{$("f1").value=b.title;$("f2").value=b.author||"";$("f3").value=b.description||"";$("f4").value=(b.tags||[]).join(", ");const d=$("dlg");let done=false;
+function editDlg(b){return new Promise(res=>{document.querySelectorAll("#bdf input[name=bdt]").forEach(r=>r.checked=r.value==(b.binding=="rtl"?"rtl":"ltr"));$("f1").value=b.title;$("f2").value=b.author||"";$("f3").value=b.description||"";$("f4").value=(b.tags||[]).join(", ");const d=$("dlg");let done=false;
 const CV={type:b.coverStyle?b.coverStyle.type:(b.coverAssetId?"image":"text"),bg:(b.coverStyle&&b.coverStyle.bg)||COV0.bg,fg:(b.coverStyle&&b.coverStyle.fg)||COV0.fg,asset:null,name:""};
 const cur=()=>({...b,title:$("f1").value.trim()||"無題の本",author:$("f2").value.trim(),coverAssetId:CV.asset?CV.asset.id:b.coverAssetId,coverStyle:{type:CV.type,bg:CV.bg,fg:CV.fg}});
 const paint=()=>{const bb=cur();if(bb.coverStyle.type=="image"&&!bb.coverAssetId)bb.coverStyle.type="text";paintCover($("cvpvc"),bb);$("cvtx").hidden=CV.type!="text";$("cvim").hidden=CV.type!="image";
@@ -933,7 +1003,7 @@ document.querySelectorAll('#cvf input[name=cvt]').forEach(r=>r.onchange=()=>{CV.
 for(const id of["f1","f2"])$(id).oninput=paint;
 $("cvpick").onclick=()=>{const f=$("fi");f.value="";f.onchange=async()=>{const x=f.files[0];f.value="";if(!x)return;try{const{asset}=await registerAsset(await importImage(x));CV.asset=asset;CV.name=x.name;CV.type="image";paint()}catch(e){toast("⚠ "+e.message)}};f.click()};
 const fin=v=>{if(done)return;done=true;closeColor();document.body.append($("cp"));$("f1").oninput=$("f2").oninput=null;try{d.close()}catch(e){}d.removeAttribute("open");res(v)};
-const ok=()=>fin({title:$("f1").value,author:$("f2").value,description:$("f3").value,tags:$("f4").value,coverStyle:{type:CV.type,bg:CV.bg,fg:CV.fg},coverAsset:CV.asset});
+const ok=()=>fin({title:$("f1").value,author:$("f2").value,description:$("f3").value,tags:$("f4").value,binding:(document.querySelector("#bdf input[name=bdt]:checked")||{}).value||"ltr",coverStyle:{type:CV.type,bg:CV.bg,fg:CV.fg},coverAsset:CV.asset});
 $("dok").onclick=ok;$("dcn").onclick=()=>fin(null);d.oncancel=e=>{e.preventDefault();fin(null)};d.onclose=()=>fin(null);
 for(const id of["f1","f2","f4"])$(id).onkeydown=e=>{if(e.key=="Enter"){e.preventDefault();ok()}};
 d.append($("cp"));try{d.showModal()}catch(e){d.setAttribute("open","")}$("f1").focus()})}
@@ -1070,6 +1140,8 @@ let err="";try{await commit({put:{books:[b],pages:pg},bump:uses(b,pg)},3)}catch(
 let err="";try{await commit({put:{books:[b],pages:pg},bump:uses(b,pg)})}catch(e){err=e.message}return[err&&c0==await counts(),err||"失敗しませんでした"]}],
 ["壊れたデータ（座標が数値でない）は書き込み前に拒否される",async()=>{const c0=await counts(),pg=mkPage([OB("text","x","a",0,1,1,{})]),b={id:uid("bk"),schema:1,title:"x",coverAssetId:null,pageIds:[pg.id]};pg.bookId=b.id;
 let err="";try{await commit({put:{books:[b],pages:[pg]}})}catch(e){err=e.message}return[err&&c0==await counts(),err||"拒否されませんでした"]}],
+["ページを画像にできる（大きさ・内容・2倍・非表示）",async()=>{const s=await mkSample(),{pages}=await bundle(s.id),pg=pages[1],c1=await pageToCanvas(pg,1),c2=await pageToCanvas(pg,2),px=(c,x,y)=>Array.from(c.getContext("2d").getImageData(x,y,1,1).data).join(),sz=c1.width==pg.size.w&&c1.height==pg.size.h&&c2.width==pg.size.w*2&&c2.height==pg.size.h*2;let non=0;const d=c1.getContext("2d").getImageData(0,0,c1.width,c1.height).data;const f0=px(c1,2,pg.size.h-2);for(let i=0;i<d.length;i+=4*997)if(d[i]!=255||d[i+1]!=255||d[i+2]!=255)non++;const hid=JSON.parse(JSON.stringify(pg));hid.objects.forEach(o=>{o.hidden=true});const c3=await pageToCanvas(hid,1),d3=c3.getContext("2d").getImageData(0,0,c3.width,c3.height).data;let allw=true;for(let i=0;i<d3.length;i+=4*997)if(d3[i]!=255)allw=false;await delBook(s.id);return[sz&&non>50&&allw,"大きさ"+c1.width+"×"+c1.height+"／2倍OK／内容あり／全部非表示なら真っ白"]}],
+["綴じ方向が保存され、情報の変更やバックアップ→復元でも残る",async()=>{const s=await mkSample(),d0=(await get("books",s.id)).binding;await updateBook(s.id,{title:"綴じテスト",binding:"rtl"});const r1=(await get("books",s.id)).binding;await updateBook(s.id,{title:"綴じテスト2"});const r2=(await get("books",s.id)).binding;const{blob}=await buildBackup([s.id]);await restoreBackup(await blob.arrayBuffer(),"replace");const r3=(await get("books",s.id)).binding;await updateBook(s.id,{title:"x",binding:"ltr"});const r4=(await get("books",s.id)).binding;await delBook(s.id);return[d0=="ltr"&&r1=="rtl"&&r2=="rtl"&&r3=="rtl"&&r4=="ltr","初期は左綴じ／右綴じに変更／題名だけ変えても保持／復元後も右綴じ／左綴じに戻せる"]}],
 ["本の情報を変えても、ID・ページ・画像の参照数は変わらない",async()=>{const s=await mkSample(),a0=await counts(),b0=await bundle(s.id),i0=JSON.stringify(ids(b0));await updateBook(s.id,{title:"  新しい題名 ",author:"作者A",description:"説明",tags:"設定, キャラ，設定"});const b1=await bundle(s.id),ok=b1.book.title=="新しい題名"&&JSON.stringify(b1.book.tags)==JSON.stringify(["設定","キャラ"])&&JSON.stringify(ids(b1))==i0&&a0==await counts();await delBook(s.id);return[ok,"題名・作者・タグだけが変わる"]}],
 ["検索・タグ絞り込み・並べ替え",async()=>{const m=(t,a,tg,u,n)=>({title:t,author:a,tags:tg,updatedAt:u,createdAt:u,pageIds:Array(n).fill(0)}),L=[m("青の図鑑","山田",["図鑑"],"2026-01-02",3),m("赤い手帳","",["設定","図鑑"],"2026-01-03",1),m("Green","佐藤",[],"2026-01-01",9)],ti=r=>r.map(b=>b.title).join("|");
 const ok=ti(filterBooks(L,"","","upd"))=="赤い手帳|青の図鑑|Green"&&ti(filterBooks(L,"山田","","upd"))=="青の図鑑"&&ti(filterBooks(L,"","図鑑","pgs"))=="青の図鑑|赤い手帳"&&ti(filterBooks(L,"green","","upd"))=="Green"&&ti(filterBooks(L,"","","pgs"))=="Green|青の図鑑|赤い手帳"&&!filterBooks(L,"なし","","upd").length;return[ok,"5通りの条件で確認"]}],
@@ -1146,6 +1218,7 @@ const n=h.u.length;h.undo(p);return[n==1&&f.x==x0,`履歴${n}件、元の位置�
 $("run").onclick=async()=>{await flush();const box=$("res");box.innerHTML="";$("run").disabled=true;let ng=0;
 for(const[n,f]of TESTS){const r=E("p");try{const[ok,d]=await f();r.className=ok?"ok":"ng";r.textContent=(ok?"✓ ":"✗ ")+n+"　"+d;if(!ok)ng++}catch(e){r.className="ng";r.textContent="✗ "+n+"　例外："+e.message;ng++}box.append(r)}
 box.append(E("p","mut","保存の永続性は、ページを再読み込みしても本が残ることで確認します。"));msg(ng?ng+"件のテストが失敗しました":"すべてのテストに成功しました",ng);$("run").disabled=false;await refresh()};
+$("imgb1").onclick=()=>exportImages(false);$("imgb2").onclick=()=>exportImages(true);
 $("seed").onclick=async()=>{try{const b=await mkSample();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("サンプル本を作りました（4ページ）")}catch(e){msg(e.message,1)}};
 $("tplb").onclick=async()=>{try{const b=await mkTemplates();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("テンプレート集を作りました（8ページ）")}catch(e){msg(e.message,1)}};
 $("blank").onclick=async()=>{try{const b=await mkBlank();cur=b.id;pi=0;mode="edit";ED.sel=null;await refresh();msg("白紙の本を作りました")}catch(e){msg(e.message,1)}};
@@ -1164,16 +1237,27 @@ $("szb").onclick=()=>setSheetH(ED.shh==SH_BIG?SH_SMALL:SH_BIG);
 addEventListener("scroll",()=>{if(mode=="edit"&&phoneDock()&&ED.sel){const o=O(ED.sel);o&&placeBar(o)}},{passive:true});
 
 /* ===== 閲覧用の全画面ビューア ===== */
-const VW={open:false,pages:[],i:0,Z:1,pt:new Map(),tap:{t:0,x:0,y:0},g:null,gest:null};
-async function openViewer(i0){try{await flush();const{pages}=await bundle(cur);if(!pages.length)return;VW.pages=pages;VW.i=clamp(i0,0,pages.length-1);VW.open=true;$("vw").hidden=false;document.documentElement.style.overflow="hidden";vwShow(0);const h=$("vwh");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");$("vwx").focus()}catch(e){toast("⚠ "+e.message)}}
+const VW={open:false,pages:[],i:0,Z:1,pt:new Map(),tap:{t:0,x:0,y:0},g:null,gest:null,rtl:false,spread:false,gs:[],bid:null};
+/* 見開き：1ページ目（表紙）は1枚だけ。左綴じは右側、右綴じは左側に置く。2ページ目からは2枚ずつ並べる */
+const vwWide=()=>{const st=$("vws");return VW.pages.length>1&&st.clientWidth>=760&&st.clientWidth/Math.max(1,st.clientHeight)>=1.3};
+const vwViewOf=i=>i<=0?0:Math.ceil(i/2),vwFirst=v=>v<=0?0:2*v-1,vwCount=()=>VW.spread?1+Math.ceil((VW.pages.length-1)/2):VW.pages.length;
+function vwSlots(){const n=VW.pages.length,i=VW.i;if(!VW.spread)return[[0,i]];const v=vwViewOf(i);if(v==0)return[[VW.rtl?0:1,0]];const a=2*v-1,b=2*v<n?2*v:null,out=[];
+if(VW.rtl){out.push([1,a]);if(b!=null)out.push([0,b])}else{out.push([0,a]);if(b!=null)out.push([1,b])}return out}
+async function openViewer(i0){try{await flush();const{pages,book}=await bundle(cur);if(!pages.length)return;VW.pages=pages;VW.rtl=book.binding=="rtl";VW.bid=book.id;VW.i=clamp(i0,0,pages.length-1);VW.open=true;$("vw").hidden=false;document.documentElement.style.overflow="hidden";VW.spread=vwWide();if(VW.spread)VW.i=vwFirst(vwViewOf(VW.i));vwShow(0);const h=$("vwh");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");$("vwx").focus()}catch(e){toast("⚠ "+e.message)}}
 function closeViewer(){if(!VW.open)return;VW.open=false;VW.pt.clear();$("vw").hidden=true;document.documentElement.style.overflow="";pi=VW.i;renderBook()}
-function vwLayout(){const p=VW.pages[VW.i],st=$("vws"),pg=$("vwp");if(!p)return;const s=Math.min(st.clientWidth/p.size.w,st.clientHeight/p.size.h)*VW.Z;pg.style.width=p.size.w*s+"px";pg.style.height=p.size.h*s+"px";if(VW.g)VW.g.style.transform=`scale(${s})`}
-function vwShow(dir){const p=VW.pages[VW.i],pg=$("vwp");pg.innerHTML="";VW.Z=1;const g=E("div");VW.g=g;g.style.cssText=`overflow:hidden;position:absolute;left:0;top:0;width:${p.size.w}px;height:${p.size.h}px;transform-origin:0 0`;
-const els=[];for(const o of p.objects){if(o.hidden)continue;const e=mkEl(o);els.push([o,e]);g.append(e)}pg.append(g);$("vws").scrollLeft=0;$("vws").scrollTop=0;vwLayout();
-for(const[o,e]of els){const t=e.querySelector(".tx");if(!t)continue;const tol=.5*Math.max(0,o.props.lineHeight-1)*o.props.fontSize+.2*o.props.fontSize,over=t.scrollHeight-t.clientHeight>tol;t.style.overflowY=over?"auto":"hidden";if(over)t.style.touchAction="pan-y"}
-$("vwc").textContent=`${VW.i+1} / ${VW.pages.length}`;$("vwl").disabled=VW.i==0;$("vwr").disabled=VW.i==VW.pages.length-1;
-if(dir&&pg.animate)pg.animate([{opacity:0,transform:`translateX(${dir*36}px)`},{opacity:1,transform:"none"}],{duration:180,easing:"ease-out"})}
-function vwGo(d){const n=VW.i+d;if(n<0||n>=VW.pages.length)return;VW.i=n;vwShow(d)}
+function vwLayout(){const p=VW.pages[VW.i],st=$("vws"),pg=$("vwp");if(!p)return;const cols=VW.spread?2:1,pw=p.size.w,ph=p.size.h,s=Math.min(st.clientWidth/(cols*pw),st.clientHeight/ph)*VW.Z;pg.style.width=cols*pw*s+"px";pg.style.height=ph*s+"px";pg.classList.toggle("sp",VW.spread);
+for(const e of VW.gs){e.w.style.cssText=`position:absolute;top:0;left:${e.slot*pw*s}px;width:${pw*s}px;height:${ph*s}px;background:#fff;overflow:hidden`;e.g.style.transform=`scale(${s})`}}
+function vwShow(dir){const p=VW.pages[VW.i],pg=$("vwp");pg.innerHTML="";VW.Z=1;VW.gs=[];
+for(const[slot,k]of vwSlots()){const q=VW.pages[k],w=E("div","vwsl"),g=E("div");g.style.cssText=`overflow:hidden;position:absolute;left:0;top:0;width:${q.size.w}px;height:${q.size.h}px;transform-origin:0 0`;
+const els=[];for(const o of q.objects){if(o.hidden)continue;const e=mkEl(o);els.push([o,e]);g.append(e)}w.append(g);pg.append(w);VW.gs.push({w,g,slot,p:q,els})}
+$("vws").scrollLeft=0;$("vws").scrollTop=0;vwLayout();
+for(const{els}of VW.gs)for(const[o,e]of els){const t=e.querySelector(".tx");if(!t)continue;const tol=.5*Math.max(0,o.props.lineHeight-1)*o.props.fontSize+.2*o.props.fontSize,over=t.scrollHeight-t.clientHeight>tol;t.style.overflowY=over?"auto":"hidden";if(over)t.style.touchAction="pan-y"}
+const ks=VW.gs.map(e=>VW.pages.indexOf(e.p)+1).sort((a,b)=>a-b),tot=VW.pages.length;$("vwc").textContent=(ks.length>1?ks[0]+"–"+ks[ks.length-1]:ks[0])+` / ${tot}`;
+const last=VW.spread?vwViewOf(VW.i)>=vwCount()-1:VW.i>=tot-1,first=VW.i==0;$("vwl").disabled=VW.rtl?last:first;$("vwr").disabled=VW.rtl?first:last;
+$("vwbd").textContent=VW.rtl?"右綴じ（左へ開く）":"左綴じ（右へ開く）";
+const sd=VW.rtl?-dir:dir;if(dir&&pg.animate)pg.animate([{opacity:0,transform:`translateX(${sd*36}px)`},{opacity:1,transform:"none"}],{duration:180,easing:"ease-out"})}
+/* d=+1 が「読み進む」向き。見開きなら2ページずつ進む */
+function vwGo(d){if(VW.spread){const v=vwViewOf(VW.i)+d;if(v<0||v>=vwCount())return;VW.i=vwFirst(v)}else{const n=VW.i+d;if(n<0||n>=VW.pages.length)return;VW.i=n}vwShow(d)}
 function vwZoom(nz,cx,cy){const st=$("vws"),pg=$("vwp"),r0=pg.getBoundingClientRect(),fx=(cx-r0.left)/r0.width,fy=(cy-r0.top)/r0.height;nz=clamp(nz,1,4);if(Math.abs(nz-VW.Z)<.001)return;VW.Z=nz;vwLayout();if(nz<=1.001){st.scrollLeft=0;st.scrollTop=0;return}
 const r1=pg.getBoundingClientRect();st.scrollLeft+=r1.left+fx*r1.width-cx;st.scrollTop+=r1.top+fy*r1.height-cy}
 (()=>{const st=$("vws"),dist=()=>{const a=[...VW.pt.values()];return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)},mid=()=>{const a=[...VW.pt.values()];return[(a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2]};
@@ -1182,13 +1266,13 @@ if(VW.pt.size==1)VW.gest={sx:e.clientX,sy:e.clientY,moved:0,pinch:false};else if
 st.addEventListener("pointermove",e=>{const o=VW.pt.get(e.pointerId);if(!o||!VW.gest)return;const dx=e.clientX-o.x,dy=e.clientY-o.y;o.x=e.clientX;o.y=e.clientY;VW.gest.moved=Math.max(VW.gest.moved,Math.hypot(e.clientX-VW.gest.sx,e.clientY-VW.gest.sy));
 if(VW.pt.size>=2){const[mx,my]=mid();vwZoom(VW.gest.z0*dist()/VW.gest.d0,mx,my)}else if(VW.Z>1.001&&!VW.gest.pinch){st.scrollLeft-=dx;st.scrollTop-=dy}});
 const end=(e,cancel)=>{const o=VW.pt.get(e.pointerId);if(!o)return;VW.pt.delete(e.pointerId);const g=VW.gest;if(!g)return;if(VW.pt.size>0)return;VW.gest=null;if(cancel||g.pinch)return;
-const dx=e.clientX-g.sx,dy=e.clientY-g.sy;if(VW.Z<=1.001&&Math.abs(dx)>50&&Math.abs(dx)>1.5*Math.abs(dy)){vwGo(dx<0?1:-1);VW.tap.t=0;return}
+const dx=e.clientX-g.sx,dy=e.clientY-g.sy;if(VW.Z<=1.001&&Math.abs(dx)>50&&Math.abs(dx)>1.5*Math.abs(dy)){vwGo((dx<0?1:-1)*(VW.rtl?-1:1));VW.tap.t=0;return}
 if(g.moved<10){const n=Date.now(),t=VW.tap;if(n-t.t<320&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<30){vwZoom(VW.Z>1.05?1:2.5,e.clientX,e.clientY);t.t=0}else{t.t=n;t.x=e.clientX;t.y=e.clientY}}};
 st.addEventListener("pointerup",e=>end(e,false));st.addEventListener("pointercancel",e=>end(e,true));
 st.addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();vwZoom(VW.Z*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY)}},{passive:false});
-$("vwx").onclick=closeViewer;$("vwl").onclick=()=>vwGo(-1);$("vwr").onclick=()=>vwGo(1);const cz=m=>{const r=st.getBoundingClientRect();vwZoom(VW.Z*m,r.left+r.width/2,r.top+r.height/2)};$("vwzo").onclick=()=>cz(1/1.4);$("vwzi").onclick=()=>cz(1.4);
-addEventListener("keydown",e=>{if(!VW.open)return;if(e.key=="Escape"){e.preventDefault();closeViewer()}else if(e.key=="ArrowLeft"){vwGo(-1)}else if(e.key=="ArrowRight"){vwGo(1)}else if(e.key=="+"||e.key=="="){cz(1.4)}else if(e.key=="-"){cz(1/1.4)}else if(e.key=="0"){cz(1/VW.Z)}});
-addEventListener("resize",()=>{if(VW.open)vwLayout()})})();
+$("vwx").onclick=closeViewer;$("vwl").onclick=()=>vwGo(VW.rtl?1:-1);$("vwr").onclick=()=>vwGo(VW.rtl?-1:1);$("vwbd").onclick=()=>setBinding(VW.bid,VW.rtl?"ltr":"rtl").then(()=>{if(VW.open)vwShow(0)});const cz=m=>{const r=st.getBoundingClientRect();vwZoom(VW.Z*m,r.left+r.width/2,r.top+r.height/2)};$("vwzo").onclick=()=>cz(1/1.4);$("vwzi").onclick=()=>cz(1.4);
+addEventListener("keydown",e=>{if(!VW.open)return;if(e.key=="Escape"){e.preventDefault();closeViewer()}else if(e.key=="ArrowLeft"){vwGo(VW.rtl?1:-1)}else if(e.key=="ArrowRight"){vwGo(VW.rtl?-1:1)}else if(e.key=="+"||e.key=="="){cz(1.4)}else if(e.key=="-"){cz(1/1.4)}else if(e.key=="0"){cz(1/VW.Z)}});
+addEventListener("resize",()=>{if(!VW.open)return;const w=vwWide();if(w!==VW.spread){VW.spread=w;if(w)VW.i=vwFirst(vwViewOf(VW.i));vwShow(0)}else vwLayout()})})();
 let lw=0;addEventListener("resize",()=>{sideDock();if(!cur||!ED.page)return;const w=$("bk").clientWidth;if(Math.abs(w-lw)>2)renderStage()});
 addEventListener("pagehide",()=>{if(ED.dirty)saveNow()});document.addEventListener("visibilitychange",()=>{if(document.hidden&&ED.dirty)saveNow()});
 (async()=>{try{db=await openDB();await refresh()}catch(e){msg("保存の準備に失敗しました："+e.message,1)}})();
