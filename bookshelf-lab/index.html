@@ -61,6 +61,15 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border-bottom:1
 .pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:4px;margin:6px 0}.pad button{min-height:48px;padding:0;font-size:1.1rem;touch-action:none;user-select:none}
 #tbl td,#tbl th{white-space:nowrap}#tdlg{width:min(640px,94vw)}#tt{height:150px;resize:vertical;min-height:90px}#tdlg .thint{margin:0 0 4px}#tdlg .thint summary{cursor:pointer;color:var(--mut);font-size:.85rem;padding:2px 0}#tdlg h2{cursor:move;touch-action:none;user-select:none;-webkit-user-select:none}#tdlg .th{display:flex;align-items:center;gap:10px;margin:0 0 6px}.gr2{cursor:grab;color:#0a84a0;font-size:1.5rem;line-height:1;width:48px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#e3f3f6;border:1px dashed #0a84a0;border-radius:10px;touch-action:none;position:relative;flex:none;user-select:none;-webkit-user-select:none}.gr2 small{font-size:.62rem;line-height:1.1;margin-top:2px}.gr2::after{content:"";position:absolute;inset:-6px}#tgrip{position:relative;margin-left:auto;flex:none;width:44px;align-self:stretch;display:grid;place-items:center;color:#0a84a0;font-size:1.2rem;cursor:nwse-resize;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:10px;background:#e3f3f6;border:1px dashed #0a84a0}#tgrip::after{content:"";position:absolute;inset:-6px}@media(max-width:700px){#tdlg{padding:8px 10px}#tdlg .th{margin:0 0 4px}#tdlg .thint{margin:0 0 2px}#tt{height:92px;min-height:70px}#tdlg .fst{margin:3px 0}#tdlg .row{margin:4px 0 0}#trb{gap:3px}#trb button{min-width:34px;padding:0 7px}#trb6{font-size:.78rem;padding:0 6px}#tc{font-size:.78rem}}
 .sh{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:8px}
+.sh.sp{display:flex;flex-wrap:wrap;align-content:flex-start;gap:32px 3px;padding:18px 10px 14px;border-radius:8px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 234px,#8a6a45 234px,#6b4f30 244px,#4a3620 248px);background-origin:padding-box}
+.spw{height:216px;margin-bottom:0;display:flex;align-items:flex-end}
+.spn{position:relative;border:0;padding:6px 0;margin:0;border-radius:3px 3px 1px 1px;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset 3px 0 4px rgba(255,255,255,.18),inset -3px 0 5px rgba(0,0,0,.28),1px 0 2px rgba(0,0,0,.25);transition:transform .18s,box-shadow .18s;min-height:0;color:#fff;background:var(--ac);background-size:cover;background-position:center}
+.spn::before{content:"";position:absolute;left:0;right:0;top:9px;height:2px;background:rgba(255,255,255,.55)}.spn::after{content:"";position:absolute;left:0;right:0;bottom:9px;height:2px;background:rgba(255,255,255,.55)}
+.spn .st{writing-mode:vertical-rl;text-orientation:mixed;font-size:.9rem;font-weight:700;line-height:1.1;height:max-content;max-height:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.spn.im::before,.spn.im::after{display:none}.spn.im .st{background:rgba(0,0,0,.5);padding:6px 2px;border-radius:3px}
+.spn.nt::before,.spn.nt::after{top:14px;bottom:14px}.spn.on{transform:translateY(-18px) rotate(-3deg);box-shadow:0 8px 10px rgba(0,0,0,.35),inset 3px 0 4px rgba(255,255,255,.18)}.spn:focus-visible{outline:3px solid #0a84a0;outline-offset:2px}
+.spmenu{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card)}.spmenu h3{margin:0 0 2px;font-size:1rem}.spmenu .bt{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.spmenu .bt button{min-height:40px}
+.vwt{display:inline-flex;gap:0}.vwt button{border-radius:0;min-height:40px}.vwt button:first-child{border-radius:8px 0 0 8px}.vwt button:last-child{border-radius:0 8px 8px 0;margin-left:-1px}.vwt button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 .bc{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);display:flex;flex-direction:column;gap:6px}
 .bc .cv{aspect-ratio:1/1.414;background:var(--ac);color:#fff;border-radius:6px;overflow:hidden;display:grid;place-items:center;text-align:center;font-size:.85rem;padding:8px;word-break:break-all}
 .bc .cv img{width:100%;height:100%;object-fit:cover;display:block;margin:-8px;padding:0}
@@ -129,6 +138,7 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <section><h2>本棚</h2>
 <div class="row"><button id="seed" class="p">サンプル本を作る</button><button id="blank">白紙の本を作る</button><button id="tplb">テンプレート集を作る</button></div>
 <div class="row"><input id="q" type="search" placeholder="タイトル・作者・タグで探す"><select id="tg"><option value="">すべてのタグ</option></select><select id="so"><option value="upd">更新が新しい順</option><option value="new">作成が新しい順</option><option value="ttl">タイトル順</option><option value="pgs">ページ数が多い順</option></select></div>
+<div class="row"><span class="vwt" id="svt"><button id="sv1" type="button">表紙で見る</button><button id="sv2" type="button">背表紙で見る</button></span><label class="rl" id="svtl" hidden style="margin-left:10px"><input type="checkbox" id="svt2">背表紙に題名を表示</label></div>
 <div id="shelf" class="sh"></div>
 <p class="mut">ここで作った本は、ページを再読み込みしても残ります。</p></section>
 <dialog id="dlg"><div id="df"><h2 style="margin:0 0 6px">本の情報</h2>
@@ -197,7 +207,8 @@ dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);co
 <details><summary>㉑ 拡大して見る・前へ／次へ（本の画面）</summary><ul><li>ページの上にある「拡大」の「－ ＋ ぴったり」で、ページの大きさを変えられます（最大400%）。</li><li>拡大すると、ページが画面からはみ出します。<span class="pcx">PCでは、「Shiftを押しながらホイールを回す」か「マウスのホイールボタンを押しながらドラッグ」で、横に動かせます（上下はふつうのスクロール）。</span><span class="phx">スマホでは、指で上下左右にスワイプして動かせます。</span></li><li>拡大の横の「◀ 前へ」「次へ ▶」で、ページを切り替えられます。ページ数（1 / 4）も出ます。</li></ul></details>
 <details><summary>㉒ 「文章を編集」の窓</summary><ul><li>操作パネルの「✎ 文章」を押すと、この窓が開きます。左上の「⠿ 動かす」（うすい青の四角）をドラッグすると、窓を縦にも横にも動かせます。キーボードや選択メニューにかかるときに使ってください。</li><li>右下の「◢」をドラッグすると、窓の幅と入力欄の高さを変えられます。はじめは入力欄が小さく、必要なときに広げます。閉じると、元の位置と大きさに戻ります。</li><li>かざり（B・I・S・U・色・かざりを消す）は、入力欄の下です。文字を指でなぞって選んでから、押します。文字数は、その右に出ます。</li><li>「ℹ 使い方」「👁 見え方（プレビュー）を見る」は、たたんでいます。押すと開きます。</li></ul></details>
 <details><summary>㉓ ページを画像で保存（PNG・ZIP）</summary><ol><li>本を開いた画面の「画像で保存」の行で、大きさを選びます。「標準（幅1000px）」か「高画質（幅2000px）」です。印刷や拡大して見たいときは、高画質が向いています。</li><li>「🖼 このページ（PNG）」を押すと、いま見ているページが1枚の画像になります。</li><li>「全ページ（ZIP）」を押すと、全部のページが1枚ずつの画像になり、ZIPにまとまります。</li></ol><ul><li>画面と同じ文字の形・色・配置で保存されます。画像枠の形や切り抜きも、そのまま入ります。</li><li>非表示にしたものは、画像に入りません。編集中にだけ出る「文字数」の表示も入りません。</li><li>フォントを読み込めなかったときは、画面と同じように、代わりの書体で描かれます。</li><li>ファイル名は、本のタイトルの英数字の部分と、日時になります（日本語だけのタイトルは、本の番号になります）。</li></ul></details>
-<details><summary>㉔ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
+<details><summary>㉔ 本棚を「背表紙」で見る</summary><ol><li>本棚の上の「背表紙で見る」を押すと、本が背中を向けて棚に並びます。「表紙で見る」で元に戻ります（選んだ方は次も覚えています）。</li><li>背表紙を押すと、その本が少し手前に出て、下に「開く・編集・情報・書き出し・複製・削除」が出ます。もう一度押すと戻ります。</li></ol><ul><li>背表紙の色と文字は、表紙の設定から自動で作られます（画像の表紙は、その画像が背に使われます）。</li><li>ページ数が多い本ほど、背が少し太くなります。</li><li>「背表紙に題名を表示」のチェックを外すと、背から文字が消えて、色や絵だけの背表紙になります（押すと、下のメニューに題名が出ます）。</li><li>本がたくさんあるときは、背表紙で見ると探しやすいです。</li></ul></details>
+<details><summary>㉕ こまったとき</summary><ul><li><b>本が消えた</b>：ブラウザの「サイトのデータ削除」や、プライベートモードで開くと、保存が消えることがあります。大切な本は、こまめにバックアップしてください。</li><li><b>画像が読み込めない</b>：対応していない形式かもしれません。PNG・JPEGなどで試してください。</li><li><b>間違えた</b>：「↶ 元に戻す」で戻せます（ページの追加・削除などは、戻せません）。</li><li><b>不具合を見つけたら</b>：使っている端末とブラウザ、押した順番を教えてください。ページ下の「テストを実行」の結果も役に立ちます。</li></ul></details>
 </div></dialog>
 <dialog id="rdlg"><div><h2 style="margin:0 0 6px">バックアップから復元</h2><div id="rsum"></div>
 <div id="rmode" hidden style="margin:8px 0"><p class="mut" style="margin:0 0 4px">同じ本がすでにあります。どうしますか？</p>
@@ -1012,22 +1023,39 @@ function paintCover(cv,b){cv.textContent="";cv.className="cv";const cs=b.coverSt
 if(img){thumbFor(b.coverAssetId).then(u=>{if(u&&!cv.firstChild||u&&cv.textContent==b.title){const i=new Image();i.src=u;i.alt="";cv.textContent="";cv.append(i)}});cv.textContent=b.title;cv.style.background="";cv.style.color="";return}
 const c={...COV0,...(cs&&cs.type=="text"?cs:{})};cv.classList.add("ct");cv.style.background=c.bg;cv.style.color=c.fg;
 const fr=E("div","fr"),inn=E("div","in");inn.append(E("div","tt",b.title||"無題の本"));if(b.author){inn.append(E("div","ln"),E("div","au",b.author))}cv.append(fr,inn)}
-async function renderShelf(){const all=await getAll("books"),box=$("shelf"),tg=$("tg"),cur0=tg.value;
-const tags=[...new Set(all.flatMap(b=>b.tags||[]))].sort();tg.innerHTML="";tg.append(Object.assign(E("option",null,"すべてのタグ"),{value:""}));tags.forEach(t=>tg.append(Object.assign(E("option",null,t),{value:t})));tg.value=tags.includes(cur0)?cur0:"";
-const bs=filterBooks(all,$("q").value,tg.value,$("so").value);box.innerHTML="";
-if(!all.length){box.append(E("p","mut","本がありません。「サンプル本を作る」を押してください。"));return}
-if(!bs.length){box.append(E("p","mut","条件に合う本がありません。"));return}
-for(const b of bs){const c=E("div","bc"),cv=E("div","cv");
-paintCover(cv,b);
-c.append(cv,E("h3",null,b.title));c.append(E("div","mut",`${b.pageIds.length}ページ${b.author?"｜"+b.author:""}`));
-if((b.tags||[]).length){const t=E("div","bt");b.tags.forEach(x=>t.append(E("span","tag",x)));c.append(t)}
-const bt=E("div","bt");
+function shelfBtns(b){const bt=E("div","bt");
 [["開く",async()=>{cur=b.id;pi=0;mode="read";ED.sel=null;await renderBook();$("bk").scrollIntoView({behavior:"smooth"})}],
 ["編集",async()=>{cur=b.id;pi=0;mode="edit";ED.sel=null;await renderBook();$("bk").scrollIntoView({behavior:"smooth"})}],
 ["情報",async()=>{const f=await editDlg(b);if(f){await updateBook(b.id,f);await refresh();msg("本の情報を保存しました")}}],
 ["書き出し",async()=>{await downloadBackup([b.id],b.title)}],
 ["複製",async()=>{await dupBook(b.id);await refresh();msg("複製しました（オブジェクトのIDは新規、画像素材は共有）")}],
-["削除",async()=>{if(await askConfirm(`「${b.title}」を、ページも画像もすべて削除します。元に戻せません。`,"この本を削除する","本を削除")){await delBook(b.id);if(cur==b.id)cur=null;await refresh();msg("削除しました");toast("本を削除しました")}}]].forEach(([n,f])=>{const x=E("button",null,n);x.onclick=async()=>{try{await flush();await f()}catch(e){msg(e.message,1)}};bt.append(x)});
+["削除",async()=>{if(await askConfirm(`「${b.title}」を、ページも画像もすべて削除します。元に戻せません。`,"この本を削除する","本を削除")){await delBook(b.id);if(cur==b.id)cur=null;await refresh();msg("削除しました");toast("本を削除しました")}}]].forEach(([n,f])=>{const x=E("button",null,n);x.onclick=async()=>{try{await flush();await f()}catch(e){msg(e.message,1)}};bt.append(x)});return bt
+}
+let SPSEL=null;
+const svtGet=()=>{try{return localStorage.getItem("bl_spinetitle")!="0"}catch(e){return true}};
+const svGet=()=>{try{return localStorage.getItem("bl_shelfview")=="sp"}catch(e){return false}};
+const spW=b=>Math.max(34,Math.min(70,26+Math.round(Math.sqrt(Math.max(1,b.pageIds.length))*9))),spH=b=>200+([...String(b.id)].reduce((a,c)=>a+c.charCodeAt(0),0)%5)*4;
+async function renderSpines(bs,box){box.classList.add("sp");const showT=svtGet();
+const menu=E("div","spmenu");menu.hidden=true;
+const show=b=>{menu.hidden=false;menu.textContent="";menu.append(E("h3",null,b.title),E("div","mut",`${b.pageIds.length}ページ${b.author?"｜"+b.author:""}`),shelfBtns(b))};
+for(const b of bs){const w=E("div","spw"),x=E("button","spn");x.type="button";x.style.width=spW(b)+"px";x.style.height=spH(b)+"px";x.setAttribute("aria-label","本："+b.title);x.dataset.id=b.id;
+const cs=b.coverStyle,img=b.coverAssetId&&(!cs||cs.type=="image");
+if(img){x.classList.add("im");thumbFor(b.coverAssetId).then(u=>{if(u)x.style.backgroundImage=`url("${u}")`})}else{const c={...COV0,...(cs&&cs.type=="text"?cs:{})};x.style.background=c.bg;x.style.color=c.fg}
+if(showT)x.append(E("span","st",b.title||"無題の本"));else x.classList.add("nt");
+x.onclick=()=>{const was=SPSEL==b.id;box.querySelectorAll(".spn.on").forEach(e=>e.classList.remove("on"));if(was){SPSEL=null;menu.hidden=true;return}SPSEL=b.id;x.classList.add("on");show(b)};
+w.append(x);box.append(w);if(SPSEL==b.id){x.classList.add("on");show(b)}}
+box.after(menu);menu.id="spmenu"}
+async function renderShelf(){const all=await getAll("books"),box=$("shelf"),tg=$("tg"),cur0=tg.value;
+const tags=[...new Set(all.flatMap(b=>b.tags||[]))].sort();tg.innerHTML="";tg.append(Object.assign(E("option",null,"すべてのタグ"),{value:""}));tags.forEach(t=>tg.append(Object.assign(E("option",null,t),{value:t})));tg.value=tags.includes(cur0)?cur0:"";
+const bs=filterBooks(all,$("q").value,tg.value,$("so").value);box.innerHTML="";box.classList.remove("sp");{const m=$("spmenu");if(m)m.remove()}const spv=svGet();$("sv1").classList.toggle("p",!spv);$("sv2").classList.toggle("p",spv);$("svtl").hidden=!spv;$("svt2").checked=svtGet();
+if(!all.length){box.append(E("p","mut","本がありません。「サンプル本を作る」を押してください。"));return}
+if(!bs.length){box.append(E("p","mut","条件に合う本がありません。"));return}
+if(spv)return renderSpines(bs,box);
+for(const b of bs){const c=E("div","bc"),cv=E("div","cv");
+paintCover(cv,b);
+c.append(cv,E("h3",null,b.title));c.append(E("div","mut",`${b.pageIds.length}ページ${b.author?"｜"+b.author:""}`));
+if((b.tags||[]).length){const t=E("div","bt");b.tags.forEach(x=>t.append(E("span","tag",x)));c.append(t)}
+const bt=shelfBtns(b);
 c.append(bt);box.append(c)}}
 async function showStore(){const box=$("sto");box.innerHTML="";const add=(t,st,ex,cls)=>{const d=E("div","it"),h=E("b");h.append(t+"：");h.append(E("span",cls||"",st));d.append(h,E("span","ex",ex));box.append(d)};let bad=false;
 add("保存の準備","できています","このブラウザの中の「データ置き場」につながっています。","ok");
@@ -1220,6 +1248,7 @@ for(const[n,f]of TESTS){const r=E("p");try{const[ok,d]=await f();r.className=ok?
 box.append(E("p","mut","保存の永続性は、ページを再読み込みしても本が残ることで確認します。"));msg(ng?ng+"件のテストが失敗しました":"すべてのテストに成功しました",ng);$("run").disabled=false;await refresh()};
 $("imgb1").onclick=()=>exportImages(false);$("imgb2").onclick=()=>exportImages(true);
 $("seed").onclick=async()=>{try{const b=await mkSample();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("サンプル本を作りました（4ページ）")}catch(e){msg(e.message,1)}};
+$("svt2").onchange=()=>{try{localStorage.setItem("bl_spinetitle",$("svt2").checked?"1":"0")}catch(e){}renderShelf()};$("sv1").onclick=()=>{try{localStorage.setItem("bl_shelfview","cv")}catch(e){}renderShelf()};$("sv2").onclick=()=>{try{localStorage.setItem("bl_shelfview","sp")}catch(e){}renderShelf()};
 $("tplb").onclick=async()=>{try{const b=await mkTemplates();cur=b.id;pi=0;mode="read";ED.sel=null;await refresh();msg("テンプレート集を作りました（8ページ）")}catch(e){msg(e.message,1)}};
 $("blank").onclick=async()=>{try{const b=await mkBlank();cur=b.id;pi=0;mode="edit";ED.sel=null;await refresh();msg("白紙の本を作りました")}catch(e){msg(e.message,1)}};
 $("per").onclick=async()=>{try{msg(await navigator.storage.persist()?"お願いが通りました。データが消えにくくなりました。":"ブラウザに断られました。使い方は変わりませんが、バックアップをこまめにとってください。")}catch(e){msg("このブラウザでは、お願いできませんでした。バックアップをこまめにとってください。")}showStore()};
