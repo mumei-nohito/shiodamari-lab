@@ -26,6 +26,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
   --warn:#ee9aa6; --warn-soft:#3a2229; --info:#e5c47a; --info-soft:#352d19; --ok:#8fd0a8; color-scheme:dark}
 :root[data-theme="dusk"]{--bg:#fbe9df;--card:#fff7f1;--ink:#3a2230;--muted:#80606c;--line:#ecc9bd;--accent:#b8452f;--accent-soft:#f6d9cc;--on-accent:#ffffff;--warn:#9c2f45;--warn-soft:#f7dbe0;--info:#7a4a12;--info-soft:#f8e6cf;--ok:#3d6b3f;color-scheme:light}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.7;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
 .wrap{max-width:1180px;margin:0 auto;display:grid;gap:24px}
@@ -127,6 +128,7 @@ pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white
       <section class="sec" id="dreamSec" hidden>
         <h2>キャラ交流の設定</h2>
         <p class="notice">個人で楽しむためのモードです。版権キャラで書いた作品を公開・投稿する場合は、その作品の二次創作ガイドライン（AI利用の可否を含む）を確認してください。</p>
+        <p class="hint">ここは「キャラ×あなた」のお話用です。ウチのコ同士のお話は「オリジナル小説」に切り替えて、詳細設定の主人公と相手役に名前とメモを入れてください。</p>
         <div class="row">
           <label class="f">キャラの出どころ<select id="dSource"><option value="版権作品">版権作品のキャラ</option><option value="自創作">自創作（うちの子）</option></select></label>
           <label class="f" id="dWorkWrap">作品名<input type="text" id="dWork" placeholder="例：作品のタイトル"></label>
@@ -170,10 +172,14 @@ pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white
           <summary id="dMainLabel">主人公</summary>
           <div class="inner">
             <div class="row">
+              <label class="f">名前<input type="text" id="pName" placeholder="空欄ならAIにおまかせ"></label>
+            </div>
+            <div class="row">
               <label class="f">性別<select id="pGender"></select></label>
               <label class="f">立場<select id="pRole"></select></label>
               <label class="f">能力<select id="pAbility"></select></label>
             </div>
+            <label class="f" id="pMemoWrap">特徴・口調メモ <span class="hint">ウチのコを主人公にするならここに。一人称、口癖、外見、過去など</span><textarea id="pMemo" placeholder="例：一人称は「僕」。丁寧語で話すが、身内には毒舌。元騎士団の書記官で、剣より帳簿が得意。"></textarea></label>
             <div>
               <p class="sub">性格 <small class="hint">最大3つまで</small></p>
               <div class="chips" id="pTraits"></div>
@@ -184,10 +190,14 @@ pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white
           <summary>相手役 <span class="badge">恋愛・相棒・師弟などの相手</span></summary>
           <div class="inner">
             <div class="row">
+              <label class="f">名前<input type="text" id="tName" placeholder="空欄ならAIにおまかせ"></label>
+            </div>
+            <div class="row">
               <label class="f">性別<select id="tGender"></select></label>
               <label class="f">立場<select id="tRole"></select></label>
               <label class="f">主人公との関係<select id="tRelation"></select></label>
             </div>
+            <label class="f" id="tMemoWrap">特徴・口調メモ <span class="hint">ウチのコを相手役にするならここに。一人称、口癖、外見、過去など</span><textarea id="tMemo" placeholder="例：一人称は「僕」。丁寧語で話すが、身内には毒舌。元騎士団の書記官で、剣より帳簿が得意。"></textarea></label>
             <div>
               <p class="sub">性格 <small class="hint">最大3つまで</small></p>
               <div class="chips" id="tTraits"></div>
@@ -309,7 +319,7 @@ const KEY="novel-library-v1";
 
 const DPOS=["キャラの世界の住人","キャラの世界へトリップ","キャラが現代にやって来る","現代パロディ（同じ現代で暮らす）"];
 function blank(){return{mode:"novel",dSource:"版権作品",dWork:"",dChar:"",dMemo:"",dName:"",dPos:"",genre:"",tags:[],ending:"",length:"",form:"普通の小説",
-  pGender:"",pRole:"",pAbility:"",pTraits:[],tGender:"",tRole:"",tRelation:"",tTraits:[],
+  pGender:"",pRole:"",pAbility:"",pTraits:[],pName:"",pMemo:"",tGender:"",tRole:"",tRelation:"",tTraits:[],tName:"",tMemo:"",
   setting:"",decide:"おまかせ",gRelation:"",gGenre:"",gKnow:"",avoid:[],avoidNote:"",free:""}}
 function sample(){return Object.assign(blank(),{genre:"恋愛",tags:["じれじれ","異世界転生","ゲーム世界転生","悪役令息","領地経営"],
   ending:"ハッピーエンド",length:"短編",pGender:"男性",pRole:"貴族",pAbility:"隠れた才能",pTraits:["冷静沈着","努力家"],
@@ -331,7 +341,7 @@ fillSelect("gRelation",D.gRelations);fillSelect("gGenre",D.gGenres);fillSelect("
 
 const SEL=["dSource","dPos","genre","ending","length","pGender","pRole","pAbility","tGender","tRole","tRelation","setting","gRelation","gGenre","gKnow"];
 SEL.forEach(id=>$(id).addEventListener("change",e=>{S[id]=e.target.value;update()}));
-["avoidNote","free","dWork","dChar","dMemo","dName"].forEach(id=>$(id).addEventListener("input",e=>{S[id]=e.target.value;update(false)}));
+["avoidNote","free","dWork","dChar","dMemo","dName","pName","pMemo","tName","tMemo"].forEach(id=>$(id).addEventListener("input",e=>{S[id]=e.target.value;update(false)}));
 document.querySelectorAll('input[name="decide"]').forEach(r=>r.addEventListener("change",e=>{S.decide=e.target.value;update()}));
 
 function renderTabs(boxId,groups,cur,list,onPick){const box=$(boxId);box.innerHTML="";
@@ -382,8 +392,8 @@ function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生
   L.push("文体・形式："+S.form+"（"+D.forms[S.form].spec+"）");
   L.push("舞台："+v(S.setting));
   L.push("未指定項目の決定方法："+S.decide,"");
-  L.push(dream?"■ 夢主（読者の分身）":"■ 主人公","性別："+v(S.pGender),"立場："+v(S.pRole),"能力："+v(S.pAbility),"性格："+(S.pTraits.length?S.pTraits.join("、"):"おまかせ"),"");
-  if(!dream)L.push("■ 相手役","性別："+v(S.tGender),"立場："+v(S.tRole),"主人公との関係："+v(S.tRelation),"性格："+(S.tTraits.length?S.tTraits.join("、"):"おまかせ"),"");
+  L.push(dream?"■ 夢主（読者の分身）":"■ 主人公",...(dream?[]:["名前："+(S.pName.trim()||"おまかせ")]),"性別："+v(S.pGender),"立場："+v(S.pRole),"能力："+v(S.pAbility),"性格："+(S.pTraits.length?S.pTraits.join("、"):"おまかせ"),...(!dream&&S.pMemo.trim()?["特徴・口調メモ："+S.pMemo.trim()]:[]),"");
+  if(!dream)L.push("■ 相手役","名前："+(S.tName.trim()||"おまかせ"),"性別："+v(S.tGender),"立場："+v(S.tRole),"主人公との関係："+v(S.tRelation),"性格："+(S.tTraits.length?S.tTraits.join("、"):"おまかせ"),...(S.tMemo.trim()?["特徴・口調メモ："+S.tMemo.trim()]:[]),"");
   if(g)L.push("■ ゲーム世界設定","ゲーム世界との関係："+v(S.gRelation),"ゲームジャンル："+v(S.gGenre),"主人公のゲーム知識："+v(S.gKnow),"");
   L.push("■ 避けたい要素",S.avoid.length?S.avoid.join("、"):"なし","除外の補足："+(S.avoidNote.trim()||"なし"),"");
   L.push("■ 追加リクエスト",S.free.trim()||"なし","");
@@ -394,6 +404,8 @@ function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生
    "避けたい要素は、主要な設定・展開として採用しない。追加リクエストの具体的な意図を尊重し、曖昧な言葉を安易に典型的なジャンル展開へ置き換えない。悪役令息・悪役令嬢などの属性は、ゲームジャンルや指定された文脈に沿って解釈する。",
    dream?"夢主の性別・立場・能力・性格を勝手に変更しない。性格に相反するものが含まれる場合は「ギャップ」として描く。夢主は「"+yume+"」と呼び、容姿や内面を細かく決めすぎず、読者が自分を重ねられる余地を残す。"
         :"主人公と相手役の性別・立場・能力・性格・関係を勝手に変更しない。モブ主人公は原則最後までモブのままとし、指定のない隠された最強能力や特別な血筋を追加しない。性格に相反するものが含まれる場合は、矛盾ではなく「ギャップ」として描く。"];
+  const ocs=dream?[]:[[S.pMemo,"主人公"],[S.tMemo,"相手役"]].filter(x=>x[0].trim()).map(x=>x[1]);
+  if(ocs.length)R.push(ocs.join("と")+"は読者の自創作キャラクターである。特徴・口調メモを最優先の根拠とし、一人称・口調・外見・過去などメモにある設定を変えない。重要な設定（過去・家族・能力など）を勝手に付け足さず、メモにない部分は控えめに補う。");
   if(dream)R.push(S.dSource==="自創作"
    ?"交流キャラは自創作キャラであり原作は存在しない。キャラの特徴・口調メモを唯一の根拠とし、重要な設定（過去・家族・能力など）を勝手に付け足さない。メモにない部分は控えめに補う。"
    :"交流キャラは版権作品のキャラである。既知のキャラ設定・口調を尊重し、特徴・口調メモと食い違う場合はメモを優先する。不確かな原作情報を事実として断定しない。原作の文章・台詞・場面を長くそのまま再現しない。原作の本筋から独立したエピソードとして書く。");
@@ -409,16 +421,16 @@ function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生
 
 function renderSlip(){let t,pair;
   if(S.mode==="dream"){t=(S.dChar.trim()||"キャラ未入力")+" × "+(S.dName.trim()||"あなた");pair=v(S.genre,"ジャンルおまかせ")}
-  else{t=[v(S.genre),...S.tags.slice(0,4)].join(" × ")+(S.tags.length>4?" ほか":"");pair=(S.pGender&&S.tGender)?`主人公と相手役：${S.pGender}×${S.tGender}`:""}
+  else{const nm=[S.pName.trim(),S.tName.trim()].filter(Boolean);t=nm.length===2?nm.join(" × "):[v(S.genre),...S.tags.slice(0,4)].join(" × ")+(S.tags.length>4?" ほか":"");pair=(S.pGender&&S.tGender)?`主人公と相手役：${S.pGender}×${S.tGender}`:""}
   $("slip").innerHTML=`<span class="hint">今回の物語</span><span class="t"></span><span class="m"></span>`;
   $("slip").querySelector(".t").textContent=t;
   $("slip").querySelector(".m").textContent=[v(S.ending,"結末おまかせ"),v(S.length,"長さおまかせ"),S.form,pair].filter(Boolean).join(" ／ ")}
 
 function update(full=true){
   if(full){
-    SEL.forEach(id=>$(id).value=S[id]);["avoidNote","free","dWork","dChar","dMemo","dName"].forEach(id=>$(id).value=S[id]);
+    SEL.forEach(id=>$(id).value=S[id]);["avoidNote","free","dWork","dChar","dMemo","dName","pName","pMemo","tName","tMemo"].forEach(id=>$(id).value=S[id]);
     const dream=S.mode==="dream";$("modeNovel").setAttribute("aria-pressed",!dream);$("modeDream").setAttribute("aria-pressed",dream);
-    $("dreamSec").hidden=!dream;$("dPartner").hidden=dream;$("dWorkWrap").hidden=S.dSource==="自創作";
+    $("dreamSec").hidden=!dream;$("pMemoWrap").hidden=dream;$("pName").closest(".row").hidden=dream;$("dPartner").hidden=dream;$("dWorkWrap").hidden=S.dSource==="自創作";
     $("dMainLabel").textContent=dream?"あなた（夢主）":"主人公";
     $(S.decide==="ランダム"?"decideRand":"decideAuto").checked=true;
     renderTabs("tagTabs",D.tagGroups,tagTab,S.tags,g=>{tagTab=g;update()});
@@ -440,7 +452,7 @@ function update(full=true){
 $("copy").addEventListener("click",()=>{const txt=buildPrompt();const done=m=>{$("status").textContent=m;setTimeout(()=>$("status").textContent="",3000)};
   const fallback=()=>{const r=document.createRange();r.selectNodeContents($("out"));const s=getSelection();s.removeAllRanges();s.addRange(r);done("選択しました。長押しまたは Ctrl+C でコピーしてください")};
   try{navigator.clipboard.writeText(txt).then(()=>done("コピーしました。AIのチャットに貼り付けてください")).catch(fallback)}catch(e){fallback()}});
-$("toShelf").addEventListener("click",()=>{const tags=S.mode==="dream"?[S.dChar.trim()?S.dChar.trim()+"（キャラ交流）":"キャラ交流",...S.tags]:S.tags.slice();
+$("toShelf").addEventListener("click",()=>{const tags=S.mode==="dream"?[S.dChar.trim()?S.dChar.trim()+"（キャラ交流）":"キャラ交流",...S.tags]:[...[S.pName.trim(),S.tName.trim()].filter(Boolean),...S.tags];
   try{localStorage.setItem("shiodamari-novel-handoff",JSON.stringify({ts:Date.now(),prompt:buildPrompt(),mainGenre:S.genre,tags:tags}))}catch(e){}});
 $("modeNovel").addEventListener("click",()=>{S.mode="novel";update()});
 $("modeDream").addEventListener("click",()=>{S.mode="dream";update()});
