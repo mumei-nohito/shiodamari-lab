@@ -321,13 +321,13 @@ const DPOS=["キャラの世界の住人","キャラの世界へトリップ","�
 function blank(){return{mode:"novel",dSource:"版権作品",dWork:"",dChar:"",dMemo:"",dName:"",dPos:"",genre:"",tags:[],ending:"",length:"",form:"普通の小説",
   pGender:"",pRole:"",pAbility:"",pTraits:[],pName:"",pMemo:"",tGender:"",tRole:"",tRelation:"",tTraits:[],tName:"",tMemo:"",
   setting:"",decide:"おまかせ",gRelation:"",gGenre:"",gKnow:"",avoid:[],avoidNote:"",free:""}}
-function sample(){return Object.assign(blank(),{genre:"恋愛",tags:["じれじれ","異世界転生","ゲーム世界転生","悪役令息","領地経営"],
-  ending:"ハッピーエンド",length:"短編",pGender:"男性",pRole:"貴族",pAbility:"隠れた才能",pTraits:["冷静沈着","努力家"],
-  tGender:"男性",tRelation:"原作（ゲーム）で敵になる相手",setting:"異世界",gRelation:"ゲームの世界そのもの",gGenre:"アクションRPG",gKnow:"隅々まで知っている",
-  avoid:["婚約破棄","断罪イベント","追放イベント"],
-  free:"原作開始のずっと前、幼少期から始まる。原作では勇者と共に主人公を倒しに来る相手役と、実は幼少期から面識があり、少しずつ恋愛的な関係になっていく。主人公は相手役を推しているが、それを表には出さない。"})}
+function sample(){return Object.assign(blank(),{genre:"ファンタジー",tags:["ほのぼの","冒険","もふもふ"],
+  ending:"ハッピーエンド",length:"短編",pRole:"冒険者",pAbility:"成長型",pTraits:["お人好し","臆病"],
+  tRole:"魔物・人外",tRelation:"初対面",setting:"西洋ファンタジー",
+  avoid:["残酷描写","悲劇的展開"],
+  free:"駆け出しの冒険者が森で迷子の小さな魔物を拾い、元の群れへ送り届けるまでの短い旅。"})}
 
-let S; try{const r=localStorage.getItem(KEY);S=r?Object.assign(blank(),JSON.parse(r)):sample()}catch(e){S=sample()}
+let S; try{const r=localStorage.getItem(KEY);S=r?Object.assign(blank(),JSON.parse(r)):blank()}catch(e){S=blank()}
 const $=id=>document.getElementById(id);
 let tagTab="雰囲気", avoidTab="展開";
 
