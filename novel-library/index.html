@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>小説ライブラリ</title>
+<meta name="description" content="条件を選ぶだけで、どのAIにも貼れる小説の注文票（プロンプト）を作るツール。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 図書館の貸出カード風。左に注文フォーム、右（スマホでは下）に組み上がったプロンプト */
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#eaeef2; --card:#fbfcfd; --ink:#1d2a3a; --muted:#5b6777; --line:#cfd6df;
+  --accent:#24587c; --accent-soft:#dbe7f0; --on-accent:#ffffff;
+  --warn:#a63d4f; --warn-soft:#f6e3e6; --info:#7a5a12; --info-soft:#f6eed9; --ok:#2f6b47;
+  --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121821; --card:#1a222d; --ink:#e4e9ef; --muted:#97a3b2; --line:#2d3947;
+  --accent:#86b8da; --accent-soft:#22374a; --on-accent:#0f1720;
+  --warn:#ee9aa6; --warn-soft:#3a2229; --info:#e5c47a; --info-soft:#352d19; --ok:#8fd0a8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121821; --card:#1a222d; --ink:#e4e9ef; --muted:#97a3b2; --line:#2d3947;
+  --accent:#86b8da; --accent-soft:#22374a; --on-accent:#0f1720;
+  --warn:#ee9aa6; --warn-soft:#3a2229; --info:#e5c47a; --info-soft:#352d19; --ok:#8fd0a8; color-scheme:dark}
+:root[data-theme="dusk"]{--bg:#fbe9df;--card:#fff7f1;--ink:#3a2230;--muted:#80606c;--line:#ecc9bd;--accent:#b8452f;--accent-soft:#f6d9cc;--on-accent:#ffffff;--warn:#9c2f45;--warn-soft:#f7dbe0;--info:#7a4a12;--info-soft:#f8e6cf;--ok:#3d6b3f;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:24px}
+header h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,40px);letter-spacing:.06em;margin:0;line-height:1.25;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.call{font-family:var(--display);font-size:13px;letter-spacing:.2em;color:var(--accent);margin:0 0 4px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:24px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:22px;min-width:0}
+.sec{display:grid;gap:10px;min-width:0}
+.sec+.sec{border-top:1px dashed var(--line);padding-top:20px}
+h2{font-family:var(--display);font-size:18px;font-weight:600;margin:0;letter-spacing:.04em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font-family:var(--body);font-size:12px;color:var(--muted);font-weight:400;letter-spacing:0}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+select,textarea,input[type="text"]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+select:focus-visible,textarea:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.tab{font:inherit;font-size:13px;background:none;border:none;color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);background:var(--accent-soft);font-weight:700}
+.tab .n{font-size:11px;color:var(--accent);margin-left:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:3px 12px;border-radius:999px;cursor:pointer;line-height:1.6}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip.avoid[aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:var(--card)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.forms{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.form{font:inherit;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 10px;cursor:pointer;display:grid;gap:2px}
+.form b{font-size:14px}
+.form span{font-size:12px;color:var(--muted);line-height:1.5}
+.form[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+details{border:1px solid var(--line);border-radius:8px;padding:0 14px}
+details[open]{padding-bottom:14px}
+summary{cursor:pointer;padding:10px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"＋";color:var(--muted)}
+details[open] summary::after{content:"－"}
+details .inner{display:grid;gap:14px}
+.sub{font-size:13px;font-weight:700;margin:0;color:var(--ink)}
+.radios{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+.side{position:sticky;top:16px;display:grid;gap:14px;min-width:0}
+@media (max-width:900px){.side{position:static}}
+.checks{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.checks li{font-size:13px;padding:6px 10px;border-radius:6px;line-height:1.55}
+.checks .bad{background:var(--warn-soft);color:var(--warn)}
+.checks .note{background:var(--info-soft);color:var(--info)}
+.checks .good{color:var(--ok);padding-left:0}
+.slip{display:grid;gap:4px;font-size:13px}
+.slip .t{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.35}
+.slip .m{color:var(--muted)}
+pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:340px;overflow:auto}
+.btns{display:grid;gap:8px}
+.btn{font:inherit;font-weight:700;border-radius:8px;padding:10px 14px;cursor:pointer;border:1px solid var(--accent);text-align:center;text-decoration:none}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:var(--card);color:var(--accent)}
+.ais{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ais .btn{font-size:13px;padding:8px 6px}
+.status{font-size:12px;color:var(--ok);min-height:1.2em;margin:0;text-align:center}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools .btn{font-size:13px;padding:6px 12px;font-weight:500}
+.how{font-size:12.5px;color:var(--muted);margin:0;padding-left:1.2em}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--accent);border-radius:10px;overflow:hidden}
+.mode button{font:inherit;border:none;background:var(--card);color:var(--accent);padding:10px 8px;cursor:pointer;display:grid;gap:0;text-align:center}
+.mode button b{font-size:15px}
+.mode button span{font-size:11.5px;opacity:.85}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.notice{font-size:12.5px;background:var(--info-soft);color:var(--info);border-radius:8px;padding:8px 12px;margin:0;line-height:1.6}
+.badge{font-size:11px;color:var(--info);background:var(--info-soft);padding:1px 8px;border-radius:999px;font-weight:500;letter-spacing:0;font-family:var(--body)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+.topbar a{color:var(--muted)}
+#th{width:auto;font-size:13px;padding:4px 8px}
+</style></head>
+<body>
+
+<div class="wrap">
+  <div class="topbar"><a href="../">潮だまり工房へ戻る</a><select id="th" aria-label="表示モード"></select></div>
+  <header>
+    <p class="call">NOVEL LIBRARY ／ 貸出票</p>
+    <h1>小説ライブラリ</h1>
+    <p>好きな条件を選ぶと、どのAIにも貼れる「小説の注文票（プロンプト）」ができあがります。選ばなかった項目はAIにおまかせ。</p>
+  </header>
+
+  <div class="grid">
+    <main class="card" id="form">
+      <div class="tools">
+        <button class="btn ghost" id="loadSample" type="button">例を読み込む</button>
+        <button class="btn ghost" id="resetAll" type="button">すべてリセット</button>
+      </div>
+
+      <div class="mode" role="group" aria-label="モード">
+        <button type="button" id="modeNovel"><b>オリジナル小説</b><span>主人公も相手もAIと一緒に作る</span></button>
+        <button type="button" id="modeDream"><b>キャラ交流（夢小説）</b><span>好きなキャラとあなたの物語</span></button>
+      </div>
+
+      <section class="sec" id="dreamSec" hidden>
+        <h2>キャラ交流の設定</h2>
+        <p class="notice">個人で楽しむためのモードです。版権キャラで書いた作品を公開・投稿する場合は、その作品の二次創作ガイドライン（AI利用の可否を含む）を確認してください。</p>
+        <div class="row">
+          <label class="f">キャラの出どころ<select id="dSource"><option value="版権作品">版権作品のキャラ</option><option value="自創作">自創作（うちの子）</option></select></label>
+          <label class="f" id="dWorkWrap">作品名<input type="text" id="dWork" placeholder="例：作品のタイトル"></label>
+          <label class="f">キャラ名<input type="text" id="dChar" placeholder="例：キャラの名前"></label>
+        </div>
+        <label class="f">キャラの特徴・口調メモ <span class="hint">AIのうろ覚えを防ぐための大事な欄。一人称や口癖、性格、外見など</span><textarea id="dMemo" placeholder="例：一人称は「俺」。ぶっきらぼうだけど面倒見がいい。語尾に「〜だろ」が多い。甘いものが苦手。"></textarea></label>
+        <div class="row">
+          <label class="f">あなた（夢主）の名前<input type="text" id="dName" placeholder="空欄なら「あなた」"></label>
+          <label class="f">二人の出会い方<select id="dPos"></select></label>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2>① メインジャンル</h2>
+        <label class="f">物語の中心になるジャンル<select id="genre"></select></label>
+      </section>
+
+      <section class="sec">
+        <h2>② 追加ジャンル・好きな要素 <small>いくつでも選べます</small></h2>
+        <div class="tabs" role="tablist" id="tagTabs"></div>
+        <div class="chips" id="tagChips"></div>
+      </section>
+
+      <section class="sec">
+        <h2>③ 結末と長さ</h2>
+        <div class="row">
+          <label class="f">結末<select id="ending"></select></label>
+          <label class="f">長さ<select id="length"></select></label>
+        </div>
+        <p class="hint" id="lengthHint"></p>
+      </section>
+
+      <section class="sec">
+        <h2>④ 文体・形式</h2>
+        <div class="forms" id="formChips"></div>
+      </section>
+
+      <section class="sec">
+        <h2>⑤ 詳細設定 <small>任意</small></h2>
+        <details id="dMain">
+          <summary id="dMainLabel">主人公</summary>
+          <div class="inner">
+            <div class="row">
+              <label class="f">性別<select id="pGender"></select></label>
+              <label class="f">立場<select id="pRole"></select></label>
+              <label class="f">能力<select id="pAbility"></select></label>
+            </div>
+            <div>
+              <p class="sub">性格 <small class="hint">最大3つまで</small></p>
+              <div class="chips" id="pTraits"></div>
+            </div>
+          </div>
+        </details>
+        <details id="dPartner">
+          <summary>相手役 <span class="badge">恋愛・相棒・師弟などの相手</span></summary>
+          <div class="inner">
+            <div class="row">
+              <label class="f">性別<select id="tGender"></select></label>
+              <label class="f">立場<select id="tRole"></select></label>
+              <label class="f">主人公との関係<select id="tRelation"></select></label>
+            </div>
+            <div>
+              <p class="sub">性格 <small class="hint">最大3つまで</small></p>
+              <div class="chips" id="tTraits"></div>
+            </div>
+          </div>
+        </details>
+        <details id="dWorld">
+          <summary>舞台・決め方</summary>
+          <div class="inner">
+            <label class="f">舞台・世界観<select id="setting"></select></label>
+            <div>
+              <p class="sub">未指定の項目の決め方</p>
+              <div class="radios">
+                <label><input type="radio" name="decide" id="decideAuto" value="おまかせ"> おまかせ（整合性重視）</label>
+                <label><input type="radio" name="decide" id="decideRand" value="ランダム"> ランダム（意外な組み合わせもアリ）</label>
+              </div>
+            </div>
+          </div>
+        </details>
+        <details id="dGame" hidden>
+          <summary>ゲーム世界の設定 <span class="badge">ゲーム世界転生を選択中</span></summary>
+          <div class="inner">
+            <div class="row">
+              <label class="f">ゲーム世界との関係<select id="gRelation"></select></label>
+              <label class="f">ゲームジャンル<select id="gGenre"></select></label>
+              <label class="f">主人公のゲーム知識<select id="gKnow"></select></label>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="sec">
+        <h2>⑥ 避けたい要素 <small>任意</small></h2>
+        <div class="tabs" role="tablist" id="avoidTabs"></div>
+        <div class="chips" id="avoidChips"></div>
+        <label class="f">除外条件の補足<textarea id="avoidNote" placeholder="例：悪役令嬢系の婚約破棄テンプレートには寄せない"></textarea></label>
+      </section>
+
+      <section class="sec">
+        <h2>⑦ 自由入力・追加リクエスト</h2>
+        <label class="f">選択肢にない希望はここへ<textarea id="free" placeholder="例：RPGの悪役令息に転生した主人公がゲーム知識を使い、討伐される未来を回避する物語"></textarea></label>
+      </section>
+    </main>
+
+    <aside class="side">
+      <div class="card">
+        <div class="slip" id="slip"></div>
+        <ul class="checks" id="checks"></ul>
+        <div class="btns">
+          <button class="btn primary" id="copy" type="button">プロンプトをコピー</button>
+          <p class="status" id="status" aria-live="polite"></p>
+          <div class="ais">
+            <a class="btn ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+            <a class="btn ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+            <a class="btn ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+          </div>
+        </div>
+        <ol class="how">
+          <li>「プロンプトをコピー」を押す</li>
+          <li>好きなAIを開いて、新しいチャットに貼り付けて送信</li>
+          <li>続きは「次のページ」と送るだけ</li>
+        </ol>
+      </div>
+      <details open>
+        <summary>できあがったプロンプト</summary>
+        <pre class="out" id="out"></pre>
+      </details>
+    </aside>
+  </div>
+</div>
+
+<script>
+const D = {
+  genres:["恋愛","ファンタジー","冒険","ミステリー","ホラー","SF","日常","コメディ","ヒューマンドラマ","青春","サスペンス","歴史"],
+  tagGroups:{
+    "雰囲気":["ほのぼの","ギャグ","感動","切ない","シリアス","ダーク","甘々","じれじれ","爽快","不穏","熱血","壮大"],
+    "Web小説":["異世界転生","異世界転移","ゲーム世界転生","悪役令嬢","悪役令息","婚約破棄","追放","ざまぁ","チート","成り上がり","スローライフ","テイマー","もふもふ","領地経営","ダンジョン経営","聖女","魔王","勇者","生産職","ループもの","現代ダンジョン","勘違い系"],
+    "恋愛属性":["溺愛","執着愛","両片想い","すれ違い","契約結婚","政略結婚","身分差","再会","年の差","人外恋愛"],
+    "追加ジャンル":["恋愛","ファンタジー","冒険","ミステリー","ホラー","SF","日常","コメディ","ヒューマンドラマ","青春","サスペンス","歴史"]
+  },
+  endings:["ハッピーエンド","ビターエンド","バッドエンド","切ない結末","結末は秘密"],
+  lengths:{
+    "短編":{hint:"全3〜5ページ・5〜10分で読める。スキマ時間向け",spec:"全3〜5ページ程度（1ページ約1,500〜2,000字）"},
+    "中編":{hint:"全8〜12ページ・20〜30分くらい",spec:"全8〜12ページ程度（1ページ約1,500〜2,000字）"},
+    "長編":{hint:"全20〜30ページ。じっくり読みたい日に",spec:"全20〜30ページ程度（1ページ約1,500〜2,000字）"},
+    "連載形式":{hint:"章ごとに区切りながら、終わりを決めずに続けていく",spec:"章ごとに区切る連載形式。章の終わりに区切りを示し、読者が終わりを望むまで続ける"}
+  },
+  forms:{
+    "普通の小説":{d:"地の文で読ませる、いつもの小説",spec:"地の文を中心とした通常の小説形式"},
+    "手紙・往復書簡":{d:"登場人物どうしの手紙のやり取り",spec:"登場人物どうしの手紙・往復書簡のみで構成する。地の文は使わない"},
+    "日記":{d:"本人しか知らない本音がこぼれる",spec:"登場人物の日記のみで構成する。日付と短い記述を積み重ねる"},
+    "報告書・調査記録":{d:"第三者の記録から関係が見えてくる",spec:"報告書・調査記録・観察記録などの公的・第三者的な文書のみで構成する"},
+    "スマホ覗き見":{d:"トーク画面・SNS・検索履歴など",spec:"スマートフォンの画面（トーク画面、SNS投稿、検索履歴、メモなど）を覗き見る形式で構成する"},
+    "混合スタイル":{d:"小説の中に手紙や日記が挟まる",spec:"通常の小説を基本に、手紙・日記・記録などの文書を場面に応じて挟み込む"}
+  },
+  genders:["男性","女性"],
+  roles:["勇者","魔王","悪役","悪役令息","悪役令嬢","モブ・一般人","冒険者","貴族","王族","商人","職人","研究者","使用人","魔物・人外","その他"],
+  abilities:["能力なし","一般人レベル","最弱","成長型","隠れた才能","チート","最強"],
+  traits:["お人好し","冷静沈着","天然","腹黒","臆病","豪快","皮肉屋","無気力","努力家","自由奔放"],
+  relations:["初対面","幼馴染","主従・上司と部下","師弟","ライバル・敵対","原作（ゲーム）で敵になる相手"],
+  settings:["現代日本","異世界","学園","西洋ファンタジー","和風・歴史","近未来","架空の街","その他"],
+  gRelations:["ゲームの世界そのもの","ゲームによく似た世界"],
+  gGenres:["乙女ゲーム","BLゲーム","RPG","アクションRPG","シミュレーション","恋愛アドベンチャー"],
+  gKnows:["隅々まで知っている","うろ覚え","ほとんど知らない"],
+  avoidGroups:{
+    "展開":["婚約破棄","断罪イベント","追放イベント","復讐・ざまぁ","主人公の無双","隠された血筋","ご都合主義的な解決"],
+    "恋愛":["恋愛中心","ハーレム","逆ハーレム","溺愛","三角関係","政略結婚"],
+    "世界観":["乙女ゲーム的世界観","RPG的世界観","ステータス画面","現代知識チート","魔法","神託・予言"],
+    "描写・雰囲気":["過度なシリアス","過度なギャグ","残酷描写","悲劇的展開","日常描写中心"]
+  }
+};
+const GAP_PAIRS=[["お人好し","腹黒"],["臆病","豪快"],["無気力","努力家"],["冷静沈着","自由奔放"],["天然","腹黒"]];
+const CLASH=[["婚約破棄","婚約破棄"],["追放","追放イベント"],["ざまぁ","復讐・ざまぁ"],["溺愛","溺愛"],["政略結婚","政略結婚"],["チート","主人公の無双"],["悪役令嬢","乙女ゲーム的世界観"]];
+const NOPHONE=["異世界","西洋ファンタジー","和風・歴史"];
+const NOPHONE_TAGS=["異世界転生","異世界転移","ゲーム世界転生"];
+const KEY="novel-library-v1";
+
+const DPOS=["キャラの世界の住人","キャラの世界へトリップ","キャラが現代にやって来る","現代パロディ（同じ現代で暮らす）"];
+function blank(){return{mode:"novel",dSource:"版権作品",dWork:"",dChar:"",dMemo:"",dName:"",dPos:"",genre:"",tags:[],ending:"",length:"",form:"普通の小説",
+  pGender:"",pRole:"",pAbility:"",pTraits:[],tGender:"",tRole:"",tRelation:"",tTraits:[],
+  setting:"",decide:"おまかせ",gRelation:"",gGenre:"",gKnow:"",avoid:[],avoidNote:"",free:""}}
+function sample(){return Object.assign(blank(),{genre:"恋愛",tags:["じれじれ","異世界転生","ゲーム世界転生","悪役令息","領地経営"],
+  ending:"ハッピーエンド",length:"短編",pGender:"男性",pRole:"貴族",pAbility:"隠れた才能",pTraits:["冷静沈着","努力家"],
+  tGender:"男性",tRelation:"原作（ゲーム）で敵になる相手",setting:"異世界",gRelation:"ゲームの世界そのもの",gGenre:"アクションRPG",gKnow:"隅々まで知っている",
+  avoid:["婚約破棄","断罪イベント","追放イベント"],
+  free:"原作開始のずっと前、幼少期から始まる。原作では勇者と共に主人公を倒しに来る相手役と、実は幼少期から面識があり、少しずつ恋愛的な関係になっていく。主人公は相手役を推しているが、それを表には出さない。"})}
+
+let S; try{const r=localStorage.getItem(KEY);S=r?Object.assign(blank(),JSON.parse(r)):sample()}catch(e){S=sample()}
+const $=id=>document.getElementById(id);
+let tagTab="雰囲気", avoidTab="展開";
+
+function fillSelect(id,opts,labelFn){const el=$(id);el.innerHTML="";
+  const o=document.createElement("option");o.value="";o.textContent="おまかせ";el.appendChild(o);
+  opts.forEach(v=>{const x=document.createElement("option");x.value=v;x.textContent=labelFn?labelFn(v):v;el.appendChild(x)})}
+fillSelect("genre",D.genres);fillSelect("ending",D.endings);fillSelect("length",Object.keys(D.lengths));
+["pGender","tGender"].forEach(i=>fillSelect(i,D.genders));["pRole","tRole"].forEach(i=>fillSelect(i,D.roles));
+fillSelect("pAbility",D.abilities);fillSelect("tRelation",D.relations);fillSelect("setting",D.settings);
+fillSelect("gRelation",D.gRelations);fillSelect("gGenre",D.gGenres);fillSelect("gKnow",D.gKnows);fillSelect("dPos",DPOS);
+
+const SEL=["dSource","dPos","genre","ending","length","pGender","pRole","pAbility","tGender","tRole","tRelation","setting","gRelation","gGenre","gKnow"];
+SEL.forEach(id=>$(id).addEventListener("change",e=>{S[id]=e.target.value;update()}));
+["avoidNote","free","dWork","dChar","dMemo","dName"].forEach(id=>$(id).addEventListener("input",e=>{S[id]=e.target.value;update(false)}));
+document.querySelectorAll('input[name="decide"]').forEach(r=>r.addEventListener("change",e=>{S.decide=e.target.value;update()}));
+
+function renderTabs(boxId,groups,cur,list,onPick){const box=$(boxId);box.innerHTML="";
+  Object.keys(groups).forEach(g=>{const b=document.createElement("button");b.type="button";b.className="tab";b.setAttribute("role","tab");
+    b.setAttribute("aria-selected",g===cur);const n=groups[g].filter(v=>list.includes(v)).length;
+    b.innerHTML=g+(n?'<span class="n">'+n+'</span>':"");b.onclick=()=>onPick(g);box.appendChild(b)})}
+function renderChips(boxId,items,list,cls,max){const box=$(boxId);box.innerHTML="";
+  items.forEach(v=>{const b=document.createElement("button");b.type="button";b.className="chip"+(cls?" "+cls:"");b.textContent=v;
+    const on=list.includes(v);b.setAttribute("aria-pressed",on);if(max&&!on&&list.length>=max)b.disabled=true;
+    b.onclick=()=>{const i=list.indexOf(v);i>=0?list.splice(i,1):list.push(v);update()};box.appendChild(b)})}
+function renderForms(){const box=$("formChips");box.innerHTML="";
+  Object.entries(D.forms).forEach(([k,v])=>{const b=document.createElement("button");b.type="button";b.className="form";
+    b.setAttribute("aria-pressed",S.form===k);b.innerHTML="<b>"+k+"</b><span>"+v.d+"</span>";b.onclick=()=>{S.form=k;update()};box.appendChild(b)})}
+
+function checks(){const out=[];const inTags=v=>S.tags.includes(v);
+  if(S.mode==="dream"){
+    if(!S.dChar.trim())out.push(["bad","交流するキャラの名前を入れてください。"]);
+    if(S.dSource==="版権作品"&&!S.dWork.trim())out.push(["note","💡 作品名があると、AIがどの作品のキャラか特定しやすくなります。"]);
+    if(!S.dMemo.trim())out.push(["note","💡 特徴・口調メモがあると、キャラの口調や設定のズレが減ります。"]);
+  }
+  CLASH.forEach(([t,a])=>{if(inTags(t)&&S.avoid.includes(a))out.push(["bad",`「${t}」が好きな要素と避けたい要素の両方に入っています。どちらかを外してください。`])});
+  if(S.genre==="恋愛"&&S.avoid.includes("恋愛中心"))out.push(["bad","メインジャンルが恋愛なのに「恋愛中心」を避ける設定になっています。"]);
+  if(S.ending==="バッドエンド"&&S.avoid.includes("悲劇的展開"))out.push(["bad","バッドエンドと「悲劇的展開を避ける」は両立しにくい組み合わせです。"]);
+  if((S.pRole==="悪役令嬢"&&S.pGender==="男性")||(S.pRole==="悪役令息"&&S.pGender==="女性"))out.push(["bad","主人公の立場と性別が合っていません（令嬢＝女性、令息＝男性）。"]);
+  if(S.mode==="novel"&&((S.tRole==="悪役令嬢"&&S.tGender==="男性")||(S.tRole==="悪役令息"&&S.tGender==="女性")))out.push(["bad","相手役の立場と性別が合っていません（令嬢＝女性、令息＝男性）。"]);
+  (S.mode==="dream"?[["夢主",S.pTraits]]:[["主人公",S.pTraits],["相手役",S.tTraits]]).forEach(([who,tr])=>GAP_PAIRS.forEach(([a,b])=>{if(tr.includes(a)&&tr.includes(b))out.push(["note",`💡 ${who}の「${a}」と「${b}」はギャップのある性格として書かれます（普段は${a}、ときどき${b}など）。`])}));
+  const noPhone=NOPHONE.includes(S.setting)||S.tags.some(t=>NOPHONE_TAGS.includes(t));
+  if(S.form==="スマホ覗き見"&&noPhone)out.push(["note","💡 スマホがない世界では、通信の魔道具や伝書などの「似た役割のもの」に置き換えて書かれます。"]);
+  if(["手紙・往復書簡","日記","報告書・調査記録","スマホ覗き見"].includes(S.form)&&["長編","連載形式"].includes(S.length))out.push(["note","💡 文書だけの形式は長くなると不自然になりがちです。長めに読むなら「混合スタイル」もおすすめ。"]);
+  if(S.tags.includes("ゲーム世界転生")&&!S.tags.includes("異世界転生")&&!S.tags.includes("異世界転移"))out.push(["note","💡 ゲーム世界転生は「転生もの」として扱われます。"]);
+  return out}
+
+const v=(x,d="おまかせ")=>x?x:d;
+const DREAM_SHORT="一度の返答で導入から結末まで書き切る読み切り（約3,000〜5,000字）";
+function lengthSpec(){if(S.mode==="dream"&&(!S.length||S.length==="短編"))return DREAM_SHORT;
+  return S.length?D.lengths[S.length].spec:"おまかせ（短編〜中編程度）"}
+function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生");const dream=S.mode==="dream";
+  const yume=S.dName.trim()||"あなた";const oneShot=dream&&(!S.length||S.length==="短編");
+  L.push(dream?"【小説ライブラリ｜キャラ交流・読書開始】":"【小説ライブラリ｜読書開始】","");
+  if(dream){L.push("■ キャラ交流設定","キャラの出どころ："+(S.dSource==="自創作"?"自創作キャラ（原作なし）":"版権作品"));
+    if(S.dSource==="版権作品")L.push("作品名："+(S.dWork.trim()||"未記入"));
+    L.push("交流キャラ："+(S.dChar.trim()||"未記入"),"キャラの特徴・口調メモ："+(S.dMemo.trim()||"なし"),"夢主の名前："+yume,"二人の出会い方："+v(S.dPos),"")}
+  L.push("■ 読書設定");
+  L.push("メインジャンル："+v(S.genre));
+  L.push("追加ジャンル・属性・雰囲気："+(S.tags.length?S.tags.join("、"):"おまかせ"));
+  L.push("結末："+v(S.ending));
+  L.push("長さ："+(S.length?S.length+"（"+lengthSpec()+"）":lengthSpec()));
+  L.push("文体・形式："+S.form+"（"+D.forms[S.form].spec+"）");
+  L.push("舞台："+v(S.setting));
+  L.push("未指定項目の決定方法："+S.decide,"");
+  L.push(dream?"■ 夢主（読者の分身）":"■ 主人公","性別："+v(S.pGender),"立場："+v(S.pRole),"能力："+v(S.pAbility),"性格："+(S.pTraits.length?S.pTraits.join("、"):"おまかせ"),"");
+  if(!dream)L.push("■ 相手役","性別："+v(S.tGender),"立場："+v(S.tRole),"主人公との関係："+v(S.tRelation),"性格："+(S.tTraits.length?S.tTraits.join("、"):"おまかせ"),"");
+  if(g)L.push("■ ゲーム世界設定","ゲーム世界との関係："+v(S.gRelation),"ゲームジャンル："+v(S.gGenre),"主人公のゲーム知識："+v(S.gKnow),"");
+  L.push("■ 避けたい要素",S.avoid.length?S.avoid.join("、"):"なし","除外の補足："+(S.avoidNote.trim()||"なし"),"");
+  L.push("■ 追加リクエスト",S.free.trim()||"なし","");
+  L.push("■ 執筆・進行ルール");
+  const R=[
+   "指定された条件を尊重し、「おまかせ」の項目だけを補完する。決定方法が「おまかせ」なら整合性を優先し、「ランダム」なら意外な組み合わせも採用する。指定済みの条件は変更しない。",
+   "メインジャンルを中心に、追加ジャンル・属性・雰囲気を自然に融合させる。選ばれた要素を名前だけの飾りにしない。",
+   "避けたい要素は、主要な設定・展開として採用しない。追加リクエストの具体的な意図を尊重し、曖昧な言葉を安易に典型的なジャンル展開へ置き換えない。悪役令息・悪役令嬢などの属性は、ゲームジャンルや指定された文脈に沿って解釈する。",
+   dream?"夢主の性別・立場・能力・性格を勝手に変更しない。性格に相反するものが含まれる場合は「ギャップ」として描く。夢主は「"+yume+"」と呼び、容姿や内面を細かく決めすぎず、読者が自分を重ねられる余地を残す。"
+        :"主人公と相手役の性別・立場・能力・性格・関係を勝手に変更しない。モブ主人公は原則最後までモブのままとし、指定のない隠された最強能力や特別な血筋を追加しない。性格に相反するものが含まれる場合は、矛盾ではなく「ギャップ」として描く。"];
+  if(dream)R.push(S.dSource==="自創作"
+   ?"交流キャラは自創作キャラであり原作は存在しない。キャラの特徴・口調メモを唯一の根拠とし、重要な設定（過去・家族・能力など）を勝手に付け足さない。メモにない部分は控えめに補う。"
+   :"交流キャラは版権作品のキャラである。既知のキャラ設定・口調を尊重し、特徴・口調メモと食い違う場合はメモを優先する。不確かな原作情報を事実として断定しない。原作の文章・台詞・場面を長くそのまま再現しない。原作の本筋から独立したエピソードとして書く。");
+  R.push("指定された文体・形式を最後まで守る。その形式の媒体が物語世界に存在しない場合は、役割の近いもの（例：スマホ→通信の魔道具、手紙→伝言の記録）に置き換え、形式そのものは維持する。",
+   "登場人物・人間関係・時系列・世界設定・伏線・既出の出来事を維持し、矛盾を避ける。",
+   oneShot?"一度の返答で、作品タイトルと本文を導入から結末まで書き切る。読者に行動の選択を求めない。読者が続編を希望したときのみ、既出の結末を壊さずに後日談や新しいエピソードを書く。"
+     :"最初の返答では、作品タイトルと第1ページの本文のみを出力する。読者が「次のページ」と送ったら続きを書く。読者に行動の選択を求めない。指定された長さを意識し、最後のページは「（完）」で締めて自然に完結させる。",
+   "結末や未公開の真相を先に明かさない。読者が展開の変更を希望した場合は既出の出来事を原則維持して反映し、過去の書き直しを明示された場合のみ該当場面を改稿する。",
+   "「あらすじ」「設定確認」と言われたら既出の情報だけを整理して答え、未公開の秘密は明かさない。「新しい物語」と言われたら、小説ライブラリで新しい注文票を作って貼り付けるよう短く案内する。",
+   "読書中は本文を中心に出力し、余計な解説・確認・感想を挟まない。");
+  R.forEach((r,i)=>L.push((i+1)+". "+r));
+  return L.join("\n")}
+
+function renderSlip(){let t,pair;
+  if(S.mode==="dream"){t=(S.dChar.trim()||"キャラ未入力")+" × "+(S.dName.trim()||"あなた");pair=v(S.genre,"ジャンルおまかせ")}
+  else{t=[v(S.genre),...S.tags.slice(0,4)].join(" × ")+(S.tags.length>4?" ほか":"");pair=(S.pGender&&S.tGender)?`主人公と相手役：${S.pGender}×${S.tGender}`:""}
+  $("slip").innerHTML=`<span class="hint">今回の物語</span><span class="t"></span><span class="m"></span>`;
+  $("slip").querySelector(".t").textContent=t;
+  $("slip").querySelector(".m").textContent=[v(S.ending,"結末おまかせ"),v(S.length,"長さおまかせ"),S.form,pair].filter(Boolean).join(" ／ ")}
+
+function update(full=true){
+  if(full){
+    SEL.forEach(id=>$(id).value=S[id]);["avoidNote","free","dWork","dChar","dMemo","dName"].forEach(id=>$(id).value=S[id]);
+    const dream=S.mode==="dream";$("modeNovel").setAttribute("aria-pressed",!dream);$("modeDream").setAttribute("aria-pressed",dream);
+    $("dreamSec").hidden=!dream;$("dPartner").hidden=dream;$("dWorkWrap").hidden=S.dSource==="自創作";
+    $("dMainLabel").textContent=dream?"あなた（夢主）":"主人公";
+    $(S.decide==="ランダム"?"decideRand":"decideAuto").checked=true;
+    renderTabs("tagTabs",D.tagGroups,tagTab,S.tags,g=>{tagTab=g;update()});
+    renderChips("tagChips",D.tagGroups[tagTab],S.tags);
+    renderTabs("avoidTabs",D.avoidGroups,avoidTab,S.avoid,g=>{avoidTab=g;update()});
+    renderChips("avoidChips",D.avoidGroups[avoidTab],S.avoid,"avoid");
+    renderChips("pTraits",D.traits,S.pTraits,"",3);renderChips("tTraits",D.traits,S.tTraits,"",3);
+    renderForms();
+    $("lengthHint").textContent=(S.mode==="dream"&&(!S.length||S.length==="短編"))?"キャラ交流の短編は、1回の返事で最後まで読める読み切りになります。":(S.length?D.lengths[S.length].hint:"おまかせの場合は短編〜中編くらいになります。");
+    $("dGame").hidden=!S.tags.includes("ゲーム世界転生");
+  }
+  const c=checks();const ul=$("checks");ul.innerHTML="";
+  if(!c.some(x=>x[0]==="bad")){const li=document.createElement("li");li.className="good";li.textContent="✓ 矛盾は見つかっていません";ul.appendChild(li)}
+  c.forEach(([k,t])=>{const li=document.createElement("li");li.className=k==="bad"?"bad":"note";li.textContent=t;ul.appendChild(li)});
+  renderSlip();$("out").textContent=buildPrompt();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+}
+
+$("copy").addEventListener("click",()=>{const txt=buildPrompt();const done=m=>{$("status").textContent=m;setTimeout(()=>$("status").textContent="",3000)};
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents($("out"));const s=getSelection();s.removeAllRanges();s.addRange(r);done("選択しました。長押しまたは Ctrl+C でコピーしてください")};
+  try{navigator.clipboard.writeText(txt).then(()=>done("コピーしました。AIのチャットに貼り付けてください")).catch(fallback)}catch(e){fallback()}});
+$("modeNovel").addEventListener("click",()=>{S.mode="novel";update()});
+$("modeDream").addEventListener("click",()=>{S.mode="dream";update()});
+$("loadSample").addEventListener("click",()=>{S=sample();update();$("status").textContent="例を読み込みました"});
+$("resetAll").addEventListener("click",()=>{S=blank();update();$("status").textContent="リセットしました"});
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").value=tm;for(const o of $("th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
+tmu();update();
+</script>
+</body></html>
