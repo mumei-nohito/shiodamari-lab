@@ -250,6 +250,8 @@ pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white
           <li>好きなAIを開いて、新しいチャットに貼り付けて送信</li>
           <li>続きは「次のページ」と送るだけ</li>
         </ol>
+        <a class="btn ghost" id="toShelf" href="../novel-shelf/#new">この注文票で本棚に作品を作る</a>
+        <p class="hint" style="margin-top:-6px">書いてもらった小説は「<a href="../novel-shelf/" style="color:var(--accent)">小説ライブラリの本棚</a>」にしまっておけます。注文票とジャンルは自動で入ります。</p>
       </div>
       <details open>
         <summary>できあがったプロンプト</summary>
@@ -438,6 +440,8 @@ function update(full=true){
 $("copy").addEventListener("click",()=>{const txt=buildPrompt();const done=m=>{$("status").textContent=m;setTimeout(()=>$("status").textContent="",3000)};
   const fallback=()=>{const r=document.createRange();r.selectNodeContents($("out"));const s=getSelection();s.removeAllRanges();s.addRange(r);done("選択しました。長押しまたは Ctrl+C でコピーしてください")};
   try{navigator.clipboard.writeText(txt).then(()=>done("コピーしました。AIのチャットに貼り付けてください")).catch(fallback)}catch(e){fallback()}});
+$("toShelf").addEventListener("click",()=>{const tags=S.mode==="dream"?[S.dChar.trim()?S.dChar.trim()+"（キャラ交流）":"キャラ交流",...S.tags]:S.tags.slice();
+  try{localStorage.setItem("shiodamari-novel-handoff",JSON.stringify({ts:Date.now(),prompt:buildPrompt(),mainGenre:S.genre,tags:tags}))}catch(e){}});
 $("modeNovel").addEventListener("click",()=>{S.mode="novel";update()});
 $("modeDream").addEventListener("click",()=>{S.mode="dream";update()});
 $("loadSample").addEventListener("click",()=>{S=sample();update();$("status").textContent="例を読み込みました"});
