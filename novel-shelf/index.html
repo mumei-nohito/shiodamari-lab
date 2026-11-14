@@ -342,6 +342,7 @@ window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
 window.addEventListener("focus",syncTheme);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
 TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
+tmu();
 /* ===== 画面遷移 ===== */
 const VIEWS = ["viewShelf", "viewWork", "viewReader", "viewWorkForm", "viewPageForm"];
 function show(id) {
