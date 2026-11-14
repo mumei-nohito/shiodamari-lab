@@ -44,6 +44,7 @@ h2 small{font-family:var(--body);font-size:12px;color:var(--muted);font-weight:4
 label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);min-width:0}
 select,textarea,input[type="text"]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
 textarea{min-height:76px;resize:vertical}
+select:disabled{opacity:.5;cursor:not-allowed}
 select:focus-visible,textarea:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hint{font-size:12px;color:var(--muted);margin:0}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);padding-bottom:8px}
@@ -159,6 +160,8 @@ pre.out{margin:0;font-family:var(--body);font-size:12.5px;line-height:1.65;white
           <label class="f">長さ<select id="length"></select></label>
         </div>
         <p class="hint" id="lengthHint"></p>
+        <label class="f">物語の構成<select id="arc"></select></label>
+        <p class="hint" id="arcHint"></p>
       </section>
 
       <section class="sec">
@@ -318,7 +321,7 @@ const NOPHONE_TAGS=["異世界転生","異世界転移","ゲーム世界転生"]
 const KEY="novel-library-v1";
 
 const DPOS=["キャラの世界の住人","キャラの世界へトリップ","キャラが現代にやって来る","現代パロディ（同じ現代で暮らす）"];
-function blank(){return{mode:"novel",dSource:"版権作品",dWork:"",dChar:"",dMemo:"",dName:"",dPos:"",genre:"",tags:[],ending:"",length:"",form:"普通の小説",
+function blank(){return{arc:"",mode:"novel",dSource:"版権作品",dWork:"",dChar:"",dMemo:"",dName:"",dPos:"",genre:"",tags:[],ending:"",length:"",form:"普通の小説",
   pGender:"",pRole:"",pAbility:"",pTraits:[],pName:"",pMemo:"",tGender:"",tRole:"",tRelation:"",tTraits:[],tName:"",tMemo:"",
   setting:"",decide:"おまかせ",gRelation:"",gGenre:"",gKnow:"",avoid:[],avoidNote:"",free:""}}
 function sample(){return Object.assign(blank(),{genre:"ファンタジー",tags:["ほのぼの","冒険","もふもふ"],
@@ -338,8 +341,18 @@ fillSelect("genre",D.genres);fillSelect("ending",D.endings);fillSelect("length",
 ["pGender","tGender"].forEach(i=>fillSelect(i,D.genders));["pRole","tRole"].forEach(i=>fillSelect(i,D.roles));
 fillSelect("pAbility",D.abilities);fillSelect("tRelation",D.relations);fillSelect("setting",D.settings);
 fillSelect("gRelation",D.gRelations);fillSelect("gGenre",D.gGenres);fillSelect("gKnow",D.gKnows);fillSelect("dPos",DPOS);
+const ARCS={
+  "ゴールで完結":{d:"いちばん大きな目標に届いたところが山場。届いたら短い余韻で完結",
+    rule:"物語の構成は「ゴールで完結」。この物語の主な目標（恋愛なら両想い、冒険なら目的の達成、ミステリーなら真相の解明など）への到達を山場とし、到達後は短い余韻で完結させる。"},
+  "ゴールのあとにひと波乱":{d:"一度ゴールに届いたあと、それを揺るがす出来事があって、乗り越えて完結",
+    rule:"物語の構成は「ゴールのあとにひと波乱」。主な目標（恋愛なら両想い、冒険なら目的の達成など）への到達を、全体の4〜6割あたりに置く。到達で完結させず、その後に、手に入れた関係や成果を揺るがす出来事を起こす。人物が悩み、判断し、行動して乗り越える過程を場面として描いてから完結させる。試練は人物の性格・価値観・過去から自然に生まれるものを優先し、唐突な第三者の悪意だけに頼らない。"},
+  "ゴールのその後":{d:"最初からゴール済み（恋人同士、旅を終えた後など）。その後の日々や新しい課題を描く",
+    rule:"物語の構成は「ゴールのその後」。物語開始時点で主な目標はすでに達成済み（恋愛ならすでに恋人同士、冒険なら旅を終えた後など）とし、その後の日々や新しい課題を中心に描く。達成までの経緯は、必要な分だけ回想や会話で触れる。"}
+};
+fillSelect("arc",Object.keys(ARCS));
+const arcOK=()=>["中編","長編","連載形式"].includes(S.length);
 
-const SEL=["dSource","dPos","genre","ending","length","pGender","pRole","pAbility","tGender","tRole","tRelation","setting","gRelation","gGenre","gKnow"];
+const SEL=["dSource","dPos","genre","ending","length","arc","pGender","pRole","pAbility","tGender","tRole","tRelation","setting","gRelation","gGenre","gKnow"];
 SEL.forEach(id=>$(id).addEventListener("change",e=>{S[id]=e.target.value;update()}));
 ["avoidNote","free","dWork","dChar","dMemo","dName","pName","pMemo","tName","tMemo"].forEach(id=>$(id).addEventListener("input",e=>{S[id]=e.target.value;update(false)}));
 document.querySelectorAll('input[name="decide"]').forEach(r=>r.addEventListener("change",e=>{S.decide=e.target.value;update()}));
@@ -372,6 +385,8 @@ function checks(){const out=[];const inTags=v=>S.tags.includes(v);
   if(S.form==="スマホ覗き見"&&noPhone)out.push(["note","💡 スマホがない世界では、通信の魔道具や伝書などの「似た役割のもの」に置き換えて書かれます。"]);
   if(["手紙・往復書簡","日記","報告書・調査記録","スマホ覗き見"].includes(S.form)&&["長編","連載形式"].includes(S.length))out.push(["note","💡 文書だけの形式は長くなると不自然になりがちです。長めに読むなら「混合スタイル」もおすすめ。"]);
   if(S.tags.includes("ゲーム世界転生")&&!S.tags.includes("異世界転生")&&!S.tags.includes("異世界転移"))out.push(["note","💡 ゲーム世界転生は「転生もの」として扱われます。"]);
+  if(arcOK()&&S.arc==="ゴールのその後"&&S.tRelation==="初対面")out.push(["bad","「ゴールのその後」は最初から関係ができている話なので、相手役との関係「初対面」と合いません。"]);
+  if(arcOK()&&S.arc==="ゴールのその後"&&S.tags.includes("両片想い"))out.push(["note","💡「ゴールのその後」×「両片想い」は、付き合っているのに互いの気持ちを測りかねている話として書かれます。"]);
   return out}
 
 const v=(x,d="おまかせ")=>x?x:d;
@@ -388,6 +403,7 @@ function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生
   L.push("メインジャンル："+v(S.genre));
   L.push("追加ジャンル・属性・雰囲気："+(S.tags.length?S.tags.join("、"):"おまかせ"));
   L.push("結末："+v(S.ending));
+  if(arcOK()&&S.arc)L.push("物語の構成："+S.arc);
   L.push("長さ："+(S.length?S.length+"（"+lengthSpec()+"）":lengthSpec()));
   L.push("文体・形式："+S.form+"（"+D.forms[S.form].spec+"）");
   L.push("舞台："+v(S.setting));
@@ -412,6 +428,7 @@ function buildPrompt(){const L=[];const g=S.tags.includes("ゲーム世界転生
    :"交流キャラは版権作品のキャラである。既知のキャラ設定・口調を尊重し、特徴・口調メモと食い違う場合はメモを優先する。不確かな原作情報を事実として断定しない。原作の文章・台詞・場面を長くそのまま再現しない。原作の本筋から独立したエピソードとして書く。");
   if(hasMemo)R.push("特徴・口調メモは、人物の言動を決めるための内部資料である。メモの文章・項目名・数値（身長など）を地の文や台詞に書き写さない。人物に自分の性格や過去を説明させない。感情や性格は、表情・仕草・沈黙・台詞の選び方・行動で表す。今の場面に関係する設定だけを使い、すべてを登場させようとしない。メモにある台詞の例は口調をつかむための参考で、そのまま本文に使わず、場面に合った新しい台詞を作る。");
   const goal=S.length&&D.lengths[S.length].goal;
+  if(arcOK()&&S.arc)R.push(ARCS[S.arc].rule);
   R.push("指定された文体・形式を最後まで守る。その形式の媒体が物語世界に存在しない場合は、役割の近いもの（例：スマホ→通信の魔道具、手紙→伝言の記録）に置き換え、形式そのものは維持する。",
    "登場人物・人間関係・時系列・世界設定・伏線・既出の出来事を維持し、矛盾を避ける。誰が何をしたか、誰が何を持ってきたかなどの細部も、前のページと食い違わせない。",
    "物語の中心となる事件・謎・対立は、原因の発見、人物の判断と行動、結果まで本文の場面として描く。「その後、解決した」のような要約で済ませない。終盤で新しい大きな謎を増やさず、提示した伏線の回収を優先する。",
@@ -445,6 +462,8 @@ function update(full=true){
     renderChips("pTraits",D.traits,S.pTraits,"",3);renderChips("tTraits",D.traits,S.tTraits,"",3);
     renderForms();
     $("lengthHint").textContent=(S.mode==="dream"&&(!S.length||S.length==="短編"))?"キャラ交流の短編は、1回の返事で最後まで読める読み切りになります。":(S.length?D.lengths[S.length].hint:"おまかせの場合は短編〜中編くらいになります。");
+    $("arc").disabled=!arcOK();
+    $("arcHint").textContent=!arcOK()?"中編・長編・連載形式を選ぶと選べます（短編だと駆け足になりやすいため）。":(S.arc?ARCS[S.arc].d:"おまかせの場合は、ジャンルと結末に合わせてAIが決めます。");
     $("dGame").hidden=!S.tags.includes("ゲーム世界転生");
   }
   const c=checks();const ul=$("checks");ul.innerHTML="";
