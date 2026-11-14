@@ -433,7 +433,7 @@ function openWork(id) {
   });
   document.getElementById("wkFullText").addEventListener("click", function () {
     openTextDlg("全文テキスト（" + (w.title || "") + "）",
-      (w.title || "") + "\n\n" + w.pages.map(function (p) { return p.body || ""; }).join("\n\n"), "copy", true);
+      fullText(w), "copy", true);
   });
   document.getElementById("wkEdit").addEventListener("click", function () { openWorkForm(w.id); });
   box.querySelectorAll("[data-read]").forEach(function (el) {
@@ -481,7 +481,7 @@ function openReader(idx) {
     + '<button class="chip' + (rs.font === "gothic" ? " on" : "") + '" data-rsf="gothic">ゴシック</button>'
     + '<button class="btn ghost small" id="rsReset" style="margin-left:auto">設定をリセット</button></div>'
     + '</div>'
-    + '<div class="readerBody" style="font-size:' + fontSize + 'px">' + esc(p.body || "") + '</div>'
+    + '<div class="readerBody" style="font-size:' + fontSize + 'px">' + esc(displayBody(w, readerIdx)) + '</div>'
     + '<div class="readerNav">'
     + '<button class="btn ghost" id="rdPrev"' + (readerIdx === 0 ? " disabled" : "") + '>← 前へ</button>'
     + '<select id="rdJump">' + opts + '</select>'
@@ -564,6 +564,37 @@ function guessTitle(body) {
   if (m) t = m[1].trim();
   if (t.length > 60 || /[。、]$/.test(t)) return "";
   return t;
+}
+/* ===== 表示・書き出し用の整形（保存した本文はそのまま） ===== */
+function normTitle(s) { return String(s || "").replace(/[\s　]/g, ""); }
+function cleanMarkdown(body) {
+  return String(body || "").split(/\r?\n/).map(function (line) {
+    return line
+      .replace(/^\s{0,3}#{1,6}\s+/, "")            /* 見出しの # */
+      .replace(/^\s{0,3}(?:[-*_]\s*){3,}$/, "")      /* 区切り線 --- */
+      .replace(/\*\*(.+?)\*\*/g, "$1")              /* **太字** */
+      .replace(/__(.+?)__/g, "$1");                  /* __太字__ */
+  }).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+/* 1ページ目の先頭行が作品タイトルなら取り除く */
+function stripTitleLine(text, title) {
+  if (!title) return text;
+  const lines = text.split("\n");
+  let i = 0;
+  while (i < lines.length && !lines[i].trim()) i++;
+  if (i < lines.length && normTitle(guessTitle(lines[i])) === normTitle(title)) {
+    lines.splice(0, i + 1);
+    while (lines.length && !lines[0].trim()) lines.shift();
+  }
+  return lines.join("\n");
+}
+function displayBody(w, idx) {
+  let t = cleanMarkdown(w.pages[idx].body);
+  if (idx === 0) t = stripTitleLine(t, w.title);
+  return t;
+}
+function fullText(w) {
+  return (w.title || "") + "\n\n" + w.pages.map(function (_, i) { return displayBody(w, i).trim(); }).join("\n\n");
 }
 let titleAuto = false;
 $("wfBody").addEventListener("input", function () {
