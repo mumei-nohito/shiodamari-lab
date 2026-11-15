@@ -195,6 +195,9 @@ body.viewing .toast{bottom:76px}
 .prow .meta{min-width:0;flex:1}
 .prow .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prow .ck{font-size:1.1rem;width:1.4em;text-align:center;color:var(--accent)}
+.bkwarn{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff4dc;color:#5c4100;border:1px solid #f0d79a;border-radius:12px;padding:8px 12px;margin:0 0 12px;font-size:.88rem}
+:root[data-theme="dark"] .bkwarn{background:#3a3016;color:#f3e2b5;border-color:#6b5a2a}
+.bkwarn .btn{box-shadow:none}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
   padding:8px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:60;pointer-events:none;font-size:.9rem}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -223,6 +226,11 @@ body.viewing .toast{bottom:76px}
     <div class="actions">
       <button class="btn" id="menuBtn">💾 バックアップ</button>
       <button class="btn primary" id="newBtn">＋ 新しく作る</button>
+    </div>
+    <div class="bkwarn hidden" id="bkWarn">
+      <span>💾</span><span id="bkMsg" style="flex:1;min-width:180px"></span>
+      <button class="btn small primary" id="bkNow">今すぐバックアップ</button>
+      <button class="btn small" id="bkLater">あとで</button>
     </div>
     <div class="toolbar">
       <input class="search" id="search" type="search" placeholder="🔍 名前・内容で検索">
@@ -382,6 +390,17 @@ body.viewing .toast{bottom:76px}
       <button class="btn" id="copyJsonBtn">📋 バックアップをテキストでコピー</button>
       <textarea class="inp" id="pasteJson" style="min-height:70px" placeholder="ここにバックアップのテキストを貼り付け"></textarea>
       <button class="btn" id="pasteImportBtn">⬆ 貼り付けたテキストから読み込む</button>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+      <div class="hint" id="bkLast" style="margin-bottom:6px"></div>
+      <label class="hint">バックアップのお知らせ：
+        <select id="bkInterval" style="font-size:.85rem;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 6px">
+          <option value="7">1週間たったら</option>
+          <option value="14">2週間たったら</option>
+          <option value="30">1か月たったら</option>
+          <option value="0">お知らせしない</option>
+        </select>
+      </label>
     </div>
     <div class="acts"><button class="btn" id="backupClose">閉じる</button></div>
   </div>
@@ -550,7 +569,7 @@ tmu();
 /* ---------- 一覧 ---------- */
 let all = [], filterTags = new Set(), current = null, reordering = false;
 const NOTAG = '分類なし';
-async function refresh(){ all = await store.all(); await normalizeOrder(); renderList(); }
+async function refresh(){ all = await store.all(); await normalizeOrder(); renderList(); checkBackup(); }
 // 自分で決めた順：番号を 1,2,3… に詰め直す（番号がないものは作った順で後ろへ）
 function manualSorted(){ return all.slice().sort((a,b) => ((a.order ?? Infinity) - (b.order ?? Infinity)) || (a.createdAt - b.createdAt)); }
 async function applyOrder(listInOrder){
@@ -1135,20 +1154,46 @@ function renderLinks(){
 }
 $('#linkAdd').onclick = () => { draft.links.push({id:uid(), title:'', url:''}); markDirty(); renderLinks(); const ins=$('#edLinks').querySelectorAll('.inp'); ins[ins.length-1]?.focus(); };
 
+/* ---------- バックアップのお知らせ ---------- */
+const BK = 'talk-profile-book-backup';
+function bkGet(){ try{ return Object.assign({last:0, snooze:0, interval:14}, JSON.parse(localStorage.getItem(BK))||{}); }catch(e){ return {last:0, snooze:0, interval:14}; } }
+function bkSet(v){ try{ localStorage.setItem(BK, JSON.stringify(Object.assign(bkGet(), v))); }catch(e){} }
+function markBackup(){ bkSet({last:Date.now(), snooze:0}); checkBackup(); }
+const DAY = 864e5;
+function checkBackup(){
+  const b = bkGet(), now = Date.now(), box = $('#bkWarn');
+  $('#bkInterval').value = String(b.interval);
+  $('#bkLast').textContent = b.last ? `最後のバックアップ：${new Date(b.last).toLocaleString('ja-JP')}` : 'まだ一度もバックアップしてないよ';
+  let msg = '';
+  if(all.length && b.interval > 0 && b.snooze <= now){
+    if(!b.last) msg = 'まだ一度もバックアップしてないよ。ブラウザのデータが消えると戻せないから、一度書き出しておくと安心！';
+    else {
+      const changed = all.filter(p => p.updatedAt > b.last).length, days = Math.floor((now - b.last)/DAY);
+      if(changed && now - b.last >= b.interval*DAY) msg = `最後のバックアップから${days}日たってるよ（そのあと${changed}件のメモが更新されてるよ）`;
+    }
+  }
+  $('#bkMsg').textContent = msg; box.classList.toggle('hidden', !msg);
+}
+$('#bkNow').onclick = () => $('#backupOv').classList.add('show');
+$('#bkLater').onclick = () => { bkSet({snooze: Date.now() + 3*DAY}); checkBackup(); toast('3日後にまたお知らせするね'); };
+$('#bkInterval').onchange = e => { bkSet({interval: +e.target.value, snooze:0}); checkBackup(); };
+
 /* ---------- バックアップ ---------- */
-$('#menuBtn').onclick = () => $('#backupOv').classList.add('show');
+$('#menuBtn').onclick = () => { checkBackup(); $('#backupOv').classList.add('show'); };
 $('#backupClose').onclick = () => $('#backupOv').classList.remove('show');
 $('#exportBtn').onclick = async () => {
   const data = {app:APP, version:1, exportedAt:new Date().toISOString(), fieldPresets:presets, platformPresets:pfPresets||[], profiles: await store.all()};
   const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
   const a = el('a',{href:URL.createObjectURL(blob), download:`AI創作メモ保管庫_${new Date().toISOString().slice(0,10)}.json`});
   document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+  markBackup();
   toast(`${data.profiles.length}件を書き出したよ`);
 };
 $('#importBtn').onclick = () => $('#importFile').click();
 $('#copyJsonBtn').onclick = async () => {
   const data = {app:APP, version:1, exportedAt:new Date().toISOString(), fieldPresets:presets, platformPresets:pfPresets||[], profiles: await store.all()};
-  copyText(JSON.stringify(data));
+  await copyText(JSON.stringify(data));
+  markBackup();
 };
 $('#importFile').onchange = async e => {
   const file = e.target.files[0]; e.target.value=''; if(!file) return;
