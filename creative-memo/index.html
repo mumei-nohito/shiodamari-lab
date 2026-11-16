@@ -913,6 +913,12 @@ function kanaMark(mark){ // mark: '゙'=濁点 '゚'=半濁点 ''=取る
   // 半角カナの部分は、いったん全角にしてから半角に戻す（ほかの部分はそのまま）
   return s => s.split(/([ｦ-ﾟ]+)/).map((part, i) => i%2 ? toHalfKana(full(toFullKana(part))) : full(part)).join('');
 }
+// どんな字にも濁点：用意されている字（が など）はその1文字に、ない字（あ゙ など）は濁点を重ねる
+const anyDakuten = s => [...s].map((c, i, arr) => {
+  if(/\s/.test(c) || /[゙゚゛゜]/.test(c) || /[゙゛]/.test(arr[i+1]||'')) return c;
+  const base = c.normalize('NFD').replace(/[゙゚]/g,''), k = (base + '゙').normalize('NFC');
+  return k.length===1 ? k : base + '゙';
+}).join('');
 const MARU_KANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲ';
 const maruKana = s => [...toKata(toFullKana(s))].map(c => { const i = MARU_KANA.indexOf(c); return i<0 ? c : cp(0x32D0 + i); }).join('');
 const unMaruKana = s => [...s].map(c => { const n = c.codePointAt(0); return n>=0x32D0 && n<=0x32FE ? MARU_KANA[n-0x32D0] : c; }).join('');
@@ -925,6 +931,7 @@ const KANA = [
   {s:'あ', nm:'大きくする', conv: swapChars(SMALL_S, SMALL_B)},
   {s:'が', nm:'濁点を付ける（付けられる字だけ）', conv: kanaMark('゙')},
   {s:'ぱ', nm:'半濁点を付ける（は行だけ）', conv: kanaMark('゚')},
+  {s:'あ゙', nm:'どんな字にも濁点（文字数が増えるよ）', conv: anyDakuten, count:true},
   {s:'か', nm:'点を取る', conv: kanaMark('')},
   {s:'㋐', nm:'丸囲みカナ（ンや濁音は変わらない）', conv: maruKana}
 ];
@@ -987,7 +994,9 @@ function applyItem(it){
     if(!t || t.selectionStart===t.selectionEnd){ toast('変えたいところを選んでから押してね'); return; }
     const a = t.selectionStart, b = t.selectionEnd, before = t.value.slice(a, b), after = it.conv(before);
     if(after===before){ toast('選んだところに変えられる文字がなかったよ'); return; }
-    putText(t, a, b, after, a, a + after.length); return;
+    putText(t, a, b, after, a, a + after.length);
+    if(it.count){ const d = len(after) - len(before); if(d>0) toast(`濁点の分、文字数が${d}字増えたよ`); }
+    return;
   }
   if(!t){ copyText(text); toast('コピーしたよ（書きたい欄をタップしてから押すと直接入るよ）'); return; }
   const v = t.value, a = t.selectionStart, b = t.selectionEnd, sel = v.slice(a, b);
