@@ -131,6 +131,23 @@ textarea.inp{resize:vertical;min-height:4.4em;height:calc(1.7em * 10 + 20px);lin
 .pre{white-space:pre-wrap;word-break:break-word;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:2.6em;line-height:1.6;overflow:auto;resize:vertical}
 .pre.short{resize:none}
 .pre.emptytxt{color:var(--sub)}
+/* Markdownプレビュー */
+#mdBtn.on{background:var(--chip);border-color:var(--accent)}
+.mdnote{background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:.82rem;color:var(--ink);margin-bottom:4px}
+.pre.md{white-space:normal}
+.md > :first-child{margin-top:0}
+.md > :last-child{margin-bottom:0}
+.md p{margin:0 0 .7em;white-space:pre-wrap}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:.9em 0 .4em;line-height:1.35}
+.md h1{font-size:1.4em}.md h2{font-size:1.25em}.md h3{font-size:1.1em}.md h4,.md h5,.md h6{font-size:1em}
+.md ul,.md ol{margin:0 0 .7em;padding-left:1.6em}
+.md li{white-space:pre-wrap}
+.md blockquote{margin:0 0 .7em;padding:4px 12px;border-left:4px solid var(--accent2);color:var(--sub);white-space:pre-wrap}
+.md hr{border:none;border-top:1px solid var(--line);margin:1em 0}
+.md code{background:var(--chip);border-radius:5px;padding:0 5px;font-family:ui-monospace,Consolas,monospace;font-size:.92em}
+.md pre.cb{background:var(--chip);border-radius:8px;padding:8px 10px;margin:0 0 .7em;overflow:auto;white-space:pre}
+.md pre.cb code{background:none;padding:0}
+.md a{color:var(--accent);word-break:break-all}
 /* modal */
 .overlay{position:fixed;inset:0;background:rgba(5,20,30,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
 .overlay.show{display:flex}
@@ -259,6 +276,7 @@ body.viewing .toast{bottom:76px}
       <button class="back" id="viewBack">← 一覧へ</button>
       <button class="back hidden" id="histBack" style="margin-left:8px"></button>
       <div class="sp"></div>
+      <button class="btn" id="mdBtn" title="Markdownの書き方を、飾りがついた見た目で確認できるよ">👁 プレビュー</button>
       <button class="btn" id="copyAllBtn">📋 まとめてコピー</button>
       <button class="btn primary" id="editBtn">✏️ 編集</button>
     </header>
@@ -679,6 +697,78 @@ $('#sortSel').onchange = () => { sortDir = sortDirs[$('#sortSel').value]; saveSo
 $('#reorderBtn').onclick = () => { reordering = !reordering; renderList(); };
 $('#sortDir').onclick = () => { sortDir = sortDir==='asc' ? 'desc' : 'asc'; sortDirs[$('#sortSel').value] = sortDir; saveSort(); renderList(); };
 
+/* ---------- Markdownプレビュー ----------
+   文字はすべて textContent で入れるので、メモに変なタグが混ざっていても動かない（安全） */
+const MDK = 'creative-memo-mdPreview';
+let mdOn = (() => { try{ return localStorage.getItem(MDK)==='1'; }catch(e){ return false; } })();
+function safeHref(u){ try{ const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; }catch(e){ return null; } }
+function mdInline(s){
+  const out = [], re = /`([^`\n]+)`|\*\*(.+?)\*\*|__(.+?)__|~~(.+?)~~|\*([^*\s](?:[^*]*?[^*\s])?)\*|_([^_\s](?:[^_]*?[^_\s])?)_|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+  let last = 0, m;
+  while((m = re.exec(s))){
+    if(m.index > last) out.push(s.slice(last, m.index));
+    if(m[1]!=null) out.push(el('code',{text:m[1]}));
+    else if(m[2]!=null || m[3]!=null) out.push(el('strong',{}, mdInline(m[2] ?? m[3])));
+    else if(m[4]!=null) out.push(el('del',{}, mdInline(m[4])));
+    else if(m[5]!=null || m[6]!=null) out.push(el('em',{}, mdInline(m[5] ?? m[6])));
+    else { const h = safeHref(m[8]); out.push(h ? el('a',{href:h, target:'_blank', rel:'noopener noreferrer'}, mdInline(m[7])) : m[0]); }
+    last = re.lastIndex;
+  }
+  if(last < s.length) out.push(s.slice(last));
+  return out;
+}
+function mdLines(lines){ // 改行はそのまま改行として見せる（チャットアプリ寄りの見え方）
+  const out = [];
+  lines.forEach((l,i) => { if(i) out.push(el('br')); out.push(...mdInline(l)); });
+  return out;
+}
+function renderMd(text){
+  const box = el('div',{class:'pre md'}), L = String(text).replace(/\r\n?/g,'\n').split('\n');
+  const isHr = l => /^ {0,3}([-*_])( *\1){2,} *$/.test(l);
+  const isUl = l => /^\s*[-*+]\s+/.test(l), isOl = l => /^\s*\d+[.)]\s+/.test(l);
+  const isStart = l => /^ {0,3}(#{1,6}\s|>|```)/.test(l) || isHr(l) || isUl(l) || isOl(l);
+  let i = 0;
+  while(i < L.length){
+    const l = L[i];
+    if(!l.trim()){ i++; continue; }
+    let m;
+    if(/^ {0,3}```/.test(l)){
+      const code = []; i++;
+      while(i < L.length && !/^ {0,3}```/.test(L[i])) code.push(L[i++]);
+      i++; box.append(el('pre',{class:'cb'}, el('code',{text:code.join('\n')})));
+    }else if((m = l.match(/^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$/))){
+      box.append(el('h'+m[1].length,{}, mdInline(m[2]))); i++;
+    }else if(isHr(l)){
+      box.append(el('hr')); i++;
+    }else if(/^ {0,3}>/.test(l)){
+      const q = [];
+      while(i < L.length && /^ {0,3}>/.test(L[i])) q.push(L[i++].replace(/^ {0,3}> ?/,''));
+      box.append(el('blockquote',{}, mdLines(q)));
+    }else if(isUl(l) || isOl(l)){
+      const ol = isOl(l), list = el(ol ? 'ol' : 'ul');
+      if(ol){ const n = parseInt(l, 10); if(n!==1) list.setAttribute('start', n); }
+      while(i < L.length && (ol ? isOl(L[i]) : isUl(L[i]))){
+        list.append(el('li',{}, mdInline(L[i].replace(ol ? /^\s*\d+[.)]\s+/ : /^\s*[-*+]\s+/, ''))));
+        i++;
+      }
+      box.append(list);
+    }else{
+      const para = [];
+      while(i < L.length && L[i].trim() && !(para.length && isStart(L[i]))) para.push(L[i++]);
+      box.append(el('p',{}, mdLines(para)));
+    }
+  }
+  return box;
+}
+function updateMdBtn(){
+  const b = $('#mdBtn'); b.classList.toggle('on', mdOn);
+  b.textContent = mdOn ? '📝 テキスト表示' : '👁 プレビュー';
+}
+$('#mdBtn').onclick = () => {
+  mdOn = !mdOn; try{ localStorage.setItem(MDK, mdOn ? '1' : '0'); }catch(e){}
+  const y = window.scrollY; openView(current.id); window.scrollTo(0, y);
+};
+
 /* ---------- 閲覧 ---------- */
 /* 履歴（関連メモをたどったあと戻れるように） */
 let hist = [];
@@ -717,13 +807,15 @@ function openView(id, mode){
     el('div',{}, el('h2',{text:p.name||'（名前なし）'}), badgesEl(p),
       el('div',{class:'hint', text:'更新：'+new Date(p.updatedAt).toLocaleString('ja-JP')}),
       (relsOf(p).length + backRefs(p).length) ? el('button',{class:'jump', text:`🧷 関連メモ ${relsOf(p).length + backRefs(p).length}件 ↓`, onclick(){ $('#relSec')?.scrollIntoView({behavior:'smooth', block:'start'}); }}) : null)));
-  const block = (title, text, extra='') => el('div',{class:'block'},
+  updateMdBtn();
+  if(mdOn) body.append(el('div',{class:'mdnote', text:'👁 プレビュー中：Markdownの書き方（## 見出し、**太字** など）を飾りつきで表示してるよ。これは見た目のめやすで、貼り付け先のアプリや環境によって見え方が変わることがあるよ（Markdownに対応していないアプリだと記号のまま表示されるよ）。コピーされるのは記号入りの元の文章だよ。'}));
+  const block = (title, text, extra='', md=false) => el('div',{class:'block'},
     el('div',{class:'block-h'}, el('h3',{text:title}), el('span',{class:'hint', text:`${len(text)}字${extra}`}),
       el('button',{class:'btn small', text:'📋 コピー', onclick(){copyText(text||'');}})),
-    el('div',{class:'pre'+(text?'':' emptytxt'), text:text||'（未入力）'}));
+    md && mdOn && text ? renderMd(text) : el('div',{class:'pre'+(text?'':' emptytxt'), text:text||'（未入力）'}));
   body.append(block('名前・タイトル', p.name||''));
-  body.append(block('本文', p.profile||'', p.profileLimit?` / ${p.profileLimit}字`:''));
-  (p.fields||[]).forEach(f => body.append(block(f.title||'（無題の項目）', f.body||'', f.limit?` / ${f.limit}字`:'')));
+  body.append(block('本文', p.profile||'', p.profileLimit?` / ${p.profileLimit}字`:'', true));
+  (p.fields||[]).forEach(f => body.append(block(f.title||'（無題の項目）', f.body||'', f.limit?` / ${f.limit}字`:'', true)));
   const outs = relsOf(p), ins = backRefs(p).filter(b => !outs.some(o => o.id===b.memo.id));
   if(outs.length || ins.length){
     const sec = el('div',{class:'block', id:'relSec'}, el('div',{class:'block-h'}, el('h3',{text:'🧷 関連メモ'}), el('span',{class:'hint', text:'押すとそのメモに移動するよ'})));
