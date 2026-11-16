@@ -216,6 +216,32 @@ body.viewing .toast{bottom:76px}
 .bkwarn{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff4dc;color:#5c4100;border:1px solid #f0d79a;border-radius:12px;padding:8px 12px;margin:0 0 12px;font-size:.88rem}
 :root[data-theme="dark"] .bkwarn{background:#3a3016;color:#f3e2b5;border-color:#6b5a2a}
 .bkwarn .btn{box-shadow:none}
+/* 飾りパレット */
+.pal{position:fixed;right:16px;bottom:76px;z-index:40;width:min(340px,calc(100vw - 20px));max-height:min(62vh,520px);display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.22);overflow:hidden}
+.pal-h{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg2)}
+.pal-h .btn{box-shadow:none}
+.grip{cursor:grab;touch-action:none;user-select:none;color:var(--sub);font-size:1.1rem;padding:0 4px}
+.grip:active{cursor:grabbing}
+.pal-help{font-size:.8rem;padding:8px 12px;border-bottom:1px solid var(--line);color:var(--ink)}
+.pal-legend{margin-top:4px;display:flex;gap:6px;align-items:center;color:var(--sub)}
+.pal-tabs{display:flex;gap:4px;padding:8px 10px 4px;overflow-x:auto;flex:none}
+.pal-tabs button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 11px;font-size:.82rem;white-space:nowrap}
+.pal-tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pal-desc{font-size:.76rem;color:var(--sub);padding:2px 12px 4px}
+.pal-body{overflow:auto;padding:4px 10px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.pal-body.wide{grid-template-columns:1fr 1fr}
+.pit{border:1px solid var(--line);background:var(--input);border-radius:10px;padding:5px 7px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0;position:relative}
+.pit:hover{border-color:var(--accent)}
+.pit .sm{font-size:.95rem;white-space:pre;overflow:hidden;text-overflow:ellipsis}
+.pit .nm{font-size:.72rem;color:var(--sub)}
+.pit .x{position:absolute;top:2px;right:4px;font-size:.72rem;color:var(--sub);border:none;background:none;padding:2px}
+.kind{display:inline-block;border-radius:999px;padding:0 7px;font-size:.68rem;font-weight:700;align-self:flex-start;white-space:nowrap}
+.k-any{background:#d5f2e6;color:#1d6b4f}.k-md{background:#dfe3fb;color:#3a3f8f}.k-app{background:#fbdde6;color:#9a2c4b}
+.pal-add{grid-column:1/-1;display:flex;gap:6px;margin-top:4px}
+.pal-add .inp{padding:5px 9px;font-size:.85rem}
+.pal-note{grid-column:1/-1;font-size:.76rem;color:var(--sub)}
+@media (max-width:520px){.pal{right:10px;bottom:70px;max-height:46vh}.pal-body{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
   padding:8px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:60;pointer-events:none;font-size:.9rem}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -285,6 +311,7 @@ body.viewing .toast{bottom:76px}
       <button id="bnHist" class="hidden">↩ 戻る</button>
       <button id="bnBack">← 一覧へ</button>
       <button id="bnTop">⬆ 上へ</button>
+      <button id="bnMd">👁 プレビュー</button>
       <button id="bnEdit" class="pri">✏️ 編集</button>
       <button id="dupBtn">📑 複製</button>
       <button id="delBtn" class="danger">🗑 削除</button>
@@ -372,6 +399,7 @@ body.viewing .toast{bottom:76px}
     </div>
 
     <div class="stickybar">
+      <button class="btn" id="palBtn" style="margin-right:auto" title="記号やMarkdownの書き方を、押すだけで入れられるパネル">🎀 飾りパレット</button>
       <button class="btn" id="editCancel">やめる</button>
       <button class="btn primary" id="editSave">💾 保存する</button>
     </div>
@@ -457,6 +485,25 @@ body.viewing .toast{bottom:76px}
     <button class="btn" id="lbNext">次 ›</button>
     <button class="btn" id="lbClose">✕ 閉じる</button>
   </div>
+</div>
+
+<!-- 飾りパレット -->
+<div class="pal hidden" id="pal" role="dialog" aria-label="飾りパレット">
+  <div class="pal-h">
+    <span class="grip" id="palGrip" title="ドラッグでパネルを動かせるよ">⠿</span>
+    <b style="flex:1">🎀 飾りパレット</b>
+    <button class="btn small" id="palHelpBtn" title="使い方">？</button>
+    <button class="btn small" id="palClose" title="閉じる">✕</button>
+  </div>
+  <div class="pal-help hidden" id="palHelp">
+    書きたい欄をタップしてから押すと、カーソルの場所に入るよ。文字を選んでから押すと、その文字を囲んだり、選んだ行の頭にまとめて付けたりできるよ。
+    <div class="pal-legend"><span class="kind k-any">どこでも</span>ただの文字。どのアプリでも見たまま</div>
+    <div class="pal-legend"><span class="kind k-md">Markdown</span>対応アプリだと飾りに変わる。未対応だと記号のまま</div>
+    <div class="pal-legend"><span class="kind k-app">アプリ専用</span>一部のAIチャットだけで意味がある書き方</div>
+  </div>
+  <div class="pal-tabs" id="palTabs"></div>
+  <div class="pal-desc" id="palDesc"></div>
+  <div class="pal-body" id="palBody"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -561,7 +608,7 @@ function avatarEl(p, big){
   else a.textContent = (p.name||'？').trim().slice(0,1) || '？';
   return a;
 }
-function show(id){ ['listView','viewView','editView'].forEach(v => $('#'+v).classList.toggle('hidden', v!==id)); document.body.classList.toggle('viewing', id==='viewView'); window.scrollTo(0,0); }
+function show(id){ ['listView','viewView','editView'].forEach(v => $('#'+v).classList.toggle('hidden', v!==id)); if(id!=='editView') $('#pal').classList.add('hidden'); document.body.classList.toggle('viewing', id==='viewView'); window.scrollTo(0,0); }
 
 /* ---------- テーマ（潮だまり工房の他ツールと共通の設定を使う） ---------- */
 const TM=["time","light","dusk","dark","auto"], TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"}, PH={light:"昼",dusk:"夕方",dark:"夜"}, TK="shiodamari-theme";
@@ -763,11 +810,144 @@ function renderMd(text){
 function updateMdBtn(){
   const b = $('#mdBtn'); b.classList.toggle('on', mdOn);
   b.textContent = mdOn ? '📝 テキスト表示' : '👁 プレビュー';
+  $('#bnMd').textContent = mdOn ? '📝 テキスト' : '👁 プレビュー';
 }
+$('#bnMd').onclick = () => $('#mdBtn').click();
 $('#mdBtn').onclick = () => {
   mdOn = !mdOn; try{ localStorage.setItem(MDK, mdOn ? '1' : '0'); }catch(e){}
   const y = window.scrollY; openView(current.id); window.scrollTo(0, y);
 };
+
+/* ---------- 飾りパレット ---------- */
+const PAL_TABS = [
+  {id:'sym', name:'記号', desc:'どのアプリでも見たまま表示される記号だよ。何行か選んでから押すと、選んだ行の頭にまとめて付くよ',
+    items:[...'★☆✦✧◆◇●○■□▶▷▼▽※→⇒♡♥♪✿❀☾☽✉❖◎・…'].map(c => ({s:c, k:'any'}))},
+  {id:'line', name:'罫線', desc:'区切りや飾りに使える線だよ。1行まるごと入るよ', wide:true,
+    items:['────────────','━━━━━━━━━━','✦ ──────── ✦','◇ ━━━━━━━━ ◇','┈┈┈┈┈┈┈┈┈┈┈┈','＊　　＊　　＊','✿ ・ ✿ ・ ✿','☾ ⋆ ✧ ⋆ ☽'].map(c => ({s:c, k:'any', block:c}))},
+  {id:'kakko', name:'かっこ', desc:'文字を選んでから押すと、その文字をかっこで囲むよ',
+    items:['「」','『』','【】','〈〉','《》','（）','［］','〔〕','“”','≪≫'].map(c => ({s:c, k:'any', wrap:[c[0], c[1], '']}))},
+  {id:'md', name:'Markdown', desc:'対応アプリだと飾りに変わる書き方だよ。見た目はメモを開いて「プレビュー」で確認できるよ', wide:true,
+    items:[
+      {s:'## 見出し', nm:'見出し（行の頭に付く）', k:'md', line:'## '},
+      {s:'### 小見出し', nm:'小見出し', k:'md', line:'### '},
+      {s:'**太字**', nm:'太字（選んだ文字を囲む）', k:'md', wrap:['**','**','太字']},
+      {s:'*斜体*', nm:'斜体', k:'md', wrap:['*','*','斜体']},
+      {s:'~~取り消し~~', nm:'取り消し線', k:'md', wrap:['~~','~~','取り消し']},
+      {s:'`コード`', nm:'コード風', k:'md', wrap:['`','`','コード']},
+      {s:'> 引用', nm:'引用（行の頭に付く）', k:'md', line:'> '},
+      {s:'- 箇条書き', nm:'箇条書き（選んだ行ぜんぶ）', k:'md', line:'- '},
+      {s:'1. 番号', nm:'連番（選んだ行に振り直す）', k:'md', num:true},
+      {s:'---', nm:'区切り線', k:'md', block:'---'},
+      {s:'行頭リセット', nm:'選んだ行の頭の記号・番号を消す', k:'any', strip:true}]},
+  {id:'app', name:'AIチャット用', desc:'一部のAIチャットで、名前に置きかわる書き方だよ。アプリによって書き方が違ったり使えなかったりするから、使うアプリの説明も確認してね', wide:true,
+    items:[
+      {s:'{{user}}', nm:'あなた（ユーザー）の名前', k:'app'},
+      {s:'{{char}}', nm:'キャラの名前', k:'app'}]},
+  {id:'my', name:'マイ素材', desc:'よく使う記号や決まり文句を登録しておけるよ（このブラウザに保存）', wide:true, items:null}
+];
+const KIND = {any:['どこでも','k-any'], md:['Markdown','k-md'], app:['アプリ専用','k-app']};
+const PTK = 'creative-memo-palTab', PPOS = 'creative-memo-palPos', MYK = 'creative-memo-mySnips';
+let palTab = (() => { try{ const v = localStorage.getItem(PTK); return PAL_TABS.some(t => t.id===v) ? v : 'md'; }catch(e){ return 'md'; } })();
+let mySnips = (() => { try{ const v = JSON.parse(localStorage.getItem(MYK)); if(Array.isArray(v)) return v.filter(x => typeof x==='string'); }catch(e){} return []; })();
+function saveMy(){ try{ localStorage.setItem(MYK, JSON.stringify(mySnips)); }catch(e){} }
+let palTarget = null;
+document.addEventListener('focusin', e => { const t = e.target; if(t.matches && t.matches('#editView textarea, #edName')) palTarget = t; });
+function palTargetEl(){ return palTarget && palTarget.isConnected && !palTarget.closest('.hidden') ? palTarget : null; }
+function putText(t, a, b, str, selA, selB){
+  t.focus(); t.setSelectionRange(a, b);
+  let ok = false;
+  if(str) try{ ok = document.execCommand('insertText', false, str); }catch(e){} // 使えればCtrl+Zで戻せる
+  if(!ok){ t.setRangeText(str, a, b, 'end'); t.dispatchEvent(new Event('input', {bubbles:true})); }
+  t.setSelectionRange(selA ?? a + str.length, selB ?? a + str.length);
+}
+const HEAD = /^(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|[・●○◆◇■□★☆✦✧※▶▷]\s*)/;
+function applyItem(it){
+  const t = palTargetEl(), text = it.block || it.s;
+  if(!t){ copyText(text); toast('コピーしたよ（書きたい欄をタップしてから押すと直接入るよ）'); return; }
+  const v = t.value, a = t.selectionStart, b = t.selectionEnd, sel = v.slice(a, b);
+  if(it.line || it.num || it.strip || (!it.wrap && !it.block && sel.includes('\n'))){
+    const ls = v.lastIndexOf('\n', a - 1) + 1;
+    let le = v.indexOf('\n', (b > a && v[b-1]==='\n') ? b - 1 : b); if(le < 0) le = v.length;
+    const lines = v.slice(ls, le).split('\n'), multi = lines.length > 1;
+    const parts = lines.map(l => { const m = l.match(/^(\s*)(.*)$/); return {ind:m[1], body:m[2]}; });
+    const used = parts.filter(p => p.body.trim() || !multi);
+    const allHave = it.line && used.length && used.every(p => p.body.startsWith(it.line));
+    let n = 0;
+    const out = parts.map(p => {
+      if(multi && !p.body.trim()) return p.ind + p.body;
+      if(it.strip) return p.ind + p.body.replace(HEAD, '');
+      if(it.num) return p.ind + (++n) + '. ' + p.body.replace(HEAD, '');
+      if(it.line) return p.ind + (allHave ? p.body.slice(it.line.length) : it.line + p.body.replace(HEAD, ''));
+      return p.ind + it.s + p.body;
+    }).join('\n');
+    putText(t, ls, le, out, ls, ls + out.length);
+  }else if(it.wrap){
+    const [x, y, smp] = it.wrap, inner = sel || smp;
+    putText(t, a, b, x + inner + y, a + x.length, a + x.length + inner.length);
+  }else if(it.block){
+    const pre = a > 0 && v[a-1] !== '\n' ? '\n' : '', post = b < v.length && v[b] !== '\n' ? '\n' : '';
+    putText(t, a, b, pre + it.block + post);
+  }else putText(t, a, b, it.s);
+}
+function renderPal(){
+  const tabs = $('#palTabs'); tabs.innerHTML = '';
+  PAL_TABS.forEach(tb => tabs.append(el('button',{class:tb.id===palTab?'on':'', text:tb.name, onclick(){
+    palTab = tb.id; try{ localStorage.setItem(PTK, palTab); }catch(e){} renderPal(); }})));
+  const tab = PAL_TABS.find(t => t.id===palTab), body = $('#palBody');
+  // 全部同じ種類のタブは、説明のところに1回だけ目印を出す
+  const kinds = [...new Set((tab.items||[]).map(it => it.k))], one = kinds.length===1 ? kinds[0] : null;
+  $('#palDesc').innerHTML = '';
+  if(one) $('#palDesc').append(el('span',{class:'kind '+KIND[one][1], text:KIND[one][0], style:'margin-right:6px'}));
+  $('#palDesc').append(tab.desc);
+  body.innerHTML = ''; body.classList.toggle('wide', !!tab.wide);
+  const items = tab.items || mySnips.map(s => ({s}));
+  items.forEach((it, i) => {
+    const b = el('button',{class:'pit', title:it.nm || it.s, onclick(){ applyItem(it); }},
+      el('span',{class:'sm', text:it.s}),
+      it.nm ? el('span',{class:'nm', text:it.nm}) : null,
+      it.k && !one ? el('span',{class:'kind '+KIND[it.k][1], text:KIND[it.k][0]}) : null);
+    if(!tab.items) b.append(el('span',{class:'x', text:'✕', title:'登録を消す', onclick(e){ e.stopPropagation(); mySnips.splice(i,1); saveMy(); renderPal(); }}));
+    body.append(b);
+  });
+  if(!tab.items){
+    if(!mySnips.length) body.append(el('div',{class:'pal-note', text:'まだ登録がないよ。下の欄に入れて「登録」してね'}));
+    const inp = el('input',{class:'inp', placeholder:'例：✧ ── {{user}} ── ✧'});
+    const add = () => { const s = inp.value; if(!s.trim()) return; if(!mySnips.includes(s)){ mySnips.push(s); saveMy(); } renderPal(); toast('マイ素材に登録したよ'); };
+    inp.addEventListener('keydown', e => { if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); add(); } });
+    body.append(el('div',{class:'pal-add'}, inp, el('button',{class:'btn small', text:'登録', onclick:add})));
+  }
+}
+// パレットのボタンを押しても、書いている欄からカーソルが外れないようにする
+$('#pal').addEventListener('mousedown', e => { if(e.target.closest('button') && !e.target.closest('.pal-add')) e.preventDefault(); });
+function placePal(){
+  const p = $('#pal'); let pos = null;
+  try{ pos = JSON.parse(localStorage.getItem(PPOS)); }catch(e){}
+  if(!pos){ p.style.left = p.style.top = ''; p.style.right = p.style.bottom = ''; return; }
+  const r = p.getBoundingClientRect();
+  const x = Math.min(Math.max(4, pos.x), innerWidth - r.width - 4), y = Math.min(Math.max(4, pos.y), innerHeight - 50);
+  Object.assign(p.style, {left:x+'px', top:y+'px', right:'auto', bottom:'auto'});
+}
+$('#palGrip').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const p = $('#pal'), r = p.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+  const move = ev => {
+    const x = Math.min(Math.max(4, ev.clientX - dx), innerWidth - r.width - 4), y = Math.min(Math.max(4, ev.clientY - dy), innerHeight - 50);
+    Object.assign(p.style, {left:x+'px', top:y+'px', right:'auto', bottom:'auto'});
+  };
+  const up = () => {
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+    const q = p.getBoundingClientRect(); try{ localStorage.setItem(PPOS, JSON.stringify({x:q.left, y:q.top})); }catch(e){}
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+});
+addEventListener('resize', () => { if(!$('#pal').classList.contains('hidden')) placePal(); });
+$('#palBtn').onclick = () => {
+  const p = $('#pal'), open = p.classList.contains('hidden');
+  p.classList.toggle('hidden', !open);
+  if(open){ renderPal(); placePal(); palTargetEl()?.focus(); }
+};
+$('#palClose').onclick = () => $('#pal').classList.add('hidden');
+$('#palHelpBtn').onclick = () => $('#palHelp').classList.toggle('hidden');
 
 /* ---------- 閲覧 ---------- */
 /* 履歴（関連メモをたどったあと戻れるように） */
