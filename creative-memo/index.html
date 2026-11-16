@@ -236,6 +236,10 @@ body.viewing .toast{bottom:76px}
 .pal-sym{display:flex;flex-wrap:wrap;gap:4px}
 .pal-sym .pit{width:34px;height:34px;justify-content:center;padding:0;font-size:1.05rem}
 .pal-sym .pit .sm{font-family:inherit}
+.pal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px}
+.pal-grid .pit{flex-direction:column;align-items:flex-start;gap:0;padding:5px 8px}
+.pal-grid .pit .sm{font-family:inherit;font-size:1rem}
+.pal-grid .pit .nm{text-align:left;max-width:100%}
 .pal-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .pal-list .pit{border:none;border-bottom:1px solid var(--line);border-radius:0;justify-content:space-between;padding:7px 10px}
 .pal-list .pit:last-child{border-bottom:none}
@@ -247,7 +251,7 @@ body.viewing .toast{bottom:76px}
 .pal-add{display:flex;gap:6px;margin-top:8px}
 .pal-add .inp{padding:5px 9px;font-size:.85rem}
 .pal-note{font-size:.76rem;color:var(--sub);margin-top:6px}
-@media (max-width:520px){.pal{right:10px;bottom:70px;max-height:46vh}}
+@media (max-width:520px){.pal{right:10px;bottom:70px;max-height:58vh}.pal-tabs button{padding:2px 8px;font-size:.78rem}.pal-grid{grid-template-columns:1fr 1fr}}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);
   padding:8px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:60;pointer-events:none;font-size:.9rem}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -506,6 +510,7 @@ body.viewing .toast{bottom:76px}
     <div class="pal-legend">🌊 どこでも見たまま（ただの文字）</div>
     <div class="pal-legend">🫧 対応アプリで飾りになる（Markdown）</div>
     <div class="pal-legend">🐚 アプリによって使える（名前の置きかえなど）</div>
+    <div class="pal-legend">✨ 見た目がそっくりな別の文字（AIが読み間違えることも）</div>
   </div>
   <div class="pal-tabs" id="palTabs"></div>
   <div class="pal-desc" id="palDesc"></div>
@@ -824,6 +829,113 @@ $('#mdBtn').onclick = () => {
   const y = window.scrollY; openView(current.id); window.scrollTo(0, y);
 };
 
+/* ---------- 変身文字（見た目がそっくりな別の文字への置きかえ） ---------- */
+const cp = n => String.fromCodePoint(n);
+function mathStyle(up, low, dig, ex={}){ // ex: 例外の文字（すでに別の場所にある文字）
+  return ch => {
+    if(ex[ch]) return ex[ch];
+    const c = ch.charCodeAt(0);
+    if(c>=65 && c<=90 && up) return cp(up + c - 65);
+    if(c>=97 && c<=122 && low) return cp(low + c - 97);
+    if(c>=48 && c<=57 && dig) return cp(dig + c - 48);
+    return ch;
+  };
+}
+const exMap = str => Object.fromEntries(str.split(' ').map(x => [x[0], x.slice(1)]));
+const toUp = f => ch => /[a-z]/.test(ch) ? f(ch.toUpperCase()) : f(ch);
+const numRun = (one, from1, max, zero) => s => s.replace(/\d+/g, d => { // ①〜⑳ のように2桁もまとめて1文字に
+  const n = +d;
+  if(d.length<=2 && n>=1 && n<=max && !(d.length===2 && d[0]==='0')) return cp(from1 + n - 1);
+  return [...d].map(x => x==='0' ? (zero||'0') : one ? cp(from1 + +x - 1) : x).join('');
+});
+const HENSHIN = [
+  {nm:'太字', f:mathStyle(0x1D400,0x1D41A,0x1D7CE)},
+  {nm:'斜体', f:mathStyle(0x1D434,0x1D44E,0,{h:'ℎ'})},
+  {nm:'太字の斜体', f:mathStyle(0x1D468,0x1D482,0)},
+  {nm:'すっきり', f:mathStyle(0x1D5A0,0x1D5BA,0x1D7E2)},
+  {nm:'すっきり太字', f:mathStyle(0x1D5D4,0x1D5EE,0x1D7EC)},
+  {nm:'すっきり斜体', f:mathStyle(0x1D608,0x1D622,0)},
+  {nm:'筆記体', f:mathStyle(0x1D49C,0x1D4B6,0,exMap('Bℬ Eℰ Fℱ Hℋ Iℐ Lℒ Mℳ Rℛ eℯ gℊ oℴ'))},
+  {nm:'筆記体の太字', f:mathStyle(0x1D4D0,0x1D4EA,0)},
+  {nm:'ひげ文字', f:mathStyle(0x1D504,0x1D51E,0,exMap('Cℭ Hℌ Iℑ Rℜ Zℨ'))},
+  {nm:'ひげ文字の太字', f:mathStyle(0x1D56C,0x1D586,0)},
+  {nm:'二重線', f:mathStyle(0x1D538,0x1D552,0x1D7D8,exMap('Cℂ Hℍ Nℕ Pℙ Qℚ Rℝ Zℤ'))},
+  {nm:'タイプライター', f:mathStyle(0x1D670,0x1D68A,0x1D7F6)},
+  {nm:'全角', f:mathStyle(0xFF21,0xFF41,0xFF10)},
+  {nm:'丸囲み', f:mathStyle(0x24B6,0x24D0,0), run:numRun(true,0x2460,20,'⓪')},
+  {nm:'黒丸囲み（大文字になる）', f:toUp(mathStyle(0x1F150,0,0)), run:numRun(true,0x2776,10,'⓿')},
+  {nm:'かっこ付き', f:mathStyle(0x1F110,0x249C,0), run:numRun(false,0x2474,20)},
+  {nm:'四角囲み（大文字になる）', f:toUp(mathStyle(0x1F130,0,0))},
+  {nm:'黒四角（大文字になる）', f:toUp(mathStyle(0x1F170,0,0))}
+];
+function henshin(st, s){ if(st.run) s = st.run(s); return [...s].map(st.f).join(''); }
+// 普通の英数字に戻すための対応表（全部のスタイルから逆引き）
+const BACK = (() => {
+  const m = new Map(), src = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  HENSHIN.forEach(st => {
+    [...src].forEach(ch => { const v = st.f(ch); if(v!==ch && !m.has(v)) m.set(v, /[a-z]/.test(ch) && st.nm.includes('大文字') ? ch.toUpperCase() : ch); });
+    if(st.run) for(let n=1;n<=20;n++){ const v = st.run(String(n)); if([...v].length===1 && v!==String(n) && !m.has(v)) m.set(v, String(n)); }
+    if(st.run){ const z = st.run('0'); if(z!=='0') m.set(z,'0'); }
+  });
+  return m;
+})();
+const unHenshin = s => [...s].map(ch => BACK.get(ch) ?? ch).join('');
+
+/* ---------- かな変換 ---------- */
+const HALF_F = 'ヲァィゥェォャュョッーアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン。「」、・', HALF_H = 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ｡｢｣､･';
+const toKata = s => s.replace(/[ぁ-ゖゝゞ]/g, c => cp(c.charCodeAt(0)+0x60));
+const toHira = s => s.replace(/[ァ-ヶヽヾ]/g, c => cp(c.charCodeAt(0)-0x60));
+function toFullKana(s){
+  return s.replace(/([ｦ-ﾝ｡-･])([ﾞﾟ]?)/g, (_, c, m) => {
+    const f = HALF_F[HALF_H.indexOf(c)]; if(!m) return f;
+    const k = (f + (m==='ﾞ' ? '゙' : '゚')).normalize('NFC');
+    return k.length===1 ? k : f + (m==='ﾞ' ? '゛' : '゜');
+  }).replace(/ﾞ/g,'゛').replace(/ﾟ/g,'゜');
+}
+function toHalfKana(s){
+  return [...toKata(s)].map(c => {
+    const d = c.normalize('NFD'), i = HALF_F.indexOf(d[0]);
+    if(i<0) return c==='゛' ? 'ﾞ' : c==='゜' ? 'ﾟ' : c;
+    return HALF_H[i] + (d[1]==='゙' ? 'ﾞ' : d[1]==='゚' ? 'ﾟ' : '');
+  }).join('');
+}
+const SMALL_B = 'あいうえおつやゆよわかけアイウエオツヤユヨワカケ', SMALL_S = 'ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶ';
+const swapChars = (from, to) => s => [...s].map(c => { const i = from.indexOf(c); return i<0 ? c : to[i]; }).join('');
+function kanaMark(mark){ // mark: '゙'=濁点 '゚'=半濁点 ''=取る
+  const one = c => {
+    if(!/[ぁ-ヺ]/.test(c)) return c;
+    const base = c.normalize('NFD').replace(/[゙゚]/g,'');
+    if(!mark) return base;
+    const k = (base + mark).normalize('NFC');
+    return k.length===1 ? k : c;
+  };
+  const full = s => [...s].map(one).join('');
+  // 半角カナの部分は、いったん全角にしてから半角に戻す（ほかの部分はそのまま）
+  return s => s.split(/([ｦ-ﾟ]+)/).map((part, i) => i%2 ? toHalfKana(full(toFullKana(part))) : full(part)).join('');
+}
+// どんな字にも濁点：用意されている字（が など）はその1文字に、ない字（あ゙ など）は濁点を重ねる
+const anyDakuten = s => [...s].map((c, i, arr) => {
+  if(/\s/.test(c) || /[゙゚゛゜]/.test(c) || /[゙゛]/.test(arr[i+1]||'')) return c;
+  const base = c.normalize('NFD').replace(/[゙゚]/g,''), k = (base + '゙').normalize('NFC');
+  return k.length===1 ? k : base + '゙';
+}).join('');
+const MARU_KANA = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲ';
+const maruKana = s => [...toKata(toFullKana(s))].map(c => { const i = MARU_KANA.indexOf(c); return i<0 ? c : cp(0x32D0 + i); }).join('');
+const unMaruKana = s => [...s].map(c => { const n = c.codePointAt(0); return n>=0x32D0 && n<=0x32FE ? MARU_KANA[n-0x32D0] : c; }).join('');
+const KANA = [
+  {s:'あ', nm:'ひらがなにする', conv: s => toHira(toFullKana(unMaruKana(s)))},
+  {s:'ア', nm:'カタカナにする', conv: s => toKata(toFullKana(unMaruKana(s)))},
+  {s:'ｱ', nm:'半角カナにする', conv: s => toHalfKana(toFullKana(unMaruKana(s)))},
+  {s:'ア', nm:'半角カナを全角に戻す', conv: toFullKana},
+  {s:'ぁ', nm:'小さくする', conv: swapChars(SMALL_B, SMALL_S)},
+  {s:'あ', nm:'大きくする', conv: swapChars(SMALL_S, SMALL_B)},
+  {s:'が', nm:'濁点を付ける（付けられる字だけ）', conv: kanaMark('゙')},
+  {s:'ぱ', nm:'半濁点を付ける（は行だけ）', conv: kanaMark('゚')},
+  {s:'あ゙', nm:'どんな字にも濁点（文字数が増えるよ）', conv: anyDakuten, count:true},
+  {s:'か', nm:'点を取る', conv: kanaMark('')},
+  {s:'㋐', nm:'丸囲みカナ（ンや濁音は変わらない）', conv: maruKana}
+];
+
 /* ---------- 飾りパレット ---------- */
 const SYM = c => ({s:c});
 const PAL_TABS = [
@@ -852,9 +964,15 @@ const PAL_TABS = [
     groups:[{list:true, items:[
       {s:'{{user}}', nm:'あなた（ユーザー）の名前'},
       {s:'{{char}}', nm:'キャラの名前'}]}]},
+  {id:'henshin', name:'英数字の変身', mark:'look', desc:'英語と数字を、見た目がそっくりな別の文字に置きかえるよ。AIが読み間違えることがあるから、キャラ名より見出しや飾り向き。アプリによっては文字数が多めに数えられたり、□で表示されたりするよ',
+    groups:[
+      {h:'変身', tip:'変えたいところを選んでから押してね', grid:true, items:HENSHIN.map(st => ({s:henshin(st, st.f('1')!=='1' || st.run ? 'AaBb12' : 'AaBbCc'), nm:st.nm, sel:true, conv: s => henshin(st, unHenshin(s))}))},
+      {list:true, items:[{s:'↺', nm:'普通の英数字に戻す', sel:true, conv:unHenshin}]}]},
+  {id:'kana', name:'かな変換', mark:'any', desc:'ひらがな・カタカナ・小さい字・濁点などを切りかえるよ',
+    groups:[{h:'変換', tip:'変えたいところを選んでから押してね', list:true, items:KANA.map(k => ({...k, sel:true}))}]},
   {id:'my', name:'マイ素材', mark:null, desc:'よく使う記号や決まり文句を登録しておけるよ（このブラウザに保存）', groups:null}
 ];
-const MARK = {any:['🌊','どこでも見たまま'], md:['🫧','対応アプリで飾りになる'], app:['🐚','アプリによって使える']};
+const MARK = {any:['🌊','どこでも見たまま'], md:['🫧','対応アプリで飾りになる'], app:['🐚','アプリによって使える'], look:['✨','見た目がそっくりな別の文字']};
 const PTK = 'creative-memo-palTab', PPOS = 'creative-memo-palPos', MYK = 'creative-memo-mySnips';
 let palTab = (() => { try{ const v = localStorage.getItem(PTK); return PAL_TABS.some(t => t.id===v) ? v : 'moji'; }catch(e){ return 'moji'; } })();
 let mySnips = (() => { try{ const v = JSON.parse(localStorage.getItem(MYK)); if(Array.isArray(v)) return v.filter(x => typeof x==='string'); }catch(e){} return []; })();
@@ -872,6 +990,14 @@ function putText(t, a, b, str, selA, selB){
 const HEAD = /^(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|[・●○◆◇■□★☆✦✧※▶▷]\s*)/;
 function applyItem(it){
   const t = palTargetEl(), text = it.block || it.s;
+  if(it.sel){ // 選んだところだけ変換する
+    if(!t || t.selectionStart===t.selectionEnd){ toast('変えたいところを選んでから押してね'); return; }
+    const a = t.selectionStart, b = t.selectionEnd, before = t.value.slice(a, b), after = it.conv(before);
+    if(after===before){ toast('選んだところに変えられる文字がなかったよ'); return; }
+    putText(t, a, b, after, a, a + after.length);
+    if(it.count){ const d = len(after) - len(before); if(d>0) toast(`濁点の分、文字数が${d}字増えたよ`); }
+    return;
+  }
   if(!t){ copyText(text); toast('コピーしたよ（書きたい欄をタップしてから押すと直接入るよ）'); return; }
   const v = t.value, a = t.selectionStart, b = t.selectionEnd, sel = v.slice(a, b);
   if(it.line || it.num || it.strip || (!it.wrap && !it.block && sel.includes('\n'))){
@@ -912,11 +1038,11 @@ function renderPal(){
   const d = $('#palDesc'); d.innerHTML = '';
   if(tab.mark) d.append(el('b',{text:MARK[tab.mark][0]+' '+MARK[tab.mark][1]}), el('br'));
   d.append(tab.desc);
-  body.innerHTML = '';
+  body.innerHTML = ''; body.scrollTop = 0;
   if(tab.groups){
     tab.groups.forEach(g => {
       if(g.h) body.append(el('div',{class:'pal-gh'}, g.h, g.tip ? el('span',{text:g.tip}) : null));
-      body.append(el('div',{class:g.list ? 'pal-list' : 'pal-sym'}, ...g.items.map(it => palItem(it))));
+      body.append(el('div',{class:g.list ? 'pal-list' : g.grid ? 'pal-grid' : 'pal-sym'}, ...g.items.map(it => palItem(it))));
     });
   }else{
     const list = el('div',{class:'pal-list'}, ...mySnips.map((s,i) => palItem({s}, () => { mySnips.splice(i,1); saveMy(); renderPal(); })));
