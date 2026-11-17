@@ -248,8 +248,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 右のパネルの幅を変えられるようにしました（左端の線をドラッグ、または「⇔ 広く」）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 「くり抜き（逆マスク）」を追加しました。耳の後ろに回したい髪などに。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/17 22:45</span>プロパティの「切り抜き」に「くり抜き（逆マスク）」を追加。選んだ形（パーツやフォルダ）と重なっている部分だけ、そのパーツを消せます。耳の後ろに回したい髪に「耳」のフォルダを指定すると、重なり順を変えずに耳が手前に見えます。鏡写しコピーでは「右耳」→「左耳」のように左右も入れ替わります。</div>
     <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広く」を押すと画面の半分くらいまで一気に広がります（「⇔ 戻す」で元の幅）。「引っ込める」は「畳む」に名前を変えました。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
     <div class="newsItem"><span>11/17 19:30</span>関節の自動の割り当てで、名前やフォルダに「手前」が入った髪（例：右前髪ー手前）が「手」と判定されて手首と一緒に動いていた不具合を修正。「頭」フォルダの中と髪のパーツは、必ず頭と一緒に動くようにしました。</div>
     <div class="newsItem"><span>11/17 19:00</span>起動した時に作業中のデータが読めなくても、保管庫に作りかけが残っていればそこから開くようにしました（以前は原案で開いて、作りかけを原案で上書きすることがありました）。保存データが見つからずに原案で開いた時は、お知らせを出します。あわせて、ブラウザに「保存データを消さないで」とお願いする設定を入れました。</div>
@@ -895,15 +896,29 @@ function clipKeyId(key) {
   return "clip-" + key;
 }
 /* マスクは複数指定できる（配列）。複数ある時は「全ての形が重なった部分」だけが残る */
-function clipKeysOf(p) {
-  if (!p || !p.clipBy) return [];
-  return Array.isArray(p.clipBy) ? p.clipBy.slice() : [p.clipBy];
+function clipKeysOf(p, field) {
+  field = field || "clipBy";
+  if (!p || !p[field]) return [];
+  return Array.isArray(p[field]) ? p[field].slice() : [p[field]];
 }
-function setClipKeys(p, keys) {
-  if (!keys.length) delete p.clipBy;
-  else if (keys.length === 1) p.clipBy = keys[0];
-  else p.clipBy = keys.slice();
+function setClipKeys(p, keys, field) {
+  field = field || "clipBy";
+  if (!keys.length) delete p[field];
+  else if (keys.length === 1) p[field] = keys[0];
+  else p[field] = keys.slice();
 }
+/* くり抜き（逆マスク）：p.cutBy に指定した形の部分だけ、このパーツを隠す。
+   例：耳の後ろに回したい髪に「耳」フォルダを指定すると、耳の形のところだけ髪が消えて、耳が手前に見える */
+const MASK_FIELDS = ["clipBy", "cutBy"];
+function mapMaskKeys(p, fn) {
+  MASK_FIELDS.forEach(function (f) {
+    const ks = clipKeysOf(p, f);
+    if (!ks.length) return;
+    const nk = fn(ks.slice());
+    if (JSON.stringify(nk) !== JSON.stringify(ks)) setClipKeys(p, nk, f);
+  });
+}
+function cutKeyId(key) { return clipKeyId(key).replace(/^clip-/, "cut-"); }
 /* グラデーション塗り：始まりの色はパーツの塗り（線パーツは線の色）、終わりの色と角度を shape.gradient に持つ */
 function gradIdOf(p) { return "gr-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, ""); }
 function basePaint(p) {
@@ -1061,6 +1076,13 @@ function clipDefs(parts) {
         defs += '<clipPath id="' + clipKeyId(k) + '">' + clipSourceShapes(k) + "</clipPath>";
       }
     });
+    clipKeysOf(p, "cutBy").forEach(function (k) {
+      if (!seen["cut:" + k] && clipSourceActive(k)) {
+        seen["cut:" + k] = true;
+        defs += '<mask id="' + cutKeyId(k) + '" maskUnits="userSpaceOnUse" x="-20000" y="-20000" width="40000" height="40000">' +
+          '<rect x="-20000" y="-20000" width="40000" height="40000" fill="#fff"/><g fill="#000">' + clipSourceShapes(k) + "</g></mask>";
+      }
+    });
   });
   return defs ? "<defs>" + defs + "</defs>" : "";
 }
@@ -1205,7 +1227,9 @@ function strokeAttrsFor(sh) {
 function partSVG(p, forExport) {
   const sh = p.shape;
   const activeKeys = clipKeysOf(p).filter(function (k) { return clipSourceActive(k); });
-  const multiClip = activeKeys.length >= 2;
+  const cutKeys = clipKeysOf(p, "cutBy").filter(function (k) { return clipSourceActive(k); });
+  /* 包み（g）が要る時は、合成（乗算など）を一番外の包みに載せる（中に置くと下のパーツに届かない） */
+  const multiClip = activeKeys.length >= 2 || cutKeys.length > 0;
   const filt = (sh.blur != null && sh.blur > 0) ? ' filter="url(#' + blurIdOf(p) + ')"' : "";
   const styles = [];
   /* マスクの包み（g）の中では合成が下絵に届かないため、複数マスク時は合成を一番外の包みに載せる */
@@ -1213,7 +1237,7 @@ function partSVG(p, forExport) {
   if (!forExport && ed(p.id).locked) styles.push("pointer-events:none");
   const styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
   const gid = forExport ? styleAttr : ' data-pid="' + p.id + '"' + styleAttr;
-  const clip = activeKeys.length === 1 ? ' clip-path="url(#' + clipKeyId(activeKeys[0]) + ')"' : "";
+  const clip = (activeKeys.length === 1 && !cutKeys.length) ? ' clip-path="url(#' + clipKeyId(activeKeys[0]) + ')"' : "";
   let el = "";
   if (sh.type === "polygon" && sh.gradient && (sh.gradient.type === "contour" || sh.gradient.type === "chain") && basePaint(p)) {
     el = (sh.gradient.type === "chain" && chainValid(sh)) ? chainSVG(p, gid, clip, filt) : contourSVG(p, gid, clip, filt);
@@ -1232,10 +1256,12 @@ function partSVG(p, forExport) {
   else if (sh.type === "rect") el = '<rect' + gid + clip + filt + ' x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '" fill="' + fillPaint(p) + '"' + (sh.fillOpacity != null && sh.fillOpacity < 1 ? ' fill-opacity="' + sh.fillOpacity + '"' : "") + "/>";
   if (partialLineOn(sh)) el += edgeLinesSVG(p, gid, clip, filt);
   if (multiClip) {
+    const wraps = activeKeys.map(function (k) { return ' clip-path="url(#' + clipKeyId(k) + ')"'; })
+      .concat(cutKeys.map(function (k) { return ' mask="url(#' + cutKeyId(k) + ')"'; }));
     let w = el;
-    for (let i = activeKeys.length - 1; i >= 0; i--) {
+    for (let i = wraps.length - 1; i >= 0; i--) {
       const gst = (i === 0 && p.blend && p.blend !== "normal") ? ' style="mix-blend-mode:' + p.blend + '"' : "";
-      w = '<g clip-path="url(#' + clipKeyId(activeKeys[i]) + ')"' + gst + ">" + w + "</g>";
+      w = "<g" + wraps[i] + gst + ">" + w + "</g>";
     }
     return w;
   }
@@ -1559,7 +1585,7 @@ function renderStage() {
   if (sel && !ed(sel.id).locked) {
     const sh = sel.shape;
     /* マスクで切り抜かれている間は、本来の形の範囲も掴めるよう透明な当たり判定を敷く（マスク外へ出ても掴んで戻せる） */
-    if (clipKeysOf(sel).some(function (k) { return clipSourceActive(k); })) {
+    if (clipKeysOf(sel).concat(clipKeysOf(sel, "cutBy")).some(function (k) { return clipSourceActive(k); })) {
       const hd = partPathD(sel);
       if (hd) out += '<path d="' + hd + '" data-pid="' + sel.id + '" fill="#000" fill-opacity="0" stroke="none" pointer-events="all"><title>マスクで隠れている範囲（ここも掴んで動かせます）</title></path>';
       else if (sh.type === "rect") out += '<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '" data-pid="' + sel.id + '" fill="#000" fill-opacity="0" stroke="none" pointer-events="all"/>';
@@ -1829,11 +1855,17 @@ function mirrorCopyParts(parts, regroup) {
     copies.push(np);
   });
   copies.forEach(function (np) {
-    if (np.clipBy) setClipKeys(np, clipKeysOf(np).map(function (k) {
+    mapMaskKeys(np, function (ks) { return ks.map(function (k) {
       if (idMap[k]) return idMap[k];
-      if (regroup && k.indexOf("folder:") === 0) return "folder:" + regroup(k.slice(7));
+      if (k.indexOf("folder:") === 0) {
+        const g0 = k.slice(7);
+        let g1 = regroup ? (regroup(g0) || g0) : g0;
+        /* コピーの外のフォルダ（例：耳/右耳）は、左右を入れ替えた名前のフォルダがあればそちらにする */
+        if (g1 === g0) { const f = swapLR(g0); if (f !== g0 && groupList().some(function (x) { return x.name === f; })) g1 = f; }
+        return "folder:" + g1;
+      }
       return k;
-    }));
+    }); });
     if (regroup && np.group) np.group = regroup(np.group) || null;
     docData.parts.push(np);
   });
@@ -1993,7 +2025,7 @@ function copyPartsPlain(parts) {
     copies.push(np);
   });
   copies.forEach(function (np) {
-    if (np.clipBy) setClipKeys(np, clipKeysOf(np).map(function (k) { return idMap[k] || k; }));
+    mapMaskKeys(np, function (ks) { return ks.map(function (k) { return idMap[k] || k; }); });
     docData.parts.push(np);
   });
   afterEdit();
@@ -2015,10 +2047,9 @@ function repath(old, neu) {
   const sw = function (g) { return g === old ? neu : (g.indexOf(old + FSEP) === 0 ? (neu ? neu + g.slice(old.length) : g.slice(old.length + 1)) : g); };
   docData.parts.forEach(function (p) {
     if (p.group && inFolder(p, old)) p.group = sw(p.group) || null;
-    const ks = clipKeysOf(p);
-    if (ks.some(function (k) { return k.indexOf("folder:") === 0; })) {
-      setClipKeys(p, ks.map(function (k) { return k.indexOf("folder:") === 0 ? (function (g) { const n = sw(g); return n ? "folder:" + n : null; })(k.slice(7)) : k; }).filter(Boolean));
-    }
+    mapMaskKeys(p, function (ks) {
+      return ks.map(function (k) { return k.indexOf("folder:") === 0 ? (function (g) { const n = sw(g); return n ? "folder:" + n : null; })(k.slice(7)) : k; }).filter(Boolean);
+    });
   });
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(function (g) { return sw(normPath(g)); }).filter(Boolean)
     .filter(function (g, i, arr) { return arr.indexOf(g) === i; });
@@ -2042,15 +2073,14 @@ function releaseGroup(name) {
   pushUndo();
   docData.parts.forEach(function (p) {
     if (groupNameOf(p) === name) p.group = up || null;
-    const ks = clipKeysOf(p);
-    if (ks.indexOf("folder:" + name) >= 0) setClipKeys(p, ks.filter(function (k) { return k !== "folder:" + name; }));
+    mapMaskKeys(p, function (ks) { return ks.filter(function (k) { return k !== "folder:" + name; }); });
   });
   /* 中のフォルダは1つ上へ */
   docData.parts.forEach(function (p) { if (p.group && p.group.indexOf(name + FSEP) === 0) p.group = (up ? up + FSEP : "") + p.group.slice(name.length + 1); });
   docData.parts.forEach(function (p) {
-    const ks = clipKeysOf(p);
-    if (ks.some(function (k) { return k.indexOf("folder:" + name + FSEP) === 0; }))
-      setClipKeys(p, ks.map(function (k) { return k.indexOf("folder:" + name + FSEP) === 0 ? "folder:" + (up ? up + FSEP : "") + k.slice(7 + name.length + 1) : k; }));
+    mapMaskKeys(p, function (ks) {
+      return ks.map(function (k) { return k.indexOf("folder:" + name + FSEP) === 0 ? "folder:" + (up ? up + FSEP : "") + k.slice(7 + name.length + 1) : k; });
+    });
   });
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(normPath).filter(function (g) { return g !== name; })
     .map(function (g) { return g.indexOf(name + FSEP) === 0 ? (up ? up + FSEP : "") + g.slice(name.length + 1) : g; });
@@ -2537,6 +2567,22 @@ function renderProps() {
     }
     h += '<div class="fld"><p class="note">目の使い方：瞳を丸く描いて、白目をマスクに指定すると、窓の中だけが見えます（視線移動や瞬きの土台）。影の使い方：影の形をざっくり描いて、肌のパーツ（または肌のフォルダ）をマスクに指定すると、肌の中だけに影が残ります。不透明度と合わせると自然な影に。マスク元を非表示にすると切り抜かれず全体が見えるので、形を描く作業ができます。</p></div>';
     if (sel.clipBy) h += '<button class="pill" id="pf_clipall">同じフォルダのパーツにも同じマスクを設定</button>';
+    /* くり抜き（逆マスク）：自分を含むフォルダ（自分ごと消えてしまう）は候補から外し、ほかのフォルダは全部出す */
+    const cuts = clipKeysOf(sel, "cutBy");
+    const cutOpts = function (cur) {
+      let o = "";
+      if (sameParts.length) o += '<optgroup label="同じフォルダ（' + esc(leafName(myG)) + '）のパーツの形">' + sameParts.map(function (q) { return opt(q.id, "「" + esc(q.name) + "」", cur); }).join("") + "</optgroup>";
+      const fl = folderNames.filter(function (nm) { return ancestors.indexOf(nm) < 0; });
+      if (fl.length) o += '<optgroup label="フォルダ全体の形（合体した形）">' + fl.map(function (nm) { return opt("folder:" + nm, "📁 " + esc(nm), cur); }).join("") + "</optgroup>";
+      const op = clipShowAll ? otherParts : otherParts.filter(function (q) { return q.id === cur; });
+      if (op.length) o += '<optgroup label="ほかのフォルダのパーツの形">' + op.map(function (q) { return opt(q.id, "「" + esc(q.name) + "」" + (q.group ? "（" + esc(q.group) + "）" : ""), cur); }).join("") + "</optgroup>";
+      return o;
+    };
+    h += '<div class="fld" style="margin-top:12px;"><label>くり抜き（逆マスク）</label><select id="pf_cut">' +
+      '<option value="">（なし）</option>' + cutOpts(cuts[0]) + "</select>";
+    if (cuts.length >= 1) h += '<select id="pf_cut2" style="margin-top:5px;"><option value="">（2つ目：なし）</option>' + cutOpts(cuts[1]) + "</select>";
+    h += '<p class="note">選んだ形の<strong>重なっている部分だけ、このパーツを消します</strong>（マスクの逆）。例：耳の後ろに回したい髪に「📁 耳」のフォルダを指定すると、耳のところだけ髪が消えて、耳が髪より手前に見えます。重なり順は変わらないので、フォルダを動かさずに済みます。</p>' +
+      (sel.cutBy ? '<button class="pill" id="pf_cutall">同じフォルダのパーツにも同じくり抜きを設定</button>' : "") + "</div>";
   }
   h += accClose();
   h += accOpen("pts", "点の調整", selPt >= 0);
@@ -2683,7 +2729,7 @@ function renderProps() {
   on("pf_delpart", "click", function () {
     if (!confirm("パーツ「" + sel.name + "」を消しますか？（元に戻すでも戻せます）")) return;
     pushUndo();
-    docData.parts.forEach(function (q) { const ks = clipKeysOf(q); if (ks.indexOf(sel.id) >= 0) setClipKeys(q, ks.filter(function (k) { return k !== sel.id; })); });
+    docData.parts.forEach(function (q) { mapMaskKeys(q, function (ks) { return ks.filter(function (k) { return k !== sel.id; }); }); });
     docData.parts = docData.parts.filter(function (p) { return p.id !== sel.id; });
     selId = null; selPt = -1;
     afterEdit();
@@ -2821,6 +2867,24 @@ function renderProps() {
   on("pf_clip", "change", applyClipUI);
   on("pf_clipAll", "change", function (e) { clipShowAll = e.target.checked; renderProps(); });
   on("pf_clip2", "change", applyClipUI);
+  const applyCutUI = function () {
+    pushUndo();
+    const keys = [];
+    ["pf_cut", "pf_cut2"].forEach(function (id) { const el = document.getElementById(id); const v = el ? el.value : ""; if (v && keys.indexOf(v) < 0) keys.push(v); });
+    setClipKeys(sel, keys, "cutBy");
+    afterEdit();
+  };
+  on("pf_cut", "change", applyCutUI);
+  on("pf_cut2", "change", applyCutUI);
+  on("pf_cutall", "click", function () {
+    if (!sel.cutBy) return;
+    pushUndo();
+    const ks = clipKeysOf(sel, "cutBy");
+    docData.parts.forEach(function (q) {
+      if (q.id !== sel.id && ks.indexOf(q.id) < 0 && (q.group || null) === (sel.group || null)) setClipKeys(q, ks, "cutBy");
+    });
+    afterEdit();
+  });
   on("pf_clipall", "click", function () {
     if (!sel.clipBy) return;
     pushUndo();
