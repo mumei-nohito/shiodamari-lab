@@ -184,6 +184,9 @@
   .gbtn:hover { border-color:var(--ac); }
   .gbtn.on { background:var(--ac); color:var(--on); border-color:var(--ac); }
   .phead { display:flex; justify-content:space-between; align-items:center; gap:6px; }
+  .phead .pill.sm { white-space:nowrap; flex:none; padding-left:9px; padding-right:9px; }   /* 狭い時も改行して丸くならないように */
+  .phead .tabs { flex:none; }
+  .pheadBtns { display:flex; gap:4px; margin-left:auto; }
   .phead h2 { margin:2px 0 8px; }
   .pill.sm { padding:2px 9px; font-size:11px; }
   .expandTab { display:none; }
@@ -245,9 +248,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 右のパネルの幅を変えられるようにしました（左端の線をドラッグ、または「⇔ 広げる」）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 右のパネルの幅を変えられるようにしました（左端の線をドラッグ、または「⇔ 広く」）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
-    <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広げる」を押すと画面の半分くらいまで一気に広がります（もう一度押すと元の幅）。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
+    <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広く」を押すと画面の半分くらいまで一気に広がります（「⇔ 戻す」で元の幅）。「引っ込める」は「畳む」に名前を変えました。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
     <div class="newsItem"><span>11/17 19:30</span>関節の自動の割り当てで、名前やフォルダに「手前」が入った髪（例：右前髪ー手前）が「手」と判定されて手首と一緒に動いていた不具合を修正。「頭」フォルダの中と髪のパーツは、必ず頭と一緒に動くようにしました。</div>
     <div class="newsItem"><span>11/17 19:00</span>起動した時に作業中のデータが読めなくても、保管庫に作りかけが残っていればそこから開くようにしました（以前は原案で開いて、作りかけを原案で上書きすることがありました）。保存データが見つからずに原案で開いた時は、お知らせを出します。あわせて、ブラウザに「保存データを消さないで」とお願いする設定を入れました。</div>
     <div class="newsItem"><span>11/13 22:00</span>「🎯 ずらしてつかむ」モードを追加。指の少し上に ✛ が出て、指を離した所の点をつかみます。つかんだ点やパーツは、画面のどこをなぞっても動かせます。スマホの下のパネルにも「↶ 戻す・↷ やり直し・🎯」を置きました。</div>
@@ -446,8 +449,8 @@
           <button class="tab on" id="tabBtnList">パーツ一覧</button>
           <button class="tab" id="tabBtnProps">プロパティ</button>
         </div>
-        <button class="pill sm" id="sideWideBtn" title="パネルを大きく広げる／元の幅に戻す（パネルの左端の線をドラッグしても幅を変えられます）">⇔ 広げる</button>
-        <button class="pill sm" id="collapseSide">引っ込める ▶</button>
+        <span class="pheadBtns"><button class="pill sm" id="sideWideBtn" title="パネルの幅を大きく広げる／元の幅に戻す（パネルの左端の線をドラッグしても変えられます）">⇔ 広く</button>
+        <button class="pill sm" id="collapseSide" title="パネルを右端に引っ込める">畳む ▶</button></span>
       </div>
       <div class="sheetBar">
         <span class="mini">パネルの高さ：</span>
@@ -3505,7 +3508,7 @@ function setSideW(w, keep) {
   w = Math.round(Math.max(SIDEW_MIN, Math.min(sideWMax(), w)));
   document.getElementById("layout").style.setProperty("--sideW", w + "px");
   const b = document.getElementById("sideWideBtn");
-  if (b) b.textContent = w > SIDEW_DEF + 60 ? "⇔ 元の幅" : "⇔ 広げる";
+  if (b) b.textContent = w > SIDEW_DEF + 60 ? "⇔ 戻す" : "⇔ 広く";
   if (keep !== false) { try { LS.setItem(SIDEW_KEY, String(w)); } catch (e) {} }
   return w;
 }
