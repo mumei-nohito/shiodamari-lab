@@ -31,8 +31,14 @@
   .titleRow .tools { display:flex; gap:8px; align-items:center; }
   .top .lead { color:var(--mut); font-size:.88rem; margin:4px 0 0; }
   #th { font:inherit; font-size:.85rem; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.3em .6em; cursor:pointer; max-width:60vw; }
-  main { display:grid; grid-template-columns:1fr 330px; gap:12px; padding:12px; align-items:start; }
+  main { display:grid; grid-template-columns:minmax(0, 1fr) var(--sideW, 330px); gap:12px; padding:12px; align-items:start; }
   #sidePanel { position:sticky; top:10px; }
+  /* パネルの左端をつまんで幅を変える（お絵かきソフトのパネルと同じ） */
+  .sideResizer { position:absolute; left:-11px; top:12px; bottom:12px; width:12px; cursor:col-resize; touch-action:none; z-index:5; display:flex; align-items:center; justify-content:center; }
+  .sideResizer::before { content:""; width:4px; height:46px; border-radius:4px; background:var(--line); transition:background .15s, height .15s; }
+  .sideResizer:hover::before, .sideResizer.drag::before { background:var(--ac); height:90px; }
+  body.sideResizing { cursor:col-resize; user-select:none; }
+  #sidePanel.closed .sideResizer { display:none; }
   .panelScroll { overflow:auto; max-height:calc(100vh - 175px); padding-right:2px; }
   .tabs { display:flex; gap:4px; }
   .tab { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 10px; font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:var(--fg); white-space:nowrap; flex:1; overflow:hidden; }
@@ -183,7 +189,7 @@
   .expandTab { display:none; }
   .panel.closed .panelBody { display:none; }
   .panel.closed .expandTab { display:block; writing-mode:vertical-rl; margin:2px auto; border:1px solid var(--line); background:var(--card); border-radius:999px; padding:12px 5px; font-family:inherit; font-weight:700; font-size:12px; color:var(--fg); cursor:pointer; }
-  main.closedR { grid-template-columns:1fr 52px; }
+  main.closedR { grid-template-columns:minmax(0, 1fr) 52px; }
   .vtx { fill:#ff8c42; stroke:#fff; stroke-width:2; cursor:grab; }
   .vtx.smooth { fill:#12a594; }
   .vtx.cur { fill:#e5484d; }
@@ -209,7 +215,7 @@
       border-radius:14px 14px 0 0; border-bottom:none; box-shadow:0 -4px 18px rgba(0,0,0,.25); padding:8px 10px calc(4px + env(safe-area-inset-bottom, 0px));
       display:flex; flex-direction:column; }
     #sidePanel .panelBody, #sidePanel.closed .panelBody { display:flex; flex-direction:column; flex:1; min-height:0; }
-    #sidePanel .expandTab, #collapseSide { display:none !important; }
+    #sidePanel .expandTab, #collapseSide, .sideResizer, #sideWideBtn { display:none !important; }
     #sidePanel.sheet-shut { height:auto; }
     .sheetBar { display:flex; margin:6px 0 4px; }
     .sheetBar .gbtn.on { background:var(--ac); border-color:var(--ac); color:var(--on); }
@@ -239,8 +245,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 「手前」という名前の髪が手首と一緒に動いてしまう不具合を直しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 右のパネルの幅を変えられるようにしました（左端の線をドラッグ、または「⇔ 広げる」）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広げる」を押すと画面の半分くらいまで一気に広がります（もう一度押すと元の幅）。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
     <div class="newsItem"><span>11/17 19:30</span>関節の自動の割り当てで、名前やフォルダに「手前」が入った髪（例：右前髪ー手前）が「手」と判定されて手首と一緒に動いていた不具合を修正。「頭」フォルダの中と髪のパーツは、必ず頭と一緒に動くようにしました。</div>
     <div class="newsItem"><span>11/17 19:00</span>起動した時に作業中のデータが読めなくても、保管庫に作りかけが残っていればそこから開くようにしました（以前は原案で開いて、作りかけを原案で上書きすることがありました）。保存データが見つからずに原案で開いた時は、お知らせを出します。あわせて、ブラウザに「保存データを消さないで」とお願いする設定を入れました。</div>
     <div class="newsItem"><span>11/13 22:00</span>「🎯 ずらしてつかむ」モードを追加。指の少し上に ✛ が出て、指を離した所の点をつかみます。つかんだ点やパーツは、画面のどこをなぞっても動かせます。スマホの下のパネルにも「↶ 戻す・↷ やり直し・🎯」を置きました。</div>
@@ -431,6 +438,7 @@
   </section>
 
   <aside class="card panel" id="sidePanel">
+      <div class="sideResizer" id="sideResizer" title="ドラッグでパネルの幅を変える（ダブルクリックで元の幅）"></div>
     <button class="expandTab" id="expandSide">◀ パネル</button>
     <div class="panelBody">
       <div class="phead">
@@ -438,6 +446,7 @@
           <button class="tab on" id="tabBtnList">パーツ一覧</button>
           <button class="tab" id="tabBtnProps">プロパティ</button>
         </div>
+        <button class="pill sm" id="sideWideBtn" title="パネルを大きく広げる／元の幅に戻す（パネルの左端の線をドラッグしても幅を変えられます）">⇔ 広げる</button>
         <button class="pill sm" id="collapseSide">引っ込める ▶</button>
       </div>
       <div class="sheetBar">
@@ -3489,6 +3498,52 @@ function setTab(t) {
 }
 document.getElementById("tabBtnList").addEventListener("click", function () { setTab("list"); });
 document.getElementById("tabBtnProps").addEventListener("click", function () { setTab("props"); });
+/* ============ パネルの幅を変える（PC） ============ */
+const SIDEW_KEY = "avatarMakerSideW", SIDEW_DEF = 330, SIDEW_MIN = 280;
+function sideWMax() { return Math.max(SIDEW_MIN, window.innerWidth - 360); }   /* キャンバスが見える幅は残す */
+function setSideW(w, keep) {
+  w = Math.round(Math.max(SIDEW_MIN, Math.min(sideWMax(), w)));
+  document.getElementById("layout").style.setProperty("--sideW", w + "px");
+  const b = document.getElementById("sideWideBtn");
+  if (b) b.textContent = w > SIDEW_DEF + 60 ? "⇔ 元の幅" : "⇔ 広げる";
+  if (keep !== false) { try { LS.setItem(SIDEW_KEY, String(w)); } catch (e) {} }
+  return w;
+}
+function curSideW() { return document.getElementById("sidePanel").getBoundingClientRect().width; }
+(function () {
+  let saved = SIDEW_DEF;
+  try { const v = parseFloat(LS.getItem(SIDEW_KEY)); if (v > 0) saved = v; } catch (e) {}
+  setSideW(saved, false);
+  const rz = document.getElementById("sideResizer");
+  let st = null;
+  rz.addEventListener("pointerdown", function (e) {
+    st = { x: e.clientX, w: curSideW() };
+    rz.setPointerCapture(e.pointerId); rz.classList.add("drag"); document.body.classList.add("sideResizing");
+    e.preventDefault();
+  });
+  rz.addEventListener("pointermove", function (e) {
+    if (!st) return;
+    setSideW(st.w + (st.x - e.clientX), false);
+  });
+  const end = function () {
+    if (!st) return;
+    st = null; rz.classList.remove("drag"); document.body.classList.remove("sideResizing");
+    setSideW(curSideW());
+    renderStage();
+  };
+  rz.addEventListener("pointerup", end);
+  rz.addEventListener("pointercancel", end);
+  rz.addEventListener("dblclick", function () { setSideW(SIDEW_DEF); renderStage(); });
+  document.getElementById("sideWideBtn").addEventListener("click", function () {
+    /* 名前を確かめたい時用：画面の半分くらいまで一気に広げる。もう一度押すと元の幅 */
+    if (curSideW() > SIDEW_DEF + 60) setSideW(SIDEW_DEF);
+    else setSideW(Math.max(560, window.innerWidth * 0.55));
+    renderStage();
+  });
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 720 && curSideW() > sideWMax()) setSideW(sideWMax(), false);
+  });
+})();
 document.getElementById("collapseSide").addEventListener("click", function () {
   document.getElementById("sidePanel").classList.add("closed");
   document.getElementById("layout").classList.add("closedR");
