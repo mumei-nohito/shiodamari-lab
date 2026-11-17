@@ -92,7 +92,7 @@ header.top .sp{flex:1}
 .hint{font-weight:400;color:var(--sub);font-size:.78rem}
 .field{margin-bottom:16px}
 .inp{width:100%;border:1px solid var(--line);background:var(--input);border-radius:10px;padding:9px 12px}
-textarea.inp{resize:vertical;min-height:4.4em;height:calc(1.7em * 10 + 20px);line-height:1.7}
+textarea.inp{resize:vertical;min-height:4.4em;height:calc(1.7em * 10 + 20px);line-height:1.7;font-size:var(--memo-fs,15px)}
 .inp:focus{outline:2px solid var(--accent2);outline-offset:1px}
 .count{font-size:.8rem;color:var(--sub);display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:4px;flex-wrap:wrap}
 .count.over .num{color:var(--danger);font-weight:700}
@@ -128,7 +128,7 @@ textarea.inp{resize:vertical;min-height:4.4em;height:calc(1.7em * 10 + 20px);lin
 .block{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}
 .block-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .block-h h3{margin:0;font-size:1rem;flex:1}
-.pre{white-space:pre-wrap;word-break:break-word;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:2.6em;line-height:1.6;overflow:auto;resize:vertical}
+.pre{font-size:var(--memo-fs,15px);white-space:pre-wrap;word-break:break-word;background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:2.6em;line-height:1.6;overflow:auto;resize:vertical}
 .pre.short{resize:none}
 .pre.emptytxt{color:var(--sub)}
 /* Markdownプレビュー */
@@ -217,6 +217,11 @@ body.viewing .toast{bottom:76px}
 :root[data-theme="dark"] .bkwarn{background:#3a3016;color:#f3e2b5;border-color:#6b5a2a}
 .bkwarn .btn{box-shadow:none}
 /* 飾りパレット */
+.fsCtl{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:2px}
+.fsCtl button{border:none;background:none;border-radius:999px;padding:3px 9px;font-size:.85rem;color:var(--ink)}
+.fsCtl button:hover{background:var(--chip)}
+.fsCtl button:disabled{opacity:.35}
+.fsCtl .fsv{font-size:.78rem;color:var(--sub);min-width:3.2em;padding:3px 4px}
 .pal{position:fixed;right:16px;bottom:76px;z-index:40;width:min(340px,calc(100vw - 20px));max-height:min(62vh,520px);display:flex;flex-direction:column;
   background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.22);overflow:hidden}
 .pal-h{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg2)}
@@ -312,6 +317,7 @@ body.viewing .toast{bottom:76px}
       <button class="back" id="viewBack">← 一覧へ</button>
       <button class="back hidden" id="histBack" style="margin-left:8px"></button>
       <div class="sp"></div>
+      <span class="fsCtl" data-fs></span>
       <button class="btn" id="mdBtn" title="Markdownの書き方を、飾りがついた見た目で確認できるよ">👁 プレビュー</button>
       <button class="btn" id="copyAllBtn">📋 まとめてコピー</button>
       <button class="btn primary" id="editBtn">✏️ 編集</button>
@@ -409,7 +415,8 @@ body.viewing .toast{bottom:76px}
     </div>
 
     <div class="stickybar">
-      <button class="btn" id="palBtn" style="margin-right:auto" title="記号やMarkdownの書き方を、押すだけで入れられるパネル">🐚 かざり箱</button>
+      <button class="btn" id="palBtn" title="記号やMarkdownの書き方を、押すだけで入れられるパネル">🐚 かざり箱</button>
+      <span class="fsCtl" data-fs style="margin-right:auto"></span>
       <button class="btn" id="editCancel">やめる</button>
       <button class="btn primary" id="editSave">💾 保存する</button>
     </div>
@@ -754,6 +761,32 @@ function saveSort(){ try{ localStorage.setItem(SK, JSON.stringify({key:$('#sortS
 $('#sortSel').onchange = () => { sortDir = sortDirs[$('#sortSel').value]; saveSort(); renderList(); };
 $('#reorderBtn').onclick = () => { reordering = !reordering; renderList(); };
 $('#sortDir').onclick = () => { sortDir = sortDir==='asc' ? 'desc' : 'asc'; sortDirs[$('#sortSel').value] = sortDir; saveSort(); renderList(); };
+
+/* ---------- 文字の大きさ（閲覧と編集で共通） ---------- */
+const FSK = 'creative-memo-fontSize', FS_MIN = 12, FS_MAX = 24, FS_DEF = 15;
+let memoFs = (() => { try{ const n = parseInt(localStorage.getItem(FSK), 10); return n>=FS_MIN && n<=FS_MAX ? n : FS_DEF; }catch(e){ return FS_DEF; } })();
+function applyFs(){
+  document.documentElement.style.setProperty('--memo-fs', memoFs + 'px');
+  document.querySelectorAll('[data-fs]').forEach(w => {
+    w.querySelector('.fsm').disabled = memoFs <= FS_MIN; w.querySelector('.fsp').disabled = memoFs >= FS_MAX;
+    w.querySelector('.fsv').textContent = memoFs + 'px';
+  });
+}
+function setFs(n){
+  memoFs = Math.max(FS_MIN, Math.min(FS_MAX, n));
+  try{ localStorage.setItem(FSK, String(memoFs)); }catch(e){}
+  applyFs();
+  // 閲覧画面は長い文の高さを文字の大きさから決めているので作り直す
+  if(!$('#viewView').classList.contains('hidden') && current){ const y = window.scrollY; openView(current.id); window.scrollTo(0, y); }
+}
+document.querySelectorAll('[data-fs]').forEach(w => {
+  w.title = '本文の文字の大きさ';
+  w.append(
+    el('button',{class:'fsm', text:'Ａ−', title:'文字を小さく', onclick(){ setFs(memoFs - 1); }}),
+    el('button',{class:'fsv', title:'押すと標準（15px）に戻すよ', onclick(){ setFs(FS_DEF); }}),
+    el('button',{class:'fsp', text:'Ａ＋', title:'文字を大きく', onclick(){ setFs(memoFs + 1); }}));
+});
+applyFs();
 
 /* ---------- Markdownプレビュー ----------
    文字はすべて textContent で入れるので、メモに変なタグが混ざっていても動かない（安全） */
