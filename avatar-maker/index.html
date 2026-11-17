@@ -239,8 +239,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 起動時に作りかけが原案に戻ってしまう問題の対策を入れました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 「手前」という名前の髪が手首と一緒に動いてしまう不具合を直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/17 19:30</span>関節の自動の割り当てで、名前やフォルダに「手前」が入った髪（例：右前髪ー手前）が「手」と判定されて手首と一緒に動いていた不具合を修正。「頭」フォルダの中と髪のパーツは、必ず頭と一緒に動くようにしました。</div>
     <div class="newsItem"><span>11/17 19:00</span>起動した時に作業中のデータが読めなくても、保管庫に作りかけが残っていればそこから開くようにしました（以前は原案で開いて、作りかけを原案で上書きすることがありました）。保存データが見つからずに原案で開いた時は、お知らせを出します。あわせて、ブラウザに「保存データを消さないで」とお願いする設定を入れました。</div>
     <div class="newsItem"><span>11/13 22:00</span>「🎯 ずらしてつかむ」モードを追加。指の少し上に ✛ が出て、指を離した所の点をつかみます。つかんだ点やパーツは、画面のどこをなぞっても動かせます。スマホの下のパネルにも「↶ 戻す・↷ やり直し・🎯」を置きました。</div>
     <div class="newsItem"><span>11/13 12:30</span>スマホ向けの手直し。パネル（パーツ一覧・プロパティ）を画面の下に固定し、キャンバスを見ながら操作できるようにしました（高さは「大・中・畳む」）。二本指の操作は、最初の動きで「拡大縮小」か「画面の移動」のどちらかに決まり、同時には起きないようにしました。二本目の指を置いた時、一本目の指で動き始めていた点やパーツは元の位置に戻ります。</div>
@@ -1237,7 +1238,7 @@ const RIG = {
     { key: "head", re: null },
     { key: "upperArm", re: /上腕/ },
     { key: "foreArm", re: /前腕/ },
-    { key: "hand", re: /手(?!首|袋)/ },
+    { key: "hand", re: /手(?!首|袋|前)/ },   /* 「手前」（髪の手前など）は手ではない */
     { key: "thigh", re: /太腿|太もも|ふともも|大腿/ },
     { key: "shin", re: /すね|脛|ふくらはぎ|下腿/ },
     { key: "foot", re: /(^|[^襟])足(?!首)/ }
@@ -1265,6 +1266,8 @@ function rigSeg(p) {
   if (p.category === "background") return null;
   const nm = p.name || "", g = p.group || "";
   const leafs = g.split(FSEP).reverse();
+  /* 「頭」フォルダの中や髪のパーツは、名前に「手」「足」が混ざっていても頭として動かす */
+  if (/^頭(\/|$)/.test(g) || /髪|襟足/.test(nm + "/" + g)) return "head";
   for (let k = 1; k < RIG.segs.length; k++) { const s = RIG.segs[k]; if (s.re.test(nm)) return s.key; }
   for (let i = 0; i < leafs.length; i++) for (let k = 1; k < RIG.segs.length; k++) { const s = RIG.segs[k]; if (s.re.test(leafs[i])) return s.key; }
   if (/^首/.test(nm) && !/頭/.test(g)) return null;
