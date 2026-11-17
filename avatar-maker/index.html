@@ -203,6 +203,7 @@
   /* 🎯 ずらしてつかむ：指の少し上に出す照準と、狙っている点・つかんでいる点の印 */
   .storeNotice { position:fixed; z-index:80; left:50%; top:12px; transform:translateX(-50%); width:min(460px, calc(100vw - 24px)); background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:14px; padding:12px 14px; box-shadow:var(--pop); font-size:13px; line-height:1.6; }
   .storeNotice p { margin:6px 0; }
+  .gbtn.warnBtn { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border-color:var(--warnhd, #b3540e); }
   .aimCross { position:fixed; z-index:70; width:34px; height:34px; margin:-17px 0 0 -17px; pointer-events:none; display:none; }
   .aimCross::before, .aimCross::after { content:""; position:absolute; background:#ff8c42; box-shadow:0 0 0 1.5px #fff; border-radius:2px; }
   .aimCross::before { left:16px; top:0; width:2px; height:34px; }
@@ -248,8 +249,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/17 「くり抜き（逆マスク）」を追加しました。耳の後ろに回したい髪などに。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/18 重なりがバラバラなフォルダのお知らせと、鏡写しでの反対側の作り直しを追加しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/18 02:00</span>フォルダの中身が、ほかのパーツを挟んで飛び飛びの重なりになっている時は、フォルダに「⚠ 重なりがバラバラ」ボタンが出るようにしました（押すと、挟まっているパーツの名前と「奥側にまとめる／手前側にまとめる」が出ます）。フォルダの「鏡写し」で、反対側のフォルダにもう中身がある時は「今ある中身を消して作り直す」ができるようになりました（片側の手足だけ直して、反対側に反映したい時に）。重なりの位置はそのまま、ほかのパーツのマスクの指定も付け替えます。反対側へ新しく写す時は、左右の層が混ざらないよう、元のすぐ上にひとかたまりで置きます。</div>
     <div class="newsItem"><span>11/17 22:45</span>プロパティの「切り抜き」に「くり抜き（逆マスク）」を追加。選んだ形（パーツやフォルダ）と重なっている部分だけ、そのパーツを消せます。耳の後ろに回したい髪に「耳」のフォルダを指定すると、重なり順を変えずに耳が手前に見えます。鏡写しコピーでは「右耳」→「左耳」のように左右も入れ替わります。</div>
     <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広く」を押すと画面の半分くらいまで一気に広がります（「⇔ 戻す」で元の幅）。「引っ込める」は「畳む」に名前を変えました。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
     <div class="newsItem"><span>11/17 19:30</span>関節の自動の割り当てで、名前やフォルダに「手前」が入った髪（例：右前髪ー手前）が「手」と判定されて手首と一緒に動いていた不具合を修正。「頭」フォルダの中と髪のパーツは、必ず頭と一緒に動くようにしました。</div>
@@ -1743,6 +1745,50 @@ function addFolder(parent) {
   if (parent) collapsedGroups[parent] = false;
   save(); renderList();
 }
+/* 決めたパーツたちを、重なり順でひとかたまりにする。
+   ・moving：かためるパーツ（中の順番はそのまま）
+   ・belowZ：この重なりの数字より奥にあるパーツの、すぐ上に入れる（間に挟まっていたほかのパーツは、かたまりの上に来る）
+   並べ直したあと、全部のパーツの重なりの数字を 0, 1, 2… に振り直す（順番は変えない） */
+function packZ(moving, belowZ, inclusive) {
+  if (!moving.length) return;
+  const set = {}; moving.forEach(function (p) { set[p.id] = true; });
+  const all = docData.parts.slice().sort(function (a, b) { return a.z - b.z; });
+  const rest = all.filter(function (p) { return !set[p.id]; });
+  const mv = all.filter(function (p) { return set[p.id]; });
+  const idx = rest.filter(function (q) { return inclusive ? q.z <= belowZ : q.z < belowZ; }).length;
+  Array.prototype.splice.apply(rest, [idx, 0].concat(mv));
+  rest.forEach(function (p, i) { p.z = i; });
+}
+/* フォルダの中身が、ほかのパーツを挟んで飛び飛びになっているか。
+   見た目に関わる時だけ知らせる：挟まっているのが「同じ親フォルダの中」のパーツで、しかもこのフォルダのパーツと位置が重なっている時
+   （一番上の階層のフォルダは、後ろ髪を体の奥に置くなどわざと分けることが多いので知らせない） */
+function groupZSandwiched(name) {
+  const parent = parentPath(name);
+  if (!parent) return [];
+  const mine = partsInGroup(name);
+  if (mine.length < 2) return [];
+  const set = {}; mine.forEach(function (p) { set[p.id] = true; });
+  const lo = Math.min.apply(null, mine.map(function (p) { return p.z; })), hi = Math.max.apply(null, mine.map(function (p) { return p.z; }));
+  const boxes = mine.map(partBBox).filter(Boolean);
+  const ov = function (a, c) { return a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h; };
+  return docData.parts.filter(function (q) {
+    if (set[q.id] || !(q.z > lo && q.z < hi) || !inFolder(q, parent)) return false;
+    const qb = partBBox(q);
+    return !!qb && boxes.some(function (b) { return ov(b, qb); });
+  });
+}
+function groupZScattered(name) { return groupZSandwiched(name).length > 0; }
+/* side："back"＝フォルダの一番奥のパーツの位置にまとめる（挟まっていたパーツはフォルダより手前へ）
+         "front"＝一番手前のパーツの位置にまとめる（挟まっていたパーツはフォルダより奥へ） */
+function alignGroupZ(name, side) {
+  const mine = partsInGroup(name);
+  if (!groupZScattered(name)) { alignMenuFor = null; renderList(); return; }
+  pushUndo();
+  if (side === "front") packZ(mine, Math.max.apply(null, mine.map(function (p) { return p.z; })), true);
+  else packZ(mine, Math.min.apply(null, mine.map(function (p) { return p.z; })), false);
+  alignMenuFor = null;
+  afterEdit();
+}
 function moveGroup(name, dir) {
   const t = groupTree(), me = t.nodes[name];
   if (!me) return;
@@ -1808,7 +1854,8 @@ function mirrorPartsInPlace(parts) {
   afterEdit();
 }
 /* 選んだパーツを、中心線の反対側に鏡合わせでコピーする（顔の左右対称づくり用） */
-function mirrorCopyParts(parts, regroup) {
+function mirrorCopyParts(parts, regroup, opt) {
+  opt = opt || {};
   const targets = parts.filter(function (p) { return p.flip !== "fixed_screen"; });
   /* 反転固定のパーツ（瞳のハイライトなど）は、形を反転せずに「いちばん近い一緒に写すパーツ」と同じだけ横にずらして写す */
   const fixedOnes = parts.filter(function (p) { return p.flip === "fixed_screen"; });
@@ -1869,6 +1916,26 @@ function mirrorCopyParts(parts, regroup) {
     if (regroup && np.group) np.group = regroup(np.group) || null;
     docData.parts.push(np);
   });
+  if (opt.replace && opt.replace.length) {
+    /* 作り直し：反対側の古いパーツを消して、古いパーツがあった重なりの位置へ入れる。
+       ほかのパーツが古いパーツをマスク・くり抜きに使っていたら、同じ名前の新しいパーツへ付け替える */
+    const old = opt.replace, oldIds = {}, byName = {};
+    old.forEach(function (q) { oldIds[q.id] = q; });
+    copies.forEach(function (np) { byName[(np.group || "") + "\u0000" + np.name] = np.id; });
+    const remap = {};
+    old.forEach(function (q) { const nid = byName[(q.group || "") + "\u0000" + q.name]; if (nid) remap[q.id] = nid; });
+    const baseZ = Math.min.apply(null, old.map(function (q) { return q.z; }));
+    docData.parts = docData.parts.filter(function (q) { return !oldIds[q.id]; });
+    old.forEach(function (q) { delete bandSel[q.id]; });
+    docData.parts.forEach(function (q) {
+      mapMaskKeys(q, function (ks) { return ks.map(function (k) { return oldIds[k] ? (remap[k] || null) : k; }).filter(Boolean); });
+    });
+    packZ(copies, baseZ, false);
+  } else if (opt.block) {
+    /* 反対側の新しいフォルダへ写す時は、元のかたまりのすぐ上に、ひとかたまりで置く（左右の層が混ざらないように） */
+    const srcTop = Math.max.apply(null, parts.map(function (p) { return p.z; }));
+    packZ(copies, srcTop, true);
+  }
   afterEdit();
   if (copies.length) selectPart(copies[copies.length - 1].id);
 }
@@ -1888,6 +1955,20 @@ function mirrorCopyGroup(name) {
     if (!Array.isArray(edState.folders)) edState.folders = [];
     sub.forEach(function (pth) { const q = swapLR(pth); if (edState.folders.indexOf(q) < 0) edState.folders.push(q); });
     collapsedGroups[swapLR(name)] = false;
+  }
+  if (swapped) {
+    const other = swapLR(name);
+    const existing = partsInGroup(other);
+    if (existing.length) {
+      const ok = confirm("反対側の「" + leafName(other) + "」には、もうパーツが " + existing.length + " 個あります。\n\n" +
+        "OK：今ある中身を消して、「" + leafName(name) + "」の鏡写しで作り直す（重なりの位置はそのまま）\n" +
+        "キャンセル：やめる\n\n（片側だけ直して反対側に反映したい時に使えます。元に戻すで戻せます）");
+      if (!ok) return;
+      mirrorCopyParts(parts, regroup, { replace: existing });
+      return;
+    }
+    mirrorCopyParts(parts, regroup, { block: true });
+    return;
   }
   mirrorCopyParts(parts, regroup);
 }
@@ -2092,6 +2173,7 @@ function releaseGroup(name) {
    ・行に落とした時の重なり順は「落とした場所の上下のパーツの間」に差し込むだけで、他のパーツの順番は変えない
    ・スマホではつまみの所だけがドラッグになり、他の所は今まで通りスクロールできる */
 let dnd = null;
+let alignMenuFor = null; /* 「⚠ 重なりをそろえる」の小さなメニューを開いているフォルダ */
 let addMenuFor = null;   /* 「＋パーツ」の小さなメニューを開いているフォルダ */
 function dndKeyOf(el) { return el ? el.getAttribute("data-drop") : null; }
 function dndParse(k) { const i = k.indexOf(":"); return { kind: k.slice(0, i), key: k.slice(i + 1) }; }
@@ -2302,12 +2384,20 @@ function renderList() {
       '<button class="gbtn" data-gsub="' + esc(g.name) + '" title="このフォルダの中にフォルダを作る">＋📁</button>' +
       '<button class="gbtn" data-gup="' + esc(g.name) + '" title="フォルダごと手前へ（同じ階層の中で）">↑</button>' +
       '<button class="gbtn" data-gdown="' + esc(g.name) + '" title="フォルダごと奥へ（同じ階層の中で）">↓</button>' +
+      (groupZScattered(g.name) ? '<button class="gbtn warnBtn' + (alignMenuFor === g.name ? " on" : "") + '" data-galign="' + esc(g.name) + '" title="このフォルダの中身が、同じ親フォルダのほかのパーツを挟んで、飛び飛びの重なりになっています">⚠ 重なりがバラバラ</button>' : "") +
       '<button class="gbtn' + (groupMove === g.name ? " on" : "") + '" data-gmove="' + esc(g.name) + '" title="押してからキャンバスをドラッグするとフォルダごと移動">移動</button>' +
       '<button class="gbtn" data-gmirror="' + esc(g.name) + '" title="フォルダごと、その場で左右反転（画面固定・ロック中は除く。名前の左右も入れ替わります）">反転</button>' +
-      '<button class="gbtn" data-gmcopy="' + esc(g.name) + '" title="フォルダごと、反対側へ鏡写しのコピーを作る（中のフォルダも。瞳のハイライトは反転せずに付いてきます）">鏡写し</button>' +
+      '<button class="gbtn" data-gmcopy="' + esc(g.name) + '" title="フォルダごと、反対側へ鏡写しのコピーを作る（中のフォルダも。瞳のハイライトは反転せずに付いてきます）。反対側のフォルダにもう中身がある時は、作り直すか聞きます（片側だけ直して反映したい時に）">鏡写し</button>' +
       '<button class="gbtn" data-gcopy="' + esc(g.name) + '" title="フォルダごとコピー（中のフォルダも）">写し</button>' +
       '<button class="gbtn" data-grelease="' + esc(g.name) + '" title="フォルダをほどく（中身は1つ上へ）">ほどく</button>' +
       "</span>" +
+      (alignMenuFor === g.name ? (function () {
+        const sw = groupZSandwiched(g.name);
+        return '<div class="gaddRow alignRow"><p class="mini" style="margin:0 0 4px;">このフォルダの中身の間に、<b>' + sw.slice(0, 6).map(function (q) { return "「" + esc(q.name) + "」"; }).join("") + (sw.length > 6 ? "ほか" + (sw.length - 6) + "個" : "") + '</b>が挟まっています。わざとならそのままでOK。そろえる時は、どちらにまとめるか選んでください（フォルダの中の順番はそのまま）。</p>' +
+          '<button class="gbtn" data-galignk="back" data-gf="' + esc(g.name) + '">奥側にまとめる（挟まったパーツが手前に）</button>' +
+          '<button class="gbtn" data-galignk="front" data-gf="' + esc(g.name) + '">手前側にまとめる（挟まったパーツが奥に）</button>' +
+          '<button class="gbtn" data-galignk="cancel" data-gf="' + esc(g.name) + '">やめる</button></div>';
+      })() : "") +
       (addMenuFor === g.name ? '<div class="gaddRow"><span class="mini">このフォルダに：</span>' +
         '<button class="gbtn" data-gaddk="circle" data-gf="' + esc(g.name) + '">＋ 丸</button>' +
         '<button class="gbtn" data-gaddk="square" data-gf="' + esc(g.name) + '">＋ 四角</button>' +
@@ -2377,6 +2467,15 @@ function renderList() {
   wire("data-grelease", function (name) { releaseGroup(name); });
   wire("data-gup", function (name) { moveGroup(name, 1); });
   wire("data-gdown", function (name) { moveGroup(name, -1); });
+  wire("data-galign", function (name) { alignMenuFor = alignMenuFor === name ? null : name; renderList(); });
+  list.querySelectorAll("[data-galignk]").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const k = b.dataset.galignk, name = b.dataset.gf;
+      if (k === "cancel") { alignMenuFor = null; renderList(); return; }
+      alignGroupZ(name, k);
+    });
+  });
   wire("data-gmove", function (name) { groupMove = groupMove === name ? null : name; if (groupMove) setMove = null; renderList(); });
   wire("data-gmirror", function (name) { mirrorGroup(name); });
   wire("data-gmcopy", function (name) { mirrorCopyGroup(name); });
