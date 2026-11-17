@@ -226,6 +226,8 @@ body.viewing .toast{bottom:76px}
   background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.22);overflow:hidden}
 .pal-h{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--bg2)}
 .pal-h .btn{box-shadow:none}
+.undoBtn{min-width:34px;font-size:1rem;padding:2px 8px}
+.undoBtn:disabled{opacity:.35;cursor:default}
 .grip{cursor:grab;touch-action:none;user-select:none;color:var(--sub);font-size:1.1rem;padding:0 4px}
 .grip:active{cursor:grabbing}
 .pal-help{font-size:.8rem;padding:8px 12px;border-bottom:1px solid var(--line);color:var(--ink)}
@@ -509,6 +511,8 @@ body.viewing .toast{bottom:76px}
   <div class="pal-h">
     <span class="grip" id="palGrip" title="ドラッグでパネルを動かせるよ">⠿</span>
     <b style="flex:1">🐚 かざり箱</b>
+    <button class="btn small undoBtn" id="palUndo" title="ひとつ前に戻す" disabled>↩</button>
+    <button class="btn small undoBtn" id="palRedo" title="戻したのをやり直す" disabled>↪</button>
     <button class="btn small" id="palHelpBtn" title="使い方">？</button>
     <button class="btn small" id="palClose" title="閉じる">✕</button>
   </div>
@@ -1011,14 +1015,56 @@ let palTab = (() => { try{ const v = localStorage.getItem(PTK); return PAL_TABS.
 let mySnips = (() => { try{ const v = JSON.parse(localStorage.getItem(MYK)); if(Array.isArray(v)) return v.filter(x => typeof x==='string'); }catch(e){} return []; })();
 function saveMy(){ try{ localStorage.setItem(MYK, JSON.stringify(mySnips)); }catch(e){} }
 let palTarget = null;
-document.addEventListener('focusin', e => { const t = e.target; if(t.matches && t.matches('#editView textarea, #edName')) palTarget = t; });
+document.addEventListener('focusin', e => { const t = e.target; if(t.matches && t.matches('#editView textarea, #edName')){ palTarget = t; histSync(t); updUndo(); } });
+/* 戻す・やり直す：欄ごとに変更の記録をとっておく（文字入力は少し間があくまでを1回分にまとめる） */
+const H = new WeakMap(), H_MAX = 200;
+let restoring = false;
+const snap = t => ({v:t.value, a:t.selectionStart, b:t.selectionEnd, at:Date.now(), kind:''});
+function histSync(t){ // 記録と今の中身がずれていたら（別のメモを開いた時など）記録をやり直す
+  const h = H.get(t);
+  if(!h || h.list[h.i].v !== t.value) H.set(t, {list:[snap(t)], i:0});
+}
+function histRecord(t, kind){
+  if(restoring) return;
+  let h = H.get(t); if(!h){ H.set(t, {list:[snap(t)], i:0}); return; }
+  const top = h.list[h.i]; if(top.v === t.value) return;
+  h.list.length = h.i + 1;
+  const s = snap(t); s.kind = kind;
+  if(kind==='type' && top.kind==='type' && h.i>0 && s.at - top.at < 1000) h.list[h.i] = s; // 続けて打った文字はまとめる
+  else { h.list.push(s); if(h.list.length > H_MAX) h.list.shift(); h.i = h.list.length - 1; }
+}
+document.addEventListener('input', e => { const t = e.target; if(t.matches && t.matches('#editView textarea, #edName')){ histRecord(t, palBusy ? 'pal' : 'type'); updUndo(); } });
+let palBusy = false;
+function updUndo(){
+  const t = palTargetEl(), h = t && H.get(t);
+  $('#palUndo').disabled = !h || h.i <= 0;
+  $('#palRedo').disabled = !h || h.i >= h.list.length - 1;
+}
+function histGo(d){
+  const t = palTargetEl(); if(!t) return;
+  histRecord(t, 'type');
+  const h = H.get(t); if(!h) return;
+  const j = h.i + d; if(j < 0 || j >= h.list.length) return;
+  h.i = j; const s = h.list[j];
+  restoring = true;
+  t.value = s.v; t.dispatchEvent(new Event('input', {bubbles:true})); // 下書きや文字数の表示も合わせて更新
+  restoring = false;
+  t.focus(); t.setSelectionRange(s.a, s.b);
+  updUndo();
+}
+$('#palUndo').onclick = () => histGo(-1);
+$('#palRedo').onclick = () => histGo(1);
 function palTargetEl(){ return palTarget && palTarget.isConnected && !palTarget.closest('.hidden') ? palTarget : null; }
 function putText(t, a, b, str, selA, selB){
+  histSync(t); histRecord(t, 'type'); palBusy = true;
   t.focus(); t.setSelectionRange(a, b);
   let ok = false;
   if(str) try{ ok = document.execCommand('insertText', false, str); }catch(e){} // 使えればCtrl+Zで戻せる
   if(!ok){ t.setRangeText(str, a, b, 'end'); t.dispatchEvent(new Event('input', {bubbles:true})); }
   t.setSelectionRange(selA ?? a + str.length, selB ?? a + str.length);
+  palBusy = false;
+  const h = H.get(t); if(h){ const top = h.list[h.i]; top.a = t.selectionStart; top.b = t.selectionEnd; top.kind = 'pal'; }
+  updUndo();
 }
 const HEAD = /^(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|[・●○◆◇■□★☆✦✧※▶▷]\s*)/;
 function applyItem(it){
