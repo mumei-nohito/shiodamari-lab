@@ -992,7 +992,8 @@ const PAL_TABS = [
         {s:'## ', nm:'見出し', line:'## '},
         {s:'### ', nm:'小見出し', line:'### '},
         {s:'> ', nm:'引用', line:'> '},
-        {s:'---', nm:'区切り線（1行まるごと）', block:'---'}]},
+        {s:'---', nm:'区切り線（1行まるごと）', block:'---'},
+        {s:'```', nm:'コードブロック（選んだ行を枠で囲む）', fence:true}]},
       {h:'行の整理', tip:'何行か選んでから押すと、まとめて変わるよ', list:true, items:[
         {s:'- ', nm:'箇条書きにする', line:'- '},
         {s:'1. 2. 3.', nm:'連番を振る（振り直しもできる）', num:true},
@@ -1079,6 +1080,19 @@ function applyItem(it){
   }
   if(!t){ copyText(text); toast('コピーしたよ（書きたい欄をタップしてから押すと直接入るよ）'); return; }
   const v = t.value, a = t.selectionStart, b = t.selectionEnd, sel = v.slice(a, b);
+  if(it.fence){ // 選んだ行を ``` で上下から挟む。選んでいないときは空の枠を作って中にカーソル
+    if(a===b){
+      const pre = a > 0 && v[a-1] !== '\n' ? '\n' : '', post = b < v.length && v[b] !== '\n' ? '\n' : '';
+      const ins = pre + '```\n\n```' + post, mid = a + pre.length + 4;
+      putText(t, a, b, ins, mid, mid);
+    }else{
+      const ls = v.lastIndexOf('\n', a - 1) + 1;
+      let le = v.indexOf('\n', v[b-1]==='\n' ? b - 1 : b); if(le < 0) le = v.length;
+      const out = '```\n' + v.slice(ls, le) + '\n```';
+      putText(t, ls, le, out, ls, ls + out.length);
+    }
+    return;
+  }
   if(it.line || it.num || it.strip || (!it.wrap && !it.block && sel.includes('\n'))){
     const ls = v.lastIndexOf('\n', a - 1) + 1;
     let le = v.indexOf('\n', (b > a && v[b-1]==='\n') ? b - 1 : b); if(le < 0) le = v.length;
