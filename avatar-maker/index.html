@@ -249,8 +249,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/18 重なりがバラバラなフォルダのお知らせと、鏡写しでの反対側の作り直しを追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/20 ズームの最大を600%から3200%に広げました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/20 23:45</span>ズームの最大を600%から3200%に広げました（三つ編みの影など細かい所用）。スライダーは「倍々」で動く目盛りにして、広い範囲でも狙った拡大率にしやすくしました。</div>
     <div class="newsItem"><span>11/18 02:00</span>フォルダの中身が、ほかのパーツを挟んで飛び飛びの重なりになっている時は、フォルダに「⚠ 重なりがバラバラ」ボタンが出るようにしました（押すと、挟まっているパーツの名前と「奥側にまとめる／手前側にまとめる」が出ます）。フォルダの「鏡写し」で、反対側のフォルダにもう中身がある時は「今ある中身を消して作り直す」ができるようになりました（片側の手足だけ直して、反対側に反映したい時に）。重なりの位置はそのまま、ほかのパーツのマスクの指定も付け替えます。反対側へ新しく写す時は、左右の層が混ざらないよう、元のすぐ上にひとかたまりで置きます。</div>
     <div class="newsItem"><span>11/17 22:45</span>プロパティの「切り抜き」に「くり抜き（逆マスク）」を追加。選んだ形（パーツやフォルダ）と重なっている部分だけ、そのパーツを消せます。耳の後ろに回したい髪に「耳」のフォルダを指定すると、重なり順を変えずに耳が手前に見えます。鏡写しコピーでは「右耳」→「左耳」のように左右も入れ替わります。</div>
     <div class="newsItem"><span>11/17 20:00</span>PCで右のパネル（パーツ一覧・プロパティ）の幅を変えられるようにしました。パネルの左端の線をドラッグすると好きな幅に、「⇔ 広く」を押すと画面の半分くらいまで一気に広がります（「⇔ 戻す」で元の幅）。「引っ込める」は「畳む」に名前を変えました。左端の線をダブルクリックしても元の幅に戻ります。幅は次に開いた時も覚えています。</div>
@@ -424,7 +425,7 @@
       <button class="pill" id="ratioBtn" title="オン：右下の●でのサイズ変更で縦横の比率を保つ／オフ：縦と横を別々に伸び縮み（ドラッグ中にShiftキーを押すと、一時的に逆になります）">縦横比を保つ</button>
       <span class="tlabel">ズーム</span>
       <button class="pill" id="zoomOutBtn">−</button>
-      <input type="range" id="zoomRange" min="30" max="600" step="5" value="100">
+      <input type="range" id="zoomRange" min="0" max="1000" step="1" value="0">
       <button class="pill" id="zoomInBtn">＋</button>
       <span class="mini" id="zoomPct">100%</span>
       <button class="pill" id="fitBtn">全体表示</button>
@@ -3123,7 +3124,7 @@ function fitView() {
   }
   vbBase = { x: minX - pad, y: minY - pad, w: (maxX - minX) + pad * 2, h: (maxY - minY) + pad * 2 };
   vb = clone(vbBase);
-  document.getElementById("zoomRange").value = 100;
+  document.getElementById("zoomRange").value = zToSlider(100);
   document.getElementById("zoomPct").textContent = "100%";
 }
 
@@ -3491,10 +3492,10 @@ stage.addEventListener("pointermove", function (e) {
     let w = v0.w, h = v0.h, screenPt = nc;
     if (drag.mode === "zoom") {
       const z0 = vbBase.w / v0.w * 100;
-      const z = (drag.d0 > 4 && nd > 4) ? Math.max(30, Math.min(600, z0 * nd / drag.d0)) : z0;
+      const z = (drag.d0 > 4 && nd > 4) ? Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z0 * nd / drag.d0)) : z0;
       w = vbBase.w / (z / 100); h = v0.h * (w / v0.w);
       screenPt = drag.c0;   /* 拡大縮小中は、指を置いた場所を中心に動かさない */
-      document.getElementById("zoomRange").value = Math.round(z);
+      document.getElementById("zoomRange").value = zToSlider(z);
       document.getElementById("zoomPct").textContent = Math.round(z) + "%";
     }
     /* 指を置いた所にあった絵が、指の下に来続けるように表示範囲を決める */
@@ -3591,13 +3592,13 @@ stage.addEventListener("wheel", function (e) {
   let dy = e.deltaY;
   if (e.deltaMode === 1) dy *= 33;
   const cur = vbBase.w / vb.w * 100;
-  const next = Math.max(30, Math.min(600, cur * Math.exp(-dy * 0.0015)));
+  const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, cur * Math.exp(-dy * 0.0015)));
   if (Math.abs(next - cur) < 0.01) return;
   const p = toSvg(e), f = cur / next;
   vb.x = p.x - (p.x - vb.x) * f;
   vb.y = p.y - (p.y - vb.y) * f;
   vb.w *= f; vb.h *= f;
-  document.getElementById("zoomRange").value = Math.round(next);
+  document.getElementById("zoomRange").value = zToSlider(next);
   document.getElementById("zoomPct").textContent = Math.round(next) + "%";
   renderStage();
 }, { passive: false });
@@ -3638,19 +3639,25 @@ document.getElementById("modePanBtn").addEventListener("click", function () {
   document.getElementById("modeUnderBtn").classList.remove("on");
   this.classList.add("on"); document.getElementById("modePtBtn").classList.remove("on");
 });
+/* ズームは 30%〜3200%。スライダーは「倍々」で動く目盛り（少し動かすと、どの拡大率でも同じくらいの割合で変わる） */
+const ZOOM_MIN = 30, ZOOM_MAX = 3200;
+function zToSlider(z) { return Math.round(1000 * Math.log(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)) / ZOOM_MIN) / Math.log(ZOOM_MAX / ZOOM_MIN)); }
+function sliderToZ(v) { return ZOOM_MIN * Math.pow(ZOOM_MAX / ZOOM_MIN, v / 1000); }
+function curZoom() { return vbBase.w / vb.w * 100; }
 function applyZoom(pct) {
-  pct = Math.max(30, Math.min(600, Math.round(pct)));
+  pct = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, Math.round(pct)));
   const f = 100 / pct;
   const cx = vb.x + vb.w / 2, cy = vb.y + vb.h / 2;
   vb.w = vbBase.w * f; vb.h = vbBase.h * f;
   vb.x = cx - vb.w / 2; vb.y = cy - vb.h / 2;
-  document.getElementById("zoomRange").value = pct;
+  document.getElementById("zoomRange").value = zToSlider(pct);
   document.getElementById("zoomPct").textContent = pct + "%";
   renderStage();
 }
-document.getElementById("zoomRange").addEventListener("input", function (e) { applyZoom(+e.target.value); });
-document.getElementById("zoomInBtn").addEventListener("click", function () { applyZoom((+document.getElementById("zoomRange").value) * 1.25); });
-document.getElementById("zoomOutBtn").addEventListener("click", function () { applyZoom((+document.getElementById("zoomRange").value) / 1.25); });
+document.getElementById("zoomRange").addEventListener("input", function (e) { applyZoom(sliderToZ(+e.target.value)); });
+document.getElementById("zoomInBtn").addEventListener("click", function () { applyZoom(curZoom() * 1.25); });
+document.getElementById("zoomOutBtn").addEventListener("click", function () { applyZoom(curZoom() / 1.25); });
+document.getElementById("zoomRange").value = zToSlider(100);
 document.getElementById("fitBtn").addEventListener("click", function () { fitView(); renderStage(); });
 document.getElementById("helpBtn").addEventListener("click", function () {
   document.getElementById("helpBox").classList.toggle("open");
