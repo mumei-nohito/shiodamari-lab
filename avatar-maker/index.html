@@ -251,8 +251,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 フォルダごとの「◐ 透かし」を追加しました（後ろ髪の作業などに）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 PCで「🎯 ずらしてつかむ」が見えてしまう問題を直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 01:40</span>PCなのに「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出ていた問題を修正。「タッチ対応」と名乗るPCでも、実際に指やペンで画面を触るまでは出さないようにしました（スマホ・タブレットは今まで通り最初から出ます）。</div>
     <div class="newsItem"><span>11/21 01:30</span>パーツ一覧のフォルダに「◐」（作業用の透かし）を追加。押すとフォルダごと40%の半透明になり、スライダーで10〜100%に変えられます。頭や体を透かして、奥の後ろ髪を見ながら作業できます。透かし中のパーツはキャンバスで選べないので、奥のパーツを直接つかめます（切り替え可）。作業用の表示なので、PNG書き出し・雛形JSONには入りません。</div>
     <div class="newsItem"><span>11/20 23:45</span>ズームの最大を600%から3200%に広げました（三つ編みの影など細かい所用）。スライダーは「倍々」で動く目盛りにして、広い範囲でも狙った拡大率にしやすくしました。</div>
     <div class="newsItem"><span>11/18 02:00</span>フォルダの中身が、ほかのパーツを挟んで飛び飛びの重なりになっている時は、フォルダに「⚠ 重なりがバラバラ」ボタンが出るようにしました（押すと、挟まっているパーツの名前と「奥側にまとめる／手前側にまとめる」が出ます）。フォルダの「鏡写し」で、反対側のフォルダにもう中身がある時は「今ある中身を消して作り直す」ができるようになりました（片側の手足だけ直して、反対側に反映したい時に）。重なりの位置はそのまま、ほかのパーツのマスクの指定も付け替えます。反対側へ新しく写す時は、左右の層が混ざらないよう、元のすぐ上にひとかたまりで置きます。</div>
@@ -3227,7 +3228,7 @@ function aimSetMode(on) {
   aimMode = !!on; aimGrab = null;
   try { LS.setItem(AIM_KEY, aimMode ? "1" : "0"); } catch (e) {}
   ["aimBtn", "sAim"].forEach(function (id) { const b = document.getElementById(id); if (b) b.classList.toggle("on", aimMode); });
-  document.querySelectorAll(".aimOnly").forEach(function (b) { b.hidden = !aimMode; });
+  aimSyncButtons();
   aimHide(); render();
   if (aimMode) aimTip("🎯 指を置くと少し上に ✛ が出ます。点に合わせて指を離すと、その点をつかめます", 3500);
 }
@@ -3808,16 +3809,30 @@ document.getElementById("sUndo").addEventListener("click", function () { documen
 document.getElementById("sRedo").addEventListener("click", function () { document.getElementById("redoBtn").click(); });
 document.getElementById("sAim").addEventListener("click", function () { aimSetMode(!aimMode); });
 document.getElementById("aimBtn").addEventListener("click", function () { aimSetMode(!aimMode); });
-/* 🎯 は指で触る画面のためのもの。マウスだけのPC（タッチパッドのノートPCも）ではボタンを出さない */
-(function () {
-  let touch = false;
-  try { touch = (navigator.maxTouchPoints || 0) > 0 || matchMedia("(any-pointer: coarse)").matches; } catch (e) {}
-  if (!touch) document.getElementById("aimBtn").style.display = "none";
-})();
+/* 🎯 は指で触る画面のためのもの。
+   ・ふだん指で操作する端末（スマホ・タブレット）では最初から出す
+   ・PCでは出さない。「タッチ対応」と名乗るだけのPCもあるので、実際に指やペンで画面を触った時に初めて出す（覚えておく） */
+const SEEN_TOUCH_KEY = "avatarMakerSeenTouch";
+function aimAvailable() {
+  try { if (matchMedia("(pointer: coarse)").matches) return true; } catch (e) {}
+  try { return LS.getItem(SEEN_TOUCH_KEY) === "1"; } catch (e) { return false; }
+}
+function aimSyncButtons() {
+  const av = aimAvailable();
+  document.getElementById("aimBtn").style.display = av ? "" : "none";
+  document.querySelectorAll(".aimOnly").forEach(function (b) { b.hidden = !(aimMode && av); });
+}
+document.addEventListener("pointerdown", function (e) {
+  if ((e.pointerType === "touch" || e.pointerType === "pen") && !aimAvailable()) {
+    try { LS.setItem(SEEN_TOUCH_KEY, "1"); } catch (er) {}
+    aimSyncButtons();
+  }
+}, true);
 document.getElementById("aimWholeBtn").addEventListener("click", aimGrabWhole);
 document.getElementById("sWhole").addEventListener("click", aimGrabWhole);
 window.addEventListener("scroll", function () { aimSyncGrab(); }, { passive: true });
-try { if (LS.getItem(AIM_KEY) === "1") { aimMode = true; ["aimBtn", "sAim"].forEach(function (id) { document.getElementById(id).classList.add("on"); }); document.querySelectorAll(".aimOnly").forEach(function (b) { b.hidden = false; }); } } catch (e) {}
+try { if (LS.getItem(AIM_KEY) === "1") { aimMode = true; ["aimBtn", "sAim"].forEach(function (id) { document.getElementById(id).classList.add("on"); }); } } catch (e) {}
+aimSyncButtons();
 setSheet((function () { try { return LS.getItem(SHEET_KEY); } catch (e) { return null; } })());
 document.getElementById("modeUnderBtn").addEventListener("click", function () {
   underMoveMode = !underMoveMode;
