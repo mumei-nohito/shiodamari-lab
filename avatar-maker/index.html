@@ -251,8 +251,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 PCで「🎯 ずらしてつかむ」が見えてしまう問題を直しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 曲げた腕が「顔より手前・髪より奥」に入り込む重なりも「⚠ 重なりがバラバラ」で知らせるようにしました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 02:00</span>「頭」のような一番上の階層のフォルダの中身の間に、腕（関節で動くパーツ）が挟まっている時も「⚠ 重なりがバラバラ」を出すようにしました。まっすぐの時は重ならなくても、試し曲げで腕を上げると「顔や耳より手前・髪より奥」に入り込んでしまうためです。</div>
     <div class="newsItem"><span>11/21 01:40</span>PCなのに「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出ていた問題を修正。「タッチ対応」と名乗るPCでも、実際に指やペンで画面を触るまでは出さないようにしました（スマホ・タブレットは今まで通り最初から出ます）。</div>
     <div class="newsItem"><span>11/21 01:30</span>パーツ一覧のフォルダに「◐」（作業用の透かし）を追加。押すとフォルダごと40%の半透明になり、スライダーで10〜100%に変えられます。頭や体を透かして、奥の後ろ髪を見ながら作業できます。透かし中のパーツはキャンバスで選べないので、奥のパーツを直接つかめます（切り替え可）。作業用の表示なので、PNG書き出し・雛形JSONには入りません。</div>
     <div class="newsItem"><span>11/20 23:45</span>ズームの最大を600%から3200%に広げました（三つ編みの影など細かい所用）。スライダーは「倍々」で動く目盛りにして、広い範囲でも狙った拡大率にしやすくしました。</div>
@@ -1785,19 +1786,24 @@ function packZ(moving, belowZ, inclusive) {
   rest.forEach(function (p, i) { p.z = i; });
 }
 /* フォルダの中身が、ほかのパーツを挟んで飛び飛びになっているか。
-   見た目に関わる時だけ知らせる：挟まっているのが「同じ親フォルダの中」のパーツで、しかもこのフォルダのパーツと位置が重なっている時
-   （一番上の階層のフォルダは、後ろ髪を体の奥に置くなどわざと分けることが多いので知らせない） */
+   見た目に関わる時だけ知らせる：挟まっているのが「同じ親フォルダの中」のパーツで、しかもこのフォルダのパーツと位置が重なっている時。
+   一番上の階層のフォルダは、腕のパーツ（関節で動く）が挟まっている時だけ知らせる */
 function groupZSandwiched(name) {
   const parent = parentPath(name);
-  if (!parent) return [];
   const mine = partsInGroup(name);
   if (mine.length < 2) return [];
   const set = {}; mine.forEach(function (p) { set[p.id] = true; });
   const lo = Math.min.apply(null, mine.map(function (p) { return p.z; })), hi = Math.max.apply(null, mine.map(function (p) { return p.z; }));
   const boxes = mine.map(partBBox).filter(Boolean);
   const ov = function (a, c) { return a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h; };
+  /* 一番上の階層のフォルダ（頭・体など）では、腕のパーツが挟まっている時に知らせる。
+     まっすぐの時は重ならなくても、腕を曲げると「顔より手前・髪より奥」のように途中に入り込んでしまうため */
+  const arm = function (q) { const k = rigSeg(q); return k === "upperArm" || k === "foreArm" || k === "hand"; };
+  const mineMoves = mine.some(function (q) { const k = rigSeg(q); return !!k && k !== "head"; });
   return docData.parts.filter(function (q) {
-    if (set[q.id] || !(q.z > lo && q.z < hi) || !inFolder(q, parent)) return false;
+    if (set[q.id] || !(q.z > lo && q.z < hi)) return false;
+    if (!parent) return !mineMoves && arm(q) && !inFolder(q, "服");   /* 一番上の階層：腕だけを見る（服の袖は服の中の話なので除く） */
+    if (!inFolder(q, parent)) return false;
     const qb = partBBox(q);
     return !!qb && boxes.some(function (b) { return ov(b, qb); });
   });
