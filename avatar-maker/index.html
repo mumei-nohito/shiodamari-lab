@@ -251,8 +251,10 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 PCで「🎯 ずらしてつかむ」が見えてしまう問題を直しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「腕の重なり」の切り替えを追加しました（頭の後ろ／手前）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 02:20</span>試し曲げに「腕の重なり」を追加。右腕・左腕ごとに「頭や体より手前」「体と頭の後ろ（後ろ髪よりは手前）」を切り替えて、手を頭の後ろに回すポーズなどを確かめられます。服の袖など腕と一緒に動くパーツもついてきます。見た目の確認用で、データの重なり順は変わりません。</div>
+    <div class="newsItem"><span>11/21 02:00</span>「頭」のような一番上の階層のフォルダの中身の間に、腕（関節で動くパーツ）が挟まっている時も「⚠ 重なりがバラバラ」を出すようにしました。まっすぐの時は重ならなくても、試し曲げで腕を上げると「顔や耳より手前・髪より奥」に入り込んでしまうためです。</div>
     <div class="newsItem"><span>11/21 01:40</span>PCなのに「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出ていた問題を修正。「タッチ対応」と名乗るPCでも、実際に指やペンで画面を触るまでは出さないようにしました（スマホ・タブレットは今まで通り最初から出ます）。</div>
     <div class="newsItem"><span>11/21 01:30</span>パーツ一覧のフォルダに「◐」（作業用の透かし）を追加。押すとフォルダごと40%の半透明になり、スライダーで10〜100%に変えられます。頭や体を透かして、奥の後ろ髪を見ながら作業できます。透かし中のパーツはキャンバスで選べないので、奥のパーツを直接つかめます（切り替え可）。作業用の表示なので、PNG書き出し・雛形JSONには入りません。</div>
     <div class="newsItem"><span>11/20 23:45</span>ズームの最大を600%から3200%に広げました（三つ編みの影など細かい所用）。スライダーは「倍々」で動く目盛りにして、広い範囲でも狙った拡大率にしやすくしました。</div>
@@ -1442,6 +1444,25 @@ function rigAutoPlace() {
 /* ---- 試し曲げ（データは書き換えない） ---- */
 let pose = {};
 let poseSym = true;
+/* 試し曲げ用：腕の重なりの切り替え（見た目だけ。データの重なり順は変えない）
+   ""＝データの順番のまま／"front"＝頭や体より手前／"back"＝体と頭の後ろ（後ろ髪よりは手前） */
+let poseLayer = { R: "", L: "" };
+function isArmPart(p) { const k = rigSeg(p); return k === "upperArm" || k === "foreArm" || k === "hand"; }
+function drawOrder(list) {
+  if (!poseLayer.R && !poseLayer.L) return list;
+  const torso = docData.parts.filter(function (q) { return q.category !== "background" && !rigSeg(q); });
+  const backZ = torso.length ? Math.min.apply(null, torso.map(function (q) { return q.z; })) - 0.5 : -0.5;
+  const key = function (p) {
+    if (isArmPart(p)) {
+      const lay = poseLayer[rigSide(p)];
+      if (lay === "front") return 1e6 + p.z;
+      if (lay === "back") return backZ + p.z * 1e-6;
+    }
+    return effZ(p);
+  };
+  return list.map(function (p, i) { return { p: p, k: key(p), i: i }; })
+    .sort(function (a, b) { return (a.k - b.k) || (a.i - b.i); }).map(function (o) { return o.p; });
+}
 function poseActive() { return Object.keys(pose).some(function (k) { return pose[k]; }); }
 function rigJointById(id) { return (docData.joints || []).find(function (j) { return j.id === id; }); }
 /* そのパーツにかかる回転（根元から順）：[{a, p}] */
@@ -1492,6 +1513,17 @@ function renderPose() {
     const v = pose[j.id] || 0;
     h += '<div class="poseRow"><span class="poseName">' + esc(j.name) + '</span><input type="range" min="' + (-def.range) + '" max="' + def.range + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
   });
+  const layOpt = function (side) {
+    const v = poseLayer[side] || "";
+    return '<select data-poselayer="' + side + '">' +
+      '<option value=""' + (v === "" ? " selected" : "") + '>いつもの順番</option>' +
+      '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体より前）</option>' +
+      '<option value="back"' + (v === "back" ? " selected" : "") + '>後ろ（頭・体の奥）</option></select>';
+  };
+  h += '<div class="fld" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
+    '<div class="poseRow"><span class="poseName">右腕</span>' + layOpt("R") + '</div>' +
+    '<div class="poseRow"><span class="poseName">左腕</span>' + layOpt("L") + '</div>' +
+    '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>';
   h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>' +
     '<p class="note">試し曲げは見た目の確認用で、データは変わりません（書き出しにも入りません）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
   box.innerHTML = h;
@@ -1513,10 +1545,13 @@ function renderPose() {
       renderStage();
     });
   });
-  box.querySelector("#poseReset").addEventListener("click", function () { pose = {}; renderPose(); renderStage(); });
+  box.querySelectorAll("[data-poselayer]").forEach(function (sl) {
+    sl.addEventListener("change", function () { poseLayer[sl.dataset.poselayer] = sl.value; renderStage(); });
+  });
+  box.querySelector("#poseReset").addEventListener("click", function () { pose = {}; poseLayer = { R: "", L: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
-  const vis = sortedParts().filter(function (p) { return !ed(p.id).hidden; });
+  const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; }));
   /* 試し曲げ中は、関節の回転をかけて描く */
   /* 同じ回り方をする、続いたパーツはまとめて1つのグループで回す。
      1つずつ別のグループにすると、そのグループの中で重ね方（乗算など）が閉じてしまい、
@@ -1785,19 +1820,24 @@ function packZ(moving, belowZ, inclusive) {
   rest.forEach(function (p, i) { p.z = i; });
 }
 /* フォルダの中身が、ほかのパーツを挟んで飛び飛びになっているか。
-   見た目に関わる時だけ知らせる：挟まっているのが「同じ親フォルダの中」のパーツで、しかもこのフォルダのパーツと位置が重なっている時
-   （一番上の階層のフォルダは、後ろ髪を体の奥に置くなどわざと分けることが多いので知らせない） */
+   見た目に関わる時だけ知らせる：挟まっているのが「同じ親フォルダの中」のパーツで、しかもこのフォルダのパーツと位置が重なっている時。
+   一番上の階層のフォルダは、腕のパーツ（関節で動く）が挟まっている時だけ知らせる */
 function groupZSandwiched(name) {
   const parent = parentPath(name);
-  if (!parent) return [];
   const mine = partsInGroup(name);
   if (mine.length < 2) return [];
   const set = {}; mine.forEach(function (p) { set[p.id] = true; });
   const lo = Math.min.apply(null, mine.map(function (p) { return p.z; })), hi = Math.max.apply(null, mine.map(function (p) { return p.z; }));
   const boxes = mine.map(partBBox).filter(Boolean);
   const ov = function (a, c) { return a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h; };
+  /* 一番上の階層のフォルダ（頭・体など）では、腕のパーツが挟まっている時に知らせる。
+     まっすぐの時は重ならなくても、腕を曲げると「顔より手前・髪より奥」のように途中に入り込んでしまうため */
+  const arm = function (q) { const k = rigSeg(q); return k === "upperArm" || k === "foreArm" || k === "hand"; };
+  const mineMoves = mine.some(function (q) { const k = rigSeg(q); return !!k && k !== "head"; });
   return docData.parts.filter(function (q) {
-    if (set[q.id] || !(q.z > lo && q.z < hi) || !inFolder(q, parent)) return false;
+    if (set[q.id] || !(q.z > lo && q.z < hi)) return false;
+    if (!parent) return !mineMoves && arm(q) && !inFolder(q, "服");   /* 一番上の階層：腕だけを見る（服の袖は服の中の話なので除く） */
+    if (!inFolder(q, parent)) return false;
     const qb = partBBox(q);
     return !!qb && boxes.some(function (b) { return ov(b, qb); });
   });
