@@ -251,8 +251,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「腕の重なり」の切り替えを追加しました（頭の後ろ／手前）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「手足を丸ごとずらす」を追加しました（腕を外側へ、など）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 02:40</span>関節の試し曲げの下に「手足を丸ごとずらす」を追加。右腕・左腕・右脚・左脚を選んで「外へ・内へ・上へ・下へ」を押すと、その手足のパーツ（服の袖など一緒に動くパーツも）と関節をまとめて動かします。反対側も左右対称に動かせて、曲げたままでも使えます。</div>
     <div class="newsItem"><span>11/21 02:20</span>試し曲げに「腕の重なり」を追加。右腕・左腕ごとに「頭や体より手前」「体と頭の後ろ（後ろ髪よりは手前）」を切り替えて、手を頭の後ろに回すポーズなどを確かめられます。服の袖など腕と一緒に動くパーツもついてきます。見た目の確認用で、データの重なり順は変わりません。</div>
     <div class="newsItem"><span>11/21 02:00</span>「頭」のような一番上の階層のフォルダの中身の間に、腕（関節で動くパーツ）が挟まっている時も「⚠ 重なりがバラバラ」を出すようにしました。まっすぐの時は重ならなくても、試し曲げで腕を上げると「顔や耳より手前・髪より奥」に入り込んでしまうためです。</div>
     <div class="newsItem"><span>11/21 01:40</span>PCなのに「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出ていた問題を修正。「タッチ対応」と名乗るPCでも、実際に指やペンで画面を触るまでは出さないようにしました（スマホ・タブレットは今まで通り最初から出ます）。</div>
@@ -1447,6 +1448,35 @@ let poseSym = true;
 /* 試し曲げ用：腕の重なりの切り替え（見た目だけ。データの重なり順は変えない）
    ""＝データの順番のまま／"front"＝頭や体より手前／"back"＝体と頭の後ろ（後ろ髪よりは手前） */
 let poseLayer = { R: "", L: "" };
+/* ============ 手足を丸ごとずらす ============
+   腕（または脚）のパーツ・その手足と一緒に動く服のパーツ・その手足の関節を、まとめて同じだけ動かす。
+   試し曲げ中でも使える（曲げたまま見比べながら、外へ・内へ寄せられる） */
+const LIMBS = {
+  arm: { segs: ["upperArm", "foreArm", "hand"], joints: ["shoulder", "elbow", "wrist"], name: "腕" },
+  leg: { segs: ["thigh", "shin", "foot"], joints: ["hip", "knee", "ankle"], name: "脚" }
+};
+let limbTarget = "arm:R", limbSym = true, limbStep = 2, limbLastMove = 0;
+function limbPartsOf(kind, side) {
+  const L = LIMBS[kind];
+  return docData.parts.filter(function (p) { return L.segs.indexOf(rigSeg(p)) >= 0 && rigSide(p) === side; });
+}
+function shiftLimb(kind, side, dx, dy) {
+  limbPartsOf(kind, side).forEach(function (p) { translatePart(p, dx, dy); });
+  LIMBS[kind].joints.forEach(function (b) {
+    const j = rigJointById(rigJointId(b, side));
+    if (j && j.pos) { j.pos[0] = Math.round((j.pos[0] + dx) * 10) / 10; j.pos[1] = Math.round((j.pos[1] + dy) * 10) / 10; }
+  });
+}
+/* out：外へ(+)／内へ(-)、down：下へ(+)／上へ(-)。キャラの右側は画面の左なので、外＝画面の左 */
+function moveLimb(kind, side, out, down) {
+  const now = Date.now();
+  if (now - limbLastMove > 800) pushUndo();   /* 続けて押した分は、元に戻す1回でまとめて戻る */
+  limbLastMove = now;
+  const sx = function (sd) { return sd === "R" ? -1 : 1; };
+  shiftLimb(kind, side, sx(side) * out, down);
+  if (limbSym) { const o = side === "R" ? "L" : "R"; shiftLimb(kind, o, sx(o) * out, down); }
+  save(); renderStage();
+}
 function isArmPart(p) { const k = rigSeg(p); return k === "upperArm" || k === "foreArm" || k === "hand"; }
 function drawOrder(list) {
   if (!poseLayer.R && !poseLayer.L) return list;
@@ -1524,6 +1554,17 @@ function renderPose() {
     '<div class="poseRow"><span class="poseName">右腕</span>' + layOpt("R") + '</div>' +
     '<div class="poseRow"><span class="poseName">左腕</span>' + layOpt("L") + '</div>' +
     '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>';
+  {
+    const tg = limbTarget.split(":"), kind = tg[0], side = tg[1] || "R";
+    const cnt = limbPartsOf(kind, side).length;
+    h += '<div class="fld" style="margin-top:10px;"><label>手足を丸ごとずらす</label>' +
+      '<div class="poseRow"><select id="limbSel">' +
+      [["arm:R", "右腕"], ["arm:L", "左腕"], ["leg:R", "右脚"], ["leg:L", "左脚"]].map(function (o) { return '<option value="' + o[0] + '"' + (limbTarget === o[0] || (limbTarget === o[0].split(":")[0] && o[0].slice(-1) === "R") ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+      '</select><select id="limbStepSel">' + [1, 2, 5, 10].map(function (v) { return '<option value="' + v + '"' + (limbStep === v ? " selected" : "") + ">" + v + "pxずつ</option>"; }).join("") + "</select></div>" +
+      '<div class="toolbar" style="margin:6px 0;"><button class="pill sm" data-limb="out">⇠ 外へ</button><button class="pill sm" data-limb="in">内へ ⇢</button><button class="pill sm" data-limb="up">↑ 上へ</button><button class="pill sm" data-limb="down">↓ 下へ</button></div>' +
+      '<label class="mini"><input type="checkbox" id="limbSym"' + (limbSym ? " checked" : "") + '> 反対側も左右対称に動かす</label>' +
+      '<p class="note">' + LIMBS[kind].name + 'のパーツ（' + cnt + '個。服の袖など一緒に動くパーツも含む）と、肩・肘・手首などの関節をまとめて動かします。曲げたままでも使えます。ロック中のパーツも動きます。続けて押した分は「元に戻す」1回で戻ります。</p></div>';
+  }
   h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>' +
     '<p class="note">試し曲げは見た目の確認用で、データは変わりません（書き出しにも入りません）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
   box.innerHTML = h;
@@ -1543,6 +1584,16 @@ function renderPose() {
       }
       if (!showJoints) { showJoints = true; document.getElementById("jointsBtn").classList.add("on"); }
       renderStage();
+    });
+  });
+  box.querySelector("#limbSel").addEventListener("change", function (e) { limbTarget = e.target.value; renderPose(); });
+  box.querySelector("#limbStepSel").addEventListener("change", function (e) { limbStep = +e.target.value; });
+  box.querySelector("#limbSym").addEventListener("change", function (e) { limbSym = e.target.checked; });
+  box.querySelectorAll("[data-limb]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const tg = (limbTarget.indexOf(":") > 0 ? limbTarget : limbTarget + ":R").split(":");
+      const d = limbStep, a = b.dataset.limb;
+      moveLimb(tg[0], tg[1], a === "out" ? d : a === "in" ? -d : 0, a === "down" ? d : a === "up" ? -d : 0);
     });
   });
   box.querySelectorAll("[data-poselayer]").forEach(function (sl) {
