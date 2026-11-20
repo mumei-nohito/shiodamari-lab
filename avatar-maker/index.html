@@ -203,6 +203,8 @@
   /* 🎯 ずらしてつかむ：指の少し上に出す照準と、狙っている点・つかんでいる点の印 */
   .storeNotice { position:fixed; z-index:80; left:50%; top:12px; transform:translateX(-50%); width:min(460px, calc(100vw - 24px)); background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:14px; padding:12px 14px; box-shadow:var(--pop); font-size:13px; line-height:1.6; }
   .storeNotice p { margin:6px 0; }
+  .gbtn.fadeOn { background:var(--soft); border-color:var(--ac); color:var(--ac); }
+  .fadeRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
   .gbtn.warnBtn { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border-color:var(--warnhd, #b3540e); }
   .aimCross { position:fixed; z-index:70; width:34px; height:34px; margin:-17px 0 0 -17px; pointer-events:none; display:none; }
   .aimCross::before, .aimCross::after { content:""; position:absolute; background:#ff8c42; box-shadow:0 0 0 1.5px #fff; border-radius:2px; }
@@ -249,8 +251,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/20 ズームの最大を600%から3200%に広げました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 フォルダごとの「◐ 透かし」を追加しました（後ろ髪の作業などに）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 01:30</span>パーツ一覧のフォルダに「◐」（作業用の透かし）を追加。押すとフォルダごと40%の半透明になり、スライダーで10〜100%に変えられます。頭や体を透かして、奥の後ろ髪を見ながら作業できます。透かし中のパーツはキャンバスで選べないので、奥のパーツを直接つかめます（切り替え可）。作業用の表示なので、PNG書き出し・雛形JSONには入りません。</div>
     <div class="newsItem"><span>11/20 23:45</span>ズームの最大を600%から3200%に広げました（三つ編みの影など細かい所用）。スライダーは「倍々」で動く目盛りにして、広い範囲でも狙った拡大率にしやすくしました。</div>
     <div class="newsItem"><span>11/18 02:00</span>フォルダの中身が、ほかのパーツを挟んで飛び飛びの重なりになっている時は、フォルダに「⚠ 重なりがバラバラ」ボタンが出るようにしました（押すと、挟まっているパーツの名前と「奥側にまとめる／手前側にまとめる」が出ます）。フォルダの「鏡写し」で、反対側のフォルダにもう中身がある時は「今ある中身を消して作り直す」ができるようになりました（片側の手足だけ直して、反対側に反映したい時に）。重なりの位置はそのまま、ほかのパーツのマスクの指定も付け替えます。反対側へ新しく写す時は、左右の層が混ざらないよう、元のすぐ上にひとかたまりで置きます。</div>
     <div class="newsItem"><span>11/17 22:45</span>プロパティの「切り抜き」に「くり抜き（逆マスク）」を追加。選んだ形（パーツやフォルダ）と重なっている部分だけ、そのパーツを消せます。耳の後ろに回したい髪に「耳」のフォルダを指定すると、重なり順を変えずに耳が手前に見えます。鏡写しコピーでは「右耳」→「左耳」のように左右も入れ替わります。</div>
@@ -1227,17 +1230,37 @@ function strokeAttrsFor(sh) {
   if (!(sh.stroke && sh.strokeWidth > 0)) return "";
   return ' stroke="' + sh.stroke + '" stroke-width="' + sh.strokeWidth + '" stroke-linejoin="' + (sh.lineJoin === "sharp" ? "miter" : "round") + '"';
 }
+/* ============ 作業用の透かし（フォルダ単位） ============
+   edState.fade = { "フォルダの道筋": 0.1〜1 }。キャンバスの表示だけに効き、PNG書き出しや雛形JSONには入らない。
+   中のフォルダにも効く（親50%・子50%なら25%）。edState.fadeNoPick が true なら、透かし中のパーツはキャンバスで選べない（後ろのパーツを触りやすく） */
+function fadeOf(p) {
+  const f = edState.fade;
+  if (!f || !p.group) return 1;
+  let a = 1;
+  const segs = p.group.split(FSEP);
+  for (let i = 1; i <= segs.length; i++) {
+    const v = f[segs.slice(0, i).join(FSEP)];
+    if (v != null && v < 1) a *= v;
+  }
+  return a;
+}
+function folderFade(name) { return (edState.fade && edState.fade[name] != null) ? edState.fade[name] : 1; }
+function setFolderFade(name, v) {
+  if (!edState.fade) edState.fade = {};
+  if (v >= 0.995) delete edState.fade[name]; else edState.fade[name] = Math.round(v * 100) / 100;
+}
 function partSVG(p, forExport) {
   const sh = p.shape;
+  const fade = forExport ? 1 : fadeOf(p);
   const activeKeys = clipKeysOf(p).filter(function (k) { return clipSourceActive(k); });
   const cutKeys = clipKeysOf(p, "cutBy").filter(function (k) { return clipSourceActive(k); });
   /* 包み（g）が要る時は、合成（乗算など）を一番外の包みに載せる（中に置くと下のパーツに届かない） */
-  const multiClip = activeKeys.length >= 2 || cutKeys.length > 0;
+  const multiClip = activeKeys.length >= 2 || cutKeys.length > 0 || fade < 1;
   const filt = (sh.blur != null && sh.blur > 0) ? ' filter="url(#' + blurIdOf(p) + ')"' : "";
   const styles = [];
   /* マスクの包み（g）の中では合成が下絵に届かないため、複数マスク時は合成を一番外の包みに載せる */
   if (p.blend && p.blend !== "normal" && !multiClip) styles.push("mix-blend-mode:" + p.blend);
-  if (!forExport && ed(p.id).locked) styles.push("pointer-events:none");
+  if (!forExport && (ed(p.id).locked || (fade < 1 && edState.fadeNoPick !== false))) styles.push("pointer-events:none");
   const styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
   const gid = forExport ? styleAttr : ' data-pid="' + p.id + '"' + styleAttr;
   const clip = (activeKeys.length === 1 && !cutKeys.length) ? ' clip-path="url(#' + clipKeyId(activeKeys[0]) + ')"' : "";
@@ -1259,7 +1282,7 @@ function partSVG(p, forExport) {
   else if (sh.type === "rect") el = '<rect' + gid + clip + filt + ' x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '" fill="' + fillPaint(p) + '"' + (sh.fillOpacity != null && sh.fillOpacity < 1 ? ' fill-opacity="' + sh.fillOpacity + '"' : "") + "/>";
   if (partialLineOn(sh)) el += edgeLinesSVG(p, gid, clip, filt);
   if (multiClip) {
-    const wraps = activeKeys.map(function (k) { return ' clip-path="url(#' + clipKeyId(k) + ')"'; })
+    const wraps = (fade < 1 ? [' opacity="' + fade + '"'] : []).concat(activeKeys.map(function (k) { return ' clip-path="url(#' + clipKeyId(k) + ')"'; }))
       .concat(cutKeys.map(function (k) { return ' mask="url(#' + cutKeyId(k) + ')"'; }));
     let w = el;
     for (let i = wraps.length - 1; i >= 0; i--) {
@@ -2136,6 +2159,7 @@ function repath(old, neu) {
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(function (g) { return sw(normPath(g)); }).filter(Boolean)
     .filter(function (g, i, arr) { return arr.indexOf(g) === i; });
   Object.keys(collapsedGroups).forEach(function (k) { const n = sw(k); if (n !== k) { collapsedGroups[n] = collapsedGroups[k]; delete collapsedGroups[k]; } });
+  if (edState.fade) Object.keys(edState.fade).forEach(function (k) { const n = sw(k); if (n !== k) { if (n) edState.fade[n] = edState.fade[k]; delete edState.fade[k]; } });
 }
 function renameGroup(name) {
   const nn = prompt("フォルダの名前を変更\n（「頭/" + leafName(name) + "」のように / で区切ると、別のフォルダの中へ移せます。一番上へ出す時は / を付けずに名前だけ）", name);
@@ -2166,6 +2190,10 @@ function releaseGroup(name) {
   });
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(normPath).filter(function (g) { return g !== name; })
     .map(function (g) { return g.indexOf(name + FSEP) === 0 ? (up ? up + FSEP : "") + g.slice(name.length + 1) : g; });
+  if (edState.fade) {
+    delete edState.fade[name];
+    Object.keys(edState.fade).forEach(function (k) { if (k.indexOf(name + FSEP) === 0) { edState.fade[(up ? up + FSEP : "") + k.slice(name.length + 1)] = edState.fade[k]; delete edState.fade[k]; } });
+  }
   afterEdit();
 }
 /* ============ 一覧のドラッグ＆ドロップ（つまみ ⠿ を掴んで動かす） ============
@@ -2174,6 +2202,7 @@ function releaseGroup(name) {
    ・行に落とした時の重なり順は「落とした場所の上下のパーツの間」に差し込むだけで、他のパーツの順番は変えない
    ・スマホではつまみの所だけがドラッグになり、他の所は今まで通りスクロールできる */
 let dnd = null;
+let fadeMenuFor = null;  /* 「◐ 透かし」の小さなメニューを開いているフォルダ */
 let alignMenuFor = null; /* 「⚠ 重なりをそろえる」の小さなメニューを開いているフォルダ */
 let addMenuFor = null;   /* 「＋パーツ」の小さなメニューを開いているフォルダ */
 function dndKeyOf(el) { return el ? el.getAttribute("data-drop") : null; }
@@ -2380,6 +2409,7 @@ function renderList() {
       '<span class="gbtns">' +
       '<button class="gbtn' + (allHidden ? " off" : "") + '" data-geye="' + esc(g.name) + '" title="フォルダごと表示/非表示（中のフォルダも）">' + (allHidden ? "🚫" : "👁") + "</button>" +
       '<button class="gbtn" data-glock="' + esc(g.name) + '" title="フォルダごとロック/解除（中のフォルダも）">' + (allLocked ? "🔒" : "🔓") + "</button>" +
+      (function () { const fv = folderFade(g.name); return '<button class="gbtn' + (fv < 1 ? " fadeOn" : "") + (fadeMenuFor === g.name ? " on" : "") + '" data-gfade="' + esc(g.name) + '" title="作業用の透かし：フォルダごと半透明にして、奥のパーツを見やすくする（書き出しには入りません）">◐' + (fv < 1 ? " " + Math.round(fv * 100) + "%" : "") + "</button>"; })() +
       '<button class="gbtn" data-grename="' + esc(g.name) + '" title="フォルダ名の変更・別のフォルダへ移す">✎</button>' +
       '<button class="gbtn' + (addMenuFor === g.name ? " on" : "") + '" data-gadd="' + esc(g.name) + '" title="このフォルダの中にパーツを作る">＋パーツ</button>' +
       '<button class="gbtn" data-gsub="' + esc(g.name) + '" title="このフォルダの中にフォルダを作る">＋📁</button>' +
@@ -2392,6 +2422,14 @@ function renderList() {
       '<button class="gbtn" data-gcopy="' + esc(g.name) + '" title="フォルダごとコピー（中のフォルダも）">写し</button>' +
       '<button class="gbtn" data-grelease="' + esc(g.name) + '" title="フォルダをほどく（中身は1つ上へ）">ほどく</button>' +
       "</span>" +
+      (fadeMenuFor === g.name ? (function () {
+        const fv = folderFade(g.name);
+        return '<div class="gaddRow fadeRow"><span class="mini">透かし ' + Math.round(fv * 100) + '%</span>' +
+          '<input type="range" min="10" max="100" step="5" value="' + Math.round(fv * 100) + '" data-gfadev="' + esc(g.name) + '" style="flex:1;min-width:120px;">' +
+          '<button class="gbtn" data-gfadek="reset" data-gf="' + esc(g.name) + '">戻す</button>' +
+          '<label class="mini" style="flex-basis:100%;"><input type="checkbox" data-gfadepick="1"' + (edState.fadeNoPick !== false ? " checked" : "") + '> 透かし中のパーツはキャンバスで選べないようにする（奥のパーツを触りやすく）</label>' +
+          '<p class="mini" style="margin:2px 0 0;flex-basis:100%;">作業用の表示です。PNG書き出し・雛形JSONには入りません。</p></div>';
+      })() : "") +
       (alignMenuFor === g.name ? (function () {
         const sw = groupZSandwiched(g.name);
         return '<div class="gaddRow alignRow"><p class="mini" style="margin:0 0 4px;">このフォルダの中身の間に、<b>' + sw.slice(0, 6).map(function (q) { return "「" + esc(q.name) + "」"; }).join("") + (sw.length > 6 ? "ほか" + (sw.length - 6) + "個" : "") + '</b>が挟まっています。わざとならそのままでOK。そろえる時は、どちらにまとめるか選んでください（フォルダの中の順番はそのまま）。</p>' +
@@ -2469,6 +2507,27 @@ function renderList() {
   wire("data-gup", function (name) { moveGroup(name, 1); });
   wire("data-gdown", function (name) { moveGroup(name, -1); });
   wire("data-galign", function (name) { alignMenuFor = alignMenuFor === name ? null : name; renderList(); });
+  wire("data-gfade", function (name) {
+    if (fadeMenuFor !== name && folderFade(name) >= 1) { setFolderFade(name, 0.4); save(); render(); }   /* 初めて押した時は、すぐ40%に */
+    fadeMenuFor = fadeMenuFor === name ? null : name; renderList();
+  });
+  list.querySelectorAll("[data-gfadev]").forEach(function (r) {
+    r.addEventListener("click", function (e) { e.stopPropagation(); });
+    r.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    r.addEventListener("input", function () {
+      setFolderFade(r.dataset.gfadev, (+r.value) / 100);
+      renderStage();
+      const lab = r.parentNode.querySelector(".mini"); if (lab) lab.textContent = "透かし " + r.value + "%";
+    });
+    r.addEventListener("change", function () { save(); renderList(); });
+  });
+  list.querySelectorAll("[data-gfadek]").forEach(function (b) {
+    b.addEventListener("click", function (e) { e.stopPropagation(); setFolderFade(b.dataset.gf, 1); fadeMenuFor = null; save(); render(); });
+  });
+  list.querySelectorAll("[data-gfadepick]").forEach(function (c) {
+    c.addEventListener("click", function (e) { e.stopPropagation(); });
+    c.addEventListener("change", function () { edState.fadeNoPick = c.checked; save(); renderStage(); });
+  });
   list.querySelectorAll("[data-galignk]").forEach(function (b) {
     b.addEventListener("click", function (e) {
       e.stopPropagation();
