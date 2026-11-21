@@ -204,6 +204,13 @@
   .defEdit { margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; display:flex; flex-direction:column; gap:6px; }
   .defEdit label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .defFolders { max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 6px; display:flex; flex-direction:column; gap:2px; }
+  .turnFolders { display:flex; flex-wrap:wrap; gap:2px 12px; font-size:12.5px; margin:0 0 6px; }
+  .turnFolders label { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+  .turnRow { display:flex; align-items:center; gap:8px; margin:4px 0; min-width:0; }
+  .turnRow select { min-width:0; max-width:100%; }
+  .turnRow input[type=range] { flex:1; min-width:0; }
+  .tArrow { font-family:Arial, Helvetica, sans-serif; font-size:1.6em; font-weight:900; -webkit-text-stroke:0.6px currentColor; line-height:1; color:var(--ac); vertical-align:-0.1em; margin:0 2px; }
+  .morphRow .poseName { white-space:normal; max-width:7.5em; line-height:1.3; }
   .morphRow { display:grid; grid-template-columns:auto minmax(60px,1fr) auto auto; gap:6px; align-items:center; }
   .recBox { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:12px; padding:10px 12px; }
   .recBox .mini { color:inherit; }
@@ -481,7 +488,7 @@
       【顔の向き（横を向く）の作り方】<br>
       1. 「表情（変形）」の「🌐 顔の向きを自動で下書き」を開き、向き・角度（20度くらい）・動かすフォルダ（ふつうは「頭」と後ろ髪）を選んで「🌐 下書きを作る」。頭をボールに見立てて、全部のパーツに「顔の向き（画面→）」の変形ができます。<br>
       2. スライダーで確かめて、気になるパーツ（はみ出た髪など）だけ、そのパーツを選んで「形を直す」で直します。<br>
-      3. 変形の確認の「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」ができます。<br>
+      3. 変形の確認の「⇄ 逆向き」で、鏡写しの「顔の向き（画面←）」ができます。<br>
       4. 首の試し曲げ（かしげ）と組み合わせると、もっと自然に見えます。大きく回すと崩れるので、真横を向くような時は別の絵に切り替えるのがおすすめです。<br>
       ・移動・拡大・回転・鏡写し・点の追加と削除をしても、変形の形がついていきます。<br>
       ・スライダーは見た目の確認用です。0%以外の間は、キャンバスでの形の編集はお休みです（「全部 0% に戻す」で戻ります）。
@@ -1949,10 +1956,10 @@ function renderMorph() {
         const pk = morphLinkLR ? morphPartner(k) : null;
         shown[k] = true; if (pk) shown[pk] = true;
         const v = Math.round((morphVals[k] || 0) * 100);
-        const label = pk ? morphBaseLabel(k) + "（左右）" : k;
-        return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(pk ? k + "・" + pk : k) + '">' + esc(label) + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"' + (pk ? ' data-morph2="' + esc(pk) + '"' : "") + '><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span>" +
+        const label = pk ? esc(morphBaseLabel(k) + "（左右）") : turnFlipName(k) ? esc(k).replace(/→/g, '<b class="tArrow">→</b>').replace(/←/g, '<b class="tArrow">←</b>') : esc(k);
+        return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(pk ? k + "・" + pk : k) + '">' + label + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"' + (pk ? ' data-morph2="' + esc(pk) + '"' : "") + '><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span>" +
           (!pk && !turnFlipName(k) ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します' + (swapLR(k) === k ? "。名前に左右が無いので同じ名前で写り、スライダー1本で両側が動きます" : "") + '">↔ 反対側へ</button>' : "") +
-          (turnFlipName(k) ? '<button class="pill sm" data-morphrev="' + esc(k) + '" title="この変形を左右反転して「' + esc(turnFlipName(k)) + '」を作ります">⇄ 逆向きを作る</button>' : "") +
+          (turnFlipName(k) ? '<button class="pill sm" data-morphrev="' + esc(k) + '" title="この変形を左右反転して「' + esc(turnFlipName(k)) + '」を作ります" style="white-space:nowrap;">⇄ 逆向き</button>' : "") +
           (swapLR(k) === k && !turnFlipName(k) && morphSplittable(k) ? '<button class="pill sm" data-morphsplit="' + esc(k) + '" title="左のパーツの分を「' + esc(k) + '・左」、右のパーツの分を「' + esc(k) + '・右」に分けて、ウインクできるようにします">左右に分ける</button>' : "") + "</div>";
       }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="morphZero">全部 0% に戻す</button></div>' +
       '<p class="note">「↔ 反対側へ」で、反対側の目（名前の左右を入れ替えたパーツ）にも写せます。名前に左右が無い変形（例：瞬き）は同じ名前で写るので、スライダー1本で両目が動きます。ウインクしたくなったら「左右に分ける」。</p>' +
@@ -1965,11 +1972,11 @@ function renderMorph() {
     const roots = []; groupList().forEach(function (g) { const r = g.name.split(FSEP)[0]; if (roots.indexOf(r) < 0) roots.push(r); });
     h += '<details class="sect turnBox" style="margin-top:10px;"' + (turnOpt.open ? " open" : "") + '><summary><b>🌐 顔の向きを自動で下書き</b></summary>' +
       '<p class="mini" style="margin:4px 0;">頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります。真ん中の目・口は大きく、端は少しだけ動き、前髪は多め・後ろ髪は逆向きに少し動きます。できた下書きは、気になるパーツだけ「形を直す」で直してください。</p>' +
-      '<label class="mini">向き <select id="turnDir"><option value="1"' + (turnOpt.dir > 0 ? " selected" : "") + '>画面の右へ（→）</option><option value="-1"' + (turnOpt.dir < 0 ? " selected" : "") + '>画面の左へ（←）</option></select></label> ' +
-      '<label class="mini">角度 <input type="range" id="turnDeg" min="5" max="35" step="1" value="' + turnOpt.deg + '"> <span id="turnDegL">' + turnOpt.deg + '度</span></label>' +
-      '<div class="mini" style="margin:4px 0;">動かすフォルダ：' + roots.map(function (r) { return '<label style="margin-right:8px;white-space:nowrap;"><input type="checkbox" data-turnf="' + esc(r) + '"' + (turnOpt.folders.indexOf(r) >= 0 ? " checked" : "") + "> " + esc(r) + "</label>"; }).join("") + "</div>" +
+      '<div class="turnRow"><span class="mini">向き</span><select id="turnDir"><option value="1"' + (turnOpt.dir > 0 ? " selected" : "") + '>画面の右へ（→）</option><option value="-1"' + (turnOpt.dir < 0 ? " selected" : "") + '>画面の左へ（←）</option></select></div>' +
+      '<div class="turnRow"><span class="mini">角度</span><input type="range" id="turnDeg" min="5" max="35" step="1" value="' + turnOpt.deg + '"><span class="mini" id="turnDegL">' + turnOpt.deg + '度</span></div>' +
+      '<div class="mini" style="margin:4px 0 2px;">動かすフォルダ：</div><div class="turnFolders">' + roots.map(function (r) { return '<label><input type="checkbox" data-turnf="' + esc(r) + '"' + (turnOpt.folders.indexOf(r) >= 0 ? " checked" : "") + "> " + esc(r) + "</label>"; }).join("") + "</div>" +
       '<div class="toolbar"><button class="pill main sm" id="turnMake">🌐 下書きを作る</button></div>' +
-      '<p class="note">名前は「' + TURN_R + '」「' + TURN_L + '」になります。片方を作って手直ししたら、変形の確認の「⇄ 逆向きを作る」で反対向きを鏡写しで作れます。20度くらいまでが自然です（大きく回すと形が崩れます）。</p></details>';
+      '<p class="note">名前は「' + TURN_R + '」「' + TURN_L + '」になります。片方を作って手直ししたら、変形の確認の「⇄ 逆向き」で反対向きを鏡写しで作れます。20度くらいまでが自然です（大きく回すと形が崩れます）。</p></details>';
   }
   h += '<div class="sect" style="margin-top:10px;"><h3>選んだパーツの変形</h3>';
   if (!sel || !Array.isArray(sel.shape.points) || (sel.shape.type !== "polygon" && sel.shape.type !== "stroke")) {
