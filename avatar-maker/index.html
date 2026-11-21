@@ -285,8 +285,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「ゆれ・呼吸・体の動き」を追加しました（髪ゆれ・呼吸・体の傾き・上下に弾む）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「体の傾き」の回す中心を、片足の足もとにも選べるようにしました（片足に体重をかけるポーズに）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 23:00</span>「体の傾き」の設定に「回す中心」を追加。腰のほか「右足もと」「左足もと」を選ぶと、その足に体重をかけて全身ごと傾きます（動かすものは自動で「ぜんぶ」に）。浮いた側の脚は、試し曲げの「股」で外に開いて足先を床に戻します。</div>
     <div class="newsItem"><span>11/21 22:40</span>プロパティに「ゆれ・呼吸・体の動き」を追加。フォルダや体全体をまとめて動かす仕組み（Live2Dのデフォーマのようなもの）です。「ゆれ」は根元はそのまま毛先ほど大きく横にゆれ（髪・スカートなど）、「呼吸」は腰を基準に上半身が伸び縮み、「体の傾き」は腰を中心に上半身ごと傾き、「上下に弾む」は体ごと上下に動きます。どれもモーションの行にできます。</div>
     <div class="newsItem"><span>11/21 20:15</span>モーション（タイムライン）を、キャンバスの下から「画面の下に浮かぶパネル」に変えました。ツールバーの「🎬 モーション」で出し入れでき、パネルを出している間はキャンバスがパネルの上に収まる大きさになります。パネルにも「↶ 戻す・↷ やり直し」を付けました。高さは「▲ 大きく／▼ 小さく」で切り替えられます。</div>
     <div class="newsItem"><span>11/21 19:00</span>キャンバスの下に「🎬 モーション（タイムライン）」を追加。関節の角度と表情（変形）を、時間ごとのキーフレームで動かせます。キーフレームごとに「なめらか・一定・ゆっくり始まる・ゆっくり止まる・パッと切り替え」を選べて、細かく打てば動きの緩急も作れます。保存したポーズをキーフレームとして置く、変形の行に「瞬き」をワンタッチで入れる、くり返し再生もできます。モーションはアバターのデータに入り、書き出しにも入ります。</div>
@@ -1777,7 +1778,7 @@ function renderMorph() {
 const DEF_TYPES = {
   sway: { label: "ゆれ", hint: "根元はそのまま、毛先ほど大きく横にゆれる（髪・スカートなど）", amp: 12, unit: "%", ampLabel: "ゆれの大きさ（高さに対して）" },
   breath: { label: "呼吸", hint: "腰を基準に、上半身が少しだけ上下に伸び縮みする", amp: 3, unit: "%", ampLabel: "伸び縮みの大きさ" },
-  lean: { label: "体の傾き", hint: "腰を中心に、上半身ごと左右に傾く", amp: 8, unit: "度", ampLabel: "傾きの大きさ" },
+  lean: { label: "体の傾き", hint: "腰を中心に上半身ごと傾く。回す中心を片足の足もとにすると、その足に体重をかけて全身ごと傾く", amp: 8, unit: "度", ampLabel: "傾きの大きさ" },
   bob: { label: "上下に弾む", hint: "体ごと上下に動く（ぴょこぴょこ）", amp: 10, unit: "px", ampLabel: "動く大きさ" }
 };
 let defVals = {}, defCache = null, defEditId = null;
@@ -1790,6 +1791,14 @@ function defTargetParts(d) {
     if (d.target === "upper") { const k = rigSeg(p); return k !== "thigh" && k !== "shin" && k !== "foot"; }
     return (d.folders || []).some(function (f) { return inFolder(p, f); });
   });
+}
+/* 体重をかけた側の足もと（足首の真下、足のパーツの一番下の高さ） */
+function footPivot(side) {
+  const a = rigJointById("rig_ankle_" + side);
+  if (!a || !a.pos) return null;
+  let y = a.pos[1];
+  docData.parts.forEach(function (p) { if (rigSeg(p) === "foot" && rigSide(p) === side) (p.shape.points || []).forEach(function (pt) { if (pt[1] > y) y = pt[1]; }); });
+  return [a.pos[0], y];
 }
 function defPivot() {
   const a = rigJointById("rig_hip_R"), b = rigJointById("rig_hip_L");
@@ -1807,7 +1816,8 @@ function buildDefCache() {
       ids[p.id] = true;
       if (d.type === "sway") (p.shape.points || []).forEach(function (pt) { if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; });
     });
-    c[d.id] = { d: d, v: v, ids: ids, y0: y0, y1: y1, pv: pv };
+    const fp = (d.type === "lean" && (d.pivot === "footR" || d.pivot === "footL")) ? footPivot(d.pivot.slice(-1)) : null;
+    c[d.id] = { d: d, v: v, ids: ids, y0: y0, y1: y1, pv: fp || pv };
   });
   defCache = c;
 }
@@ -1876,6 +1886,9 @@ function renderDeform() {
     }
     h += '<label class="mini">' + esc(T.ampLabel) + ' <input type="range" id="defAmp" min="1" max="' + (d.type === "sway" ? 40 : d.type === "lean" ? 30 : d.type === "breath" ? 10 : 40) + '" step="1" value="' + (d.amp != null ? d.amp : T.amp) + '"> <span id="defAmpL">' + (d.amp != null ? d.amp : T.amp) + T.unit + "</span></label>";
     if (d.type === "sway") h += '<label class="mini">根元の高さ（上から） <input type="range" id="defRoot" min="0" max="80" step="1" value="' + (d.root || 0) + '"> <span id="defRootL">' + (d.root || 0) + "%</span></label>";
+    if (d.type === "lean") h += '<label class="mini">回す中心 <select id="defPivot">' +
+      [["hip", "腰（上半身だけ傾く）"], ["footR", "右足もと（右足に体重をかける）"], ["footL", "左足もと（左足に体重をかける）"]].map(function (o) { return '<option value="' + o[0] + '"' + ((d.pivot || "hip") === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select></label>" +
+      ((d.pivot === "footR" || d.pivot === "footL") ? '<p class="mini" style="margin:0;">足もとを中心に回す時は、動かすものを「ぜんぶ」にすると全身ごと傾きます。浮いた側の脚は、関節の試し曲げの「股」で外に開いて、足先を床に戻してください。</p>' : "");
     h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="defDel">これを消す</button><button class="pill sm" id="defClose">設定を閉じる</button></div></div>';
   }
   h += '<div class="toolbar" style="margin-top:8px;">' + Object.keys(DEF_TYPES).map(function (k) { return '<button class="pill sm" data-defadd="' + k + '" title="' + esc(DEF_TYPES[k].hint) + '">＋ ' + esc(DEF_TYPES[k].label) + "</button>"; }).join("") + "</div>" +
@@ -1906,6 +1919,12 @@ function renderDeform() {
   const amp = box.querySelector("#defAmp");
   amp.addEventListener("input", function () { d.amp = +amp.value; box.querySelector("#defAmpL").textContent = amp.value + DEF_TYPES[d.type].unit; renderStage(); });
   amp.addEventListener("change", function () { pushUndo(); save(); });
+  const pvSel = box.querySelector("#defPivot");
+  if (pvSel) pvSel.addEventListener("change", function () {
+    pushUndo(); d.pivot = pvSel.value;
+    if (d.pivot !== "hip" && d.target === "upper") d.target = "all";   /* 足もとで回すなら全身ごと */
+    save(); renderDeform(); renderStage();
+  });
   const rt = box.querySelector("#defRoot");
   if (rt) { rt.addEventListener("input", function () { d.root = +rt.value; box.querySelector("#defRootL").textContent = rt.value + "%"; renderStage(); }); rt.addEventListener("change", function () { pushUndo(); save(); }); }
   box.querySelector("#defDel").addEventListener("click", function () {
