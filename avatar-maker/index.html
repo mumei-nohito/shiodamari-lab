@@ -211,6 +211,9 @@
   .turnRow input[type=range] { flex:1; min-width:0; }
   .tArrow { font-family:Arial, Helvetica, sans-serif; font-size:1.6em; font-weight:900; -webkit-text-stroke:0.6px currentColor; line-height:1; color:var(--ac); vertical-align:-0.1em; margin:0 2px; }
   .morphRow .poseName { white-space:normal; max-width:7.5em; line-height:1.3; }
+  .morphEditRow { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:6px; align-items:center; }
+  .morphEditRow .poseName { white-space:normal; line-height:1.3; overflow-wrap:anywhere; }
+  .morphEditRow .pill { white-space:nowrap; }
   .morphRow { display:grid; grid-template-columns:auto minmax(60px,1fr) auto auto; gap:6px; align-items:center; }
   .recBox { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:12px; padding:10px 12px; }
   .recBox .mini { color:inherit; }
@@ -297,8 +300,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「表情（変形）」に「🌐 顔の向きを自動で下書き」と「⇄ 逆向きを作る」を追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「表情（変形）」の「選んだパーツの変形」で、変形の名前がボタンに隠れていたのを直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/22 07:40</span>「選んだパーツの変形」で、長い変形の名前（顔の向きなど）が「形を直す」ボタンに隠れて見えなかったのを直しました。名前は折り返して全部表示し、矢印も大きく表示します。</div>
     <div class="newsItem"><span>11/22 02:30</span>「表情（変形）」に「🌐 顔の向きを自動で下書き」を追加。頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります（真ん中の目・口は大きく、端は少しだけ動いて潰れ、前髪は多め・後ろ髪は逆向きに少し、顔の輪郭はほとんど動きません）。できた「顔の向き（画面→）」は「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」にできます（反対側のパーツがあればそこへ、真ん中のパーツは自分自身へ写します）。</div>
     <div class="newsItem"><span>11/22 01:50</span>「使い方」を最近の機能に合わせて書き足しました。新しく「関節とポーズ」「🦴 かんたんポーズ」「表情（変形）と瞬き」「ゆれ・呼吸・体の動き」「🎬 モーション」の章を作り、瞬きと手を振る動きの作り方を手順つきで載せました。くり抜き・フォルダの透かし・重なりがバラバラ・パネルの幅なども追加しています。</div>
     <div class="newsItem"><span>11/22 01:20</span>同梱の雛形を、このツールで作った「セレス」（パーツ・関節・首傾げポーズ・待機モーション・ゆれ／呼吸／体の傾き入り）に差し替えました。「雛形に戻す」や保管庫の「雛形から新しく」でセレスが出てきます。今の作業データはそのままです。</div>
@@ -1931,6 +1935,8 @@ function mirrorMorphReverse(name) {
   save(); render();
   aimTip("⇄ 「" + to + "」を " + Object.keys(res).length + " パーツに作りました", 3000);
 }
+/* 変形の名前の表示（顔の向きの矢印は大きく太く） */
+function morphLabelHTML(k) { return esc(k).replace(/→/g, '<b class="tArrow">→</b>').replace(/←/g, '<b class="tArrow">←</b>'); }
 function renderMorph() {
   const box = document.getElementById("morphBox");
   if (!box) return;
@@ -1956,7 +1962,7 @@ function renderMorph() {
         const pk = morphLinkLR ? morphPartner(k) : null;
         shown[k] = true; if (pk) shown[pk] = true;
         const v = Math.round((morphVals[k] || 0) * 100);
-        const label = pk ? esc(morphBaseLabel(k) + "（左右）") : turnFlipName(k) ? esc(k).replace(/→/g, '<b class="tArrow">→</b>').replace(/←/g, '<b class="tArrow">←</b>') : esc(k);
+        const label = pk ? esc(morphBaseLabel(k) + "（左右）") : morphLabelHTML(k);
         return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(pk ? k + "・" + pk : k) + '">' + label + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"' + (pk ? ' data-morph2="' + esc(pk) + '"' : "") + '><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span>" +
           (!pk && !turnFlipName(k) ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します' + (swapLR(k) === k ? "。名前に左右が無いので同じ名前で写り、スライダー1本で両側が動きます" : "") + '">↔ 反対側へ</button>' : "") +
           (turnFlipName(k) ? '<button class="pill sm" data-morphrev="' + esc(k) + '" title="この変形を左右反転して「' + esc(turnFlipName(k)) + '」を作ります" style="white-space:nowrap;">⇄ 逆向き</button>' : "") +
@@ -1984,7 +1990,7 @@ function renderMorph() {
   } else {
     const ms = sel.shape.morphs ? Object.keys(sel.shape.morphs) : [];
     h += '<p class="mini" style="margin:0 0 6px;">「' + esc(sel.name) + '」</p>' +
-      (ms.length ? ms.map(function (k) { return '<div class="poseRow"><span class="poseName">' + esc(k) + '</span><button class="pill sm" data-morphedit="' + esc(k) + '">形を直す</button><button class="pill sm" data-morphdel="' + esc(k) + '">消す</button></div>'; }).join("") : "") +
+      (ms.length ? ms.map(function (k) { return '<div class="poseRow morphEditRow"><span class="poseName" title="' + esc(k) + '">' + morphLabelHTML(k) + '</span><button class="pill sm" data-morphedit="' + esc(k) + '">形を直す</button><button class="pill sm" data-morphdel="' + esc(k) + '">消す</button></div>'; }).join("") : "") +
       '<div class="poseRow" style="margin-top:6px;"><input type="text" id="morphNameIn" list="morphNameList" placeholder="変形の名前（例：まばたき・右）" maxlength="30" style="flex:1;min-width:0;"><datalist id="morphNameList">' + names.map(function (k) { return '<option value="' + esc(k) + '">'; }).join("") + '</datalist>' +
       '<button class="pill sm" id="morphRecBtn">● 変形を記録</button></div>' +
       '<p class="note">まばたきなら、上まつ毛・白目・下まつ毛などに、同じ名前（例：まばたき・右）で1つずつ記録します。白目でマスクした瞳は、白目が閉じるのに合わせて隠れます。</p></div>';
