@@ -290,8 +290,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「使い方」に、関節とポーズ・かんたんポーズ・表情と瞬き・ゆれと呼吸・モーションの説明を追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「表情（変形）」に「🌐 顔の向きを自動で下書き」と「⇄ 逆向きを作る」を追加しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/22 02:30</span>「表情（変形）」に「🌐 顔の向きを自動で下書き」を追加。頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります（真ん中の目・口は大きく、端は少しだけ動いて潰れ、前髪は多め・後ろ髪は逆向きに少し、顔の輪郭はほとんど動きません）。できた「顔の向き（画面→）」は「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」にできます（反対側のパーツがあればそこへ、真ん中のパーツは自分自身へ写します）。</div>
     <div class="newsItem"><span>11/22 01:50</span>「使い方」を最近の機能に合わせて書き足しました。新しく「関節とポーズ」「🦴 かんたんポーズ」「表情（変形）と瞬き」「ゆれ・呼吸・体の動き」「🎬 モーション」の章を作り、瞬きと手を振る動きの作り方を手順つきで載せました。くり抜き・フォルダの透かし・重なりがバラバラ・パネルの幅なども追加しています。</div>
     <div class="newsItem"><span>11/22 01:20</span>同梱の雛形を、このツールで作った「セレス」（パーツ・関節・首傾げポーズ・待機モーション・ゆれ／呼吸／体の傾き入り）に差し替えました。「雛形に戻す」や保管庫の「雛形から新しく」でセレスが出てきます。今の作業データはそのままです。</div>
     <div class="newsItem"><span>11/22 01:00</span>「🦴 かんたんポーズ」を追加（イージーポーザーのような操作）。キャンバスの腕・脚・頭をつかんでドラッグすると、その根元の関節で回ります。関節の点を押すと輪っかが出て、輪っかや●でも回せます。ロック中のパーツもつかめます（形は変わりません）。モーションには「動かしたら自動で記録」を追加し、「◆ この形を記録」は、動かしているものの行を自動で作るようにしました（先に行を足さなくてOK）。</div>
@@ -477,6 +478,11 @@
       3. 白目・下まつ毛なども、<b>同じ名前</b>で1つずつ記録します。同じ名前の変形は一緒に動き、白目でマスクした瞳は白目が閉じるのに合わせて隠れます。<br>
       4. 片目ができたら「↔ 反対側へ」で、反対側の目（名前の左右を入れ替えたパーツ）に鏡写しで写せます。名前に左右が無い変形（瞬き）は同じ名前で写るので、スライダー1本で両目が動きます。<br>
       5. ウインクしたくなったら「左右に分ける」で「瞬き・左」「瞬き・右」に分かれます。「左右をいっしょに動かす」をオフにすると片目ずつ動かせます。<br>
+      【顔の向き（横を向く）の作り方】<br>
+      1. 「表情（変形）」の「🌐 顔の向きを自動で下書き」を開き、向き・角度（20度くらい）・動かすフォルダ（ふつうは「頭」と後ろ髪）を選んで「🌐 下書きを作る」。頭をボールに見立てて、全部のパーツに「顔の向き（画面→）」の変形ができます。<br>
+      2. スライダーで確かめて、気になるパーツ（はみ出た髪など）だけ、そのパーツを選んで「形を直す」で直します。<br>
+      3. 変形の確認の「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」ができます。<br>
+      4. 首の試し曲げ（かしげ）と組み合わせると、もっと自然に見えます。大きく回すと崩れるので、真横を向くような時は別の絵に切り替えるのがおすすめです。<br>
       ・移動・拡大・回転・鏡写し・点の追加と削除をしても、変形の形がついていきます。<br>
       ・スライダーは見た目の確認用です。0%以外の間は、キャンバスでの形の編集はお休みです（「全部 0% に戻す」で戻ります）。
     </p>
@@ -1769,6 +1775,126 @@ function finishMorphRec(keep) {
   selPt = -1;
   save(); render();
 }
+/* ============ 🌐 顔の向きの下書き（地球儀方式） ============
+   頭を「ボール」とみなして、ボールを横に回した時に表面の点がどう動くかで、各パーツの「向き」の変形を自動で作る。
+   ・真ん中（目・鼻・口）は大きく、端（輪郭のそば）は少しだけ動いて潰れる。おでこ・あごは動く幅が小さい
+   ・前髪は顔より手前（大きいボール）なので多めに、後ろ髪は奥なので逆向きに少しだけ、顔の輪郭はほとんど動かない
+   作るのは「下書き」。気になる所は、そのパーツの「形を直す」で手直しする */
+const TURN_R = "顔の向き（画面→）", TURN_L = "顔の向き（画面←）";
+let turnOpt = { dir: 1, deg: 20, folders: null };
+function turnDefaultFolders() {
+  const roots = {};
+  groupList().forEach(function (g) { const r = g.name.split(FSEP)[0]; roots[r] = true; });
+  return Object.keys(roots).filter(function (r) { return r === "頭" || /髪/.test(r); });
+}
+function turnParts(folders) {
+  return docData.parts.filter(function (p) {
+    return p.category !== "background" && p.shape && Array.isArray(p.shape.points) && p.shape.points.length && (p.shape.type === "polygon" || p.shape.type === "stroke") &&
+      folders.some(function (f) { return inFolder(p, f); });
+  });
+}
+/* 顔の土台（ボールの大きさを決める）：名前に「輪郭」「顔」がある一番大きいパーツ。無ければ髪以外の全体 */
+function turnFaceBox(ps) {
+  const bbOf = function (p) { let a = 1e9, b = 1e9, c = -1e9, d = -1e9; p.shape.points.forEach(function (q) { a = Math.min(a, q[0]); b = Math.min(b, q[1]); c = Math.max(c, q[0]); d = Math.max(d, q[1]); }); return { x0: a, y0: b, x1: c, y1: d, area: (c - a) * (d - b) }; };
+  let best = null;
+  ps.forEach(function (p) { if (/輪郭|^顔|顔$/.test(p.name) && !/影|髪/.test(p.name) && p.shape.type === "polygon") { const bb = bbOf(p); if (!best || bb.area > best.bb.area) best = { p: p, bb: bb }; } });
+  if (!best) {
+    const rest = ps.filter(function (p) { return !/髪|襟足/.test(p.name + "/" + (p.group || "")); });
+    if (!rest.length) return null;
+    const bb = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 };
+    rest.forEach(function (p) { const b = bbOf(p); bb.x0 = Math.min(bb.x0, b.x0); bb.y0 = Math.min(bb.y0, b.y0); bb.x1 = Math.max(bb.x1, b.x1); bb.y1 = Math.max(bb.y1, b.y1); });
+    return { bb: bb, face: null };
+  }
+  return { bb: best.bb, face: best.p };
+}
+/* パーツの奥行き：s＝ボールの大きさの倍率、m＝動く量の倍率（マイナスは逆向き） */
+function turnDepth(p, face) {
+  const nm = p.name + "/" + (p.group || "");
+  if (face && p.id === face.id) return { s: 1, m: 0.15 };
+  if (/後ろ髪|後髪|襟足/.test(nm)) return { s: 1, m: -0.35 };
+  if (/前髪|横髪|アホ毛|一本毛|触覚|もみあげ/.test(nm)) return { s: 1.12, m: 1 };
+  if (/髪/.test(nm) || p.category === "hair") return { s: 1, m: 0.6 };
+  if (/輪郭|顔・影|顔の影/.test(p.name)) return { s: 1, m: 0.15 };
+  if (/耳/.test(nm)) return { s: 1, m: 0.8 };
+  return { s: 1, m: 1 };
+}
+function makeTurnMorph(name, dir, deg, folders) {
+  const ps = turnParts(folders);
+  if (!ps.length) { alert("選んだフォルダに、変形できるパーツ（多角形・線）がありません。"); return; }
+  const fb = turnFaceBox(ps);
+  if (!fb) { alert("顔の大きさが分かりませんでした。「顔・輪郭」のような名前の、顔の土台のパーツがあるか確かめてください。"); return; }
+  /* 頭のボールは顔の輪郭より上に大きい（おでこ・頭のてっぺんは髪に隠れている）ので、中心を少し上に、縦を大きめにとる */
+  const rx = Math.max(4, (fb.bb.x1 - fb.bb.x0) / 2), ry = Math.max(4, (fb.bb.y1 - fb.bb.y0) / 2);
+  const cx = (fb.bb.x0 + fb.bb.x1) / 2, cy = (fb.bb.y0 + fb.bb.y1) / 2 - ry * 0.25;
+  const th = dir * deg * Math.PI / 180;
+  const exists = ps.some(function (p) { return p.shape.morphs && p.shape.morphs[name]; });
+  if (exists && !confirm("「" + name + "」はもうあります。作り直しますか？（手直しした形も、自動の下書きで上書きされます）")) return;
+  pushUndo();
+  ps.forEach(function (p) {
+    const dp = turnDepth(p, fb.face), a = rx * dp.s, b = ry * dp.s * 1.5;
+    const out = p.shape.points.map(function (q) {
+      const o = q.slice();
+      const v = Math.max(-0.97, Math.min(0.97, (q[1] - cy) / b));
+      const r = a * Math.cos(Math.asin(v));
+      const u = (q[0] - cx) / r;
+      /* ボールの外（耳や広がった髪）は、縁の点と同じ割合で縮む（縁でつながるように） */
+      const nx = Math.abs(u) <= 1 ? cx + r * Math.sin(Math.asin(u) + th) : cx + (q[0] - cx) * Math.cos(th);
+      o[0] = Math.round((q[0] + (nx - q[0]) * dp.m) * 10) / 10;
+      return o;
+    });
+    if (!p.shape.morphs) p.shape.morphs = {};
+    p.shape.morphs[name] = out;
+  });
+  morphVals = {}; morphVals[name] = 1;
+  save(); render();
+  aimTip("🌐 「" + name + "」の下書きを " + ps.length + " パーツに作りました", 3000);
+}
+/* 変形の「逆向き」を鏡写しで作る（「顔の向き（画面→）」→「顔の向き（画面←）」など）。
+   反対側のパーツ（名前の左右を入れ替えたもの）があればそこへ、真ん中のパーツ（顔・口など）は自分自身へ、
+   片側にしかないパーツ（片側だけの髪など）は、動きを左右反対にして自分自身へ写す */
+function turnFlipName(k) {
+  if (/→/.test(k) || /←/.test(k)) return k.replace(/→/g, "\u0001").replace(/←/g, "→").replace(/\u0001/g, "←");
+  return null;
+}
+function mirrorMorphReverse(name) {
+  const to = turnFlipName(name);
+  if (!to) return;
+  const src = docData.parts.filter(function (p) { return p.shape && p.shape.morphs && p.shape.morphs[name] && p.shape.morphs[name].length === p.shape.points.length; });
+  if (!src.length) return;
+  const exists = docData.parts.some(function (p) { return p.shape && p.shape.morphs && p.shape.morphs[to]; });
+  if (exists && !confirm("「" + to + "」はもうあります。鏡写しで作り直しますか？")) return;
+  pushUndo();
+  const C = centerX(), res = {};
+  const deltaAt = function (p, i) { const b = p.shape.points[i], m = p.shape.morphs[name][i]; return [m[0] - b[0], m[1] - b[1], (typeof m[2] === "number" && typeof b[2] === "number") ? m[2] - b[2] : 0]; };
+  src.forEach(function (p) {
+    const on = swapLR(p.name), og = p.group ? swapLR(p.group) : p.group;
+    let q = on !== p.name || og !== p.group ? docData.parts.find(function (x) { return x.id !== p.id && x.name === on && (x.group || null) === (og || null) && Array.isArray(x.shape.points); }) : null;
+    let mode = "pair";
+    if (!q) {
+      let x0 = 1e9, x1 = -1e9; p.shape.points.forEach(function (pt) { x0 = Math.min(x0, pt[0]); x1 = Math.max(x1, pt[0]); });
+      q = p; mode = (x0 < C && x1 > C) ? "self" : "flip";
+    }
+    const out = q.shape.points.map(function (qb, j) {
+      let d;
+      if (mode === "flip") d = deltaAt(p, j);
+      else {
+        /* 鏡に写した元のパーツの点のうち、一番近い点の動きを使う */
+        let bi = 0, bd = 1e18;
+        p.shape.points.forEach(function (b, i) { const mx = 2 * C - b[0], dd = (mx - qb[0]) * (mx - qb[0]) + (b[1] - qb[1]) * (b[1] - qb[1]); if (dd < bd) { bd = dd; bi = i; } });
+        d = deltaAt(p, bi);
+      }
+      const o = qb.slice();
+      o[0] = Math.round((qb[0] - d[0]) * 10) / 10; o[1] = Math.round((qb[1] + d[1]) * 10) / 10;
+      if (q.shape.type === "stroke" && typeof qb[2] === "number") o[2] = Math.max(0, qb[2] + d[2]);
+      return o;
+    });
+    res[q.id] = out;
+  });
+  Object.keys(res).forEach(function (id) { const q = partById(id); if (!q.shape.morphs) q.shape.morphs = {}; q.shape.morphs[to] = res[id]; });
+  morphVals = {}; morphVals[to] = 1;
+  save(); render();
+  aimTip("⇄ 「" + to + "」を " + Object.keys(res).length + " パーツに作りました", 3000);
+}
 function renderMorph() {
   const box = document.getElementById("morphBox");
   if (!box) return;
@@ -1796,13 +1922,25 @@ function renderMorph() {
         const v = Math.round((morphVals[k] || 0) * 100);
         const label = pk ? morphBaseLabel(k) + "（左右）" : k;
         return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(pk ? k + "・" + pk : k) + '">' + esc(label) + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"' + (pk ? ' data-morph2="' + esc(pk) + '"' : "") + '><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span>" +
-          (!pk ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します' + (swapLR(k) === k ? "。名前に左右が無いので同じ名前で写り、スライダー1本で両側が動きます" : "") + '">↔ 反対側へ</button>' : "") +
-          (swapLR(k) === k && morphSplittable(k) ? '<button class="pill sm" data-morphsplit="' + esc(k) + '" title="左のパーツの分を「' + esc(k) + '・左」、右のパーツの分を「' + esc(k) + '・右」に分けて、ウインクできるようにします">左右に分ける</button>' : "") + "</div>";
+          (!pk && !turnFlipName(k) ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します' + (swapLR(k) === k ? "。名前に左右が無いので同じ名前で写り、スライダー1本で両側が動きます" : "") + '">↔ 反対側へ</button>' : "") +
+          (turnFlipName(k) ? '<button class="pill sm" data-morphrev="' + esc(k) + '" title="この変形を左右反転して「' + esc(turnFlipName(k)) + '」を作ります">⇄ 逆向きを作る</button>' : "") +
+          (swapLR(k) === k && !turnFlipName(k) && morphSplittable(k) ? '<button class="pill sm" data-morphsplit="' + esc(k) + '" title="左のパーツの分を「' + esc(k) + '・左」、右のパーツの分を「' + esc(k) + '・右」に分けて、ウインクできるようにします">左右に分ける</button>' : "") + "</div>";
       }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="morphZero">全部 0% に戻す</button></div>' +
       '<p class="note">「↔ 反対側へ」で、反対側の目（名前の左右を入れ替えたパーツ）にも写せます。名前に左右が無い変形（例：瞬き）は同じ名前で写るので、スライダー1本で両目が動きます。ウインクしたくなったら「左右に分ける」。</p>' +
       '<p class="note">スライダーは見た目の確認用です（パーツの形は変わりません）。0%以外の間は、キャンバスでの形の編集はお休みです。</p></div>';
   } else {
     h += '<p class="mini">まだ変形がありません。パーツを選んで、下の「変形を記録」から作れます。</p>';
+  }
+  {
+    if (!turnOpt.folders) turnOpt.folders = turnDefaultFolders();
+    const roots = []; groupList().forEach(function (g) { const r = g.name.split(FSEP)[0]; if (roots.indexOf(r) < 0) roots.push(r); });
+    h += '<details class="sect turnBox" style="margin-top:10px;"' + (turnOpt.open ? " open" : "") + '><summary><b>🌐 顔の向きを自動で下書き</b></summary>' +
+      '<p class="mini" style="margin:4px 0;">頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります。真ん中の目・口は大きく、端は少しだけ動き、前髪は多め・後ろ髪は逆向きに少し動きます。できた下書きは、気になるパーツだけ「形を直す」で直してください。</p>' +
+      '<label class="mini">向き <select id="turnDir"><option value="1"' + (turnOpt.dir > 0 ? " selected" : "") + '>画面の右へ（→）</option><option value="-1"' + (turnOpt.dir < 0 ? " selected" : "") + '>画面の左へ（←）</option></select></label> ' +
+      '<label class="mini">角度 <input type="range" id="turnDeg" min="5" max="35" step="1" value="' + turnOpt.deg + '"> <span id="turnDegL">' + turnOpt.deg + '度</span></label>' +
+      '<div class="mini" style="margin:4px 0;">動かすフォルダ：' + roots.map(function (r) { return '<label style="margin-right:8px;white-space:nowrap;"><input type="checkbox" data-turnf="' + esc(r) + '"' + (turnOpt.folders.indexOf(r) >= 0 ? " checked" : "") + "> " + esc(r) + "</label>"; }).join("") + "</div>" +
+      '<div class="toolbar"><button class="pill main sm" id="turnMake">🌐 下書きを作る</button></div>' +
+      '<p class="note">名前は「' + TURN_R + '」「' + TURN_L + '」になります。片方を作って手直ししたら、変形の確認の「⇄ 逆向きを作る」で反対向きを鏡写しで作れます。20度くらいまでが自然です（大きく回すと形が崩れます）。</p></details>';
   }
   h += '<div class="sect" style="margin-top:10px;"><h3>選んだパーツの変形</h3>';
   if (!sel || !Array.isArray(sel.shape.points) || (sel.shape.type !== "polygon" && sel.shape.type !== "stroke")) {
@@ -1829,6 +1967,18 @@ function renderMorph() {
   if (ml) ml.addEventListener("change", function () { morphLinkLR = ml.checked; try { LS.setItem("avatarMakerMorphLink", ml.checked ? "1" : "0"); } catch (e) {} renderMorph(); });
   box.querySelectorAll("[data-morphcopy]").forEach(function (b) { b.addEventListener("click", function () { copyMorphToOtherSide(b.dataset.morphcopy); }); });
   box.querySelectorAll("[data-morphsplit]").forEach(function (b) { b.addEventListener("click", function () { splitMorphLR(b.dataset.morphsplit); }); });
+  box.querySelectorAll("[data-morphrev]").forEach(function (b) { b.addEventListener("click", function () { mirrorMorphReverse(b.dataset.morphrev); }); });
+  const tbx = box.querySelector(".turnBox");
+  if (tbx) {
+    tbx.addEventListener("toggle", function () { turnOpt.open = tbx.open; });
+    box.querySelector("#turnDir").addEventListener("change", function (e) { turnOpt.dir = +e.target.value; });
+    const td = box.querySelector("#turnDeg"); td.addEventListener("input", function () { turnOpt.deg = +td.value; box.querySelector("#turnDegL").textContent = td.value + "度"; });
+    box.querySelectorAll("[data-turnf]").forEach(function (c) { c.addEventListener("change", function () { const f = c.dataset.turnf; turnOpt.folders = turnOpt.folders.filter(function (x) { return x !== f; }); if (c.checked) turnOpt.folders.push(f); }); });
+    box.querySelector("#turnMake").addEventListener("click", function () {
+      if (!turnOpt.folders.length) { alert("動かすフォルダを選んでください（ふつうは「頭」と後ろ髪のフォルダ）。"); return; }
+      makeTurnMorph(turnOpt.dir > 0 ? TURN_R : TURN_L, turnOpt.dir, turnOpt.deg, turnOpt.folders);
+    });
+  }
   const mz = box.querySelector("#morphZero");
   if (mz) mz.addEventListener("click", function () { morphVals = {}; renderMorph(); renderStage(); });
   const rb = box.querySelector("#morphRecBtn");
