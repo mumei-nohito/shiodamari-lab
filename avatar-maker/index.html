@@ -175,6 +175,10 @@
   .poseRow { display:grid; grid-template-columns:5.5em 1fr 3.2em; gap:6px; align-items:center; font-size:12.5px; margin:3px 0; }
   .poseRow input[type=range] { width:100%; }
   .poseName { font-weight:700; color:var(--fg); white-space:nowrap; }
+  .poseChips { display:flex; flex-wrap:wrap; gap:5px; margin:2px 0 8px; }
+  .poseSaveBox .poseRow { display:flex; gap:6px; align-items:center; }
+  .poseLayerBox .poseRow { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px; align-items:center; }
+  .poseLayerBox select { width:100%; min-width:0; }
   .poseVal { text-align:right; color:var(--mut); font-variant-numeric:tabular-nums; }
   .gaddRow { display:flex; flex-wrap:wrap; gap:4px; align-items:center; padding:4px 2px 2px; border-top:1px dashed var(--line); margin-top:3px; }
   .gkids { margin-left:5px; padding-left:6px; border-left:2px solid var(--line); }
@@ -251,8 +255,10 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「手足を丸ごとずらす」を追加しました（腕を外側へ、など）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「ポーズの保存」を追加しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 13:20</span>試し曲げに「ポーズの保存」を追加。曲げ方と腕の重なりに名前を付けて保存し、ボタン一つで呼び出せます（今の形からなめらかに動きます）。上書き・名前の変更・削除もできます。保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</div>
+    <div class="newsItem"><span>11/21 13:00</span>試し曲げの「腕の重なり」を、上腕と「前腕と手」で別々に選べるようにしました。上腕は体の横のまま、前腕と手だけ体の前に出す（腕組み）、のようなポーズが確かめられます。</div>
     <div class="newsItem"><span>11/21 02:40</span>関節の試し曲げの下に「手足を丸ごとずらす」を追加。右腕・左腕・右脚・左脚を選んで「外へ・内へ・上へ・下へ」を押すと、その手足のパーツ（服の袖など一緒に動くパーツも）と関節をまとめて動かします。反対側も左右対称に動かせて、曲げたままでも使えます。</div>
     <div class="newsItem"><span>11/21 02:20</span>試し曲げに「腕の重なり」を追加。右腕・左腕ごとに「頭や体より手前」「体と頭の後ろ（後ろ髪よりは手前）」を切り替えて、手を頭の後ろに回すポーズなどを確かめられます。服の袖など腕と一緒に動くパーツもついてきます。見た目の確認用で、データの重なり順は変わりません。</div>
     <div class="newsItem"><span>11/21 02:00</span>「頭」のような一番上の階層のフォルダの中身の間に、腕（関節で動くパーツ）が挟まっている時も「⚠ 重なりがバラバラ」を出すようにしました。まっすぐの時は重ならなくても、試し曲げで腕を上げると「顔や耳より手前・髪より奥」に入り込んでしまうためです。</div>
@@ -1447,7 +1453,7 @@ let pose = {};
 let poseSym = true;
 /* 試し曲げ用：腕の重なりの切り替え（見た目だけ。データの重なり順は変えない）
    ""＝データの順番のまま／"front"＝頭や体より手前／"back"＝体と頭の後ろ（後ろ髪よりは手前） */
-let poseLayer = { R: "", L: "" };
+let poseLayer = { R: "", L: "", Rlow: "", Llow: "" };   /* R・L＝上腕、Rlow・Llow＝前腕と手（"same"なら上腕と同じ） */
 /* ============ 手足を丸ごとずらす ============
    腕（または脚）のパーツ・その手足と一緒に動く服のパーツ・その手足の関節を、まとめて同じだけ動かす。
    試し曲げ中でも使える（曲げたまま見比べながら、外へ・内へ寄せられる） */
@@ -1477,14 +1483,42 @@ function moveLimb(kind, side, out, down) {
   if (limbSym) { const o = side === "R" ? "L" : "R"; shiftLimb(kind, o, sx(o) * out, down); }
   save(); renderStage();
 }
+/* ============ ポーズの保存 ============
+   docData.poses = [{ id, name, angles: { 関節id: 角度 }, layer: { R, L, Rlow, Llow } }]
+   アバターのデータに入るので、JSON・ZIP書き出しにも入る（着せ替えツールでポーズを選ぶ時にそのまま使える）。
+   あとで「手を振る」のような一連の動き（ポーズを順番につなぐ）に広げられるよう、1ポーズ＝角度と重なりのセットにしている */
+let poseSelId = null, poseAnim = 0;
+function posesOf() { if (!Array.isArray(docData.poses)) docData.poses = []; return docData.poses; }
+function cleanAngles(a) { const o = {}; Object.keys(a || {}).forEach(function (k) { if (a[k]) o[k] = a[k]; }); return o; }
+function applyPoseSmooth(target, layer) {
+  /* 今の角度から、選んだポーズの角度へ、なめらかに動かす（0.35秒） */
+  cancelAnimationFrame(poseAnim);
+  const from = Object.assign({}, pose), keys = {};
+  Object.keys(from).concat(Object.keys(target)).forEach(function (k) { keys[k] = true; });
+  poseLayer = Object.assign({ R: "", L: "", Rlow: "", Llow: "" }, layer || {});
+  const t0 = performance.now(), dur = 350;
+  const step = function (now) {
+    const u = Math.min(1, (now - t0) / dur), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    const cur = {};
+    Object.keys(keys).forEach(function (k) { cur[k] = Math.round(((from[k] || 0) + ((target[k] || 0) - (from[k] || 0)) * e) * 10) / 10; });
+    pose = cur;
+    if (!showJoints) { showJoints = true; document.getElementById("jointsBtn").classList.add("on"); }
+    renderStage();
+    if (u < 1) poseAnim = requestAnimationFrame(step);
+    else { pose = cleanAngles(target); renderPose(); renderStage(); }
+  };
+  poseAnim = requestAnimationFrame(step);
+}
 function isArmPart(p) { const k = rigSeg(p); return k === "upperArm" || k === "foreArm" || k === "hand"; }
 function drawOrder(list) {
-  if (!poseLayer.R && !poseLayer.L) return list;
+  if (!poseLayer.R && !poseLayer.L && !poseLayer.Rlow && !poseLayer.Llow) return list;
   const torso = docData.parts.filter(function (q) { return q.category !== "background" && !rigSeg(q); });
   const backZ = torso.length ? Math.min.apply(null, torso.map(function (q) { return q.z; })) - 0.5 : -0.5;
   const key = function (p) {
     if (isArmPart(p)) {
-      const lay = poseLayer[rigSide(p)];
+      const sd = rigSide(p), low = rigSeg(p) !== "upperArm";
+      /* 前腕・手は、別に決めていなければ上腕と同じ（腕組みなど、前腕だけ体の前に出す時は別々に） */
+      const lay = (low && poseLayer[sd + "low"]) ? poseLayer[sd + "low"] : poseLayer[sd];
       if (lay === "front") return 1e6 + p.z;
       if (lay === "back") return backZ + p.z * 1e-6;
     }
@@ -1543,16 +1577,19 @@ function renderPose() {
     const v = pose[j.id] || 0;
     h += '<div class="poseRow"><span class="poseName">' + esc(j.name) + '</span><input type="range" min="' + (-def.range) + '" max="' + def.range + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
   });
-  const layOpt = function (side) {
-    const v = poseLayer[side] || "";
-    return '<select data-poselayer="' + side + '">' +
-      '<option value=""' + (v === "" ? " selected" : "") + '>いつもの順番</option>' +
-      '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体より前）</option>' +
+  const layOpt = function (side, low) {
+    const key = side + (low ? "low" : ""), v = poseLayer[key] || "";
+    return '<select data-poselayer="' + key + '">' +
+      '<option value=""' + (v === "" ? " selected" : "") + '>' + (low ? "上腕と同じ" : "いつもの順番") + '</option>' +
+      '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体の前）</option>' +
       '<option value="back"' + (v === "back" ? " selected" : "") + '>後ろ（頭・体の奥）</option></select>';
   };
-  h += '<div class="fld" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
-    '<div class="poseRow"><span class="poseName">右腕</span>' + layOpt("R") + '</div>' +
-    '<div class="poseRow"><span class="poseName">左腕</span>' + layOpt("L") + '</div>' +
+  h += '<div class="fld poseLayerBox" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
+    '<div class="poseRow"><span class="poseName">右・上腕</span>' + layOpt("R") + '</div>' +
+    '<div class="poseRow"><span class="poseName">右・前腕と手</span>' + layOpt("R", true) + '</div>' +
+    '<div class="poseRow"><span class="poseName">左・上腕</span>' + layOpt("L") + '</div>' +
+    '<div class="poseRow"><span class="poseName">左・前腕と手</span>' + layOpt("L", true) + '</div>' +
+    '<p class="note">例：腕組み＝上腕は「いつもの順番」のまま、前腕と手だけ「手前」にして、肘を曲げる。斜め向きで奥の腕を隠す＝その腕を「後ろ」に。</p>' +
     '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>';
   {
     const tg = limbTarget.split(":"), kind = tg[0], side = tg[1] || "R";
@@ -1565,8 +1602,19 @@ function renderPose() {
       '<label class="mini"><input type="checkbox" id="limbSym"' + (limbSym ? " checked" : "") + '> 反対側も左右対称に動かす</label>' +
       '<p class="note">' + LIMBS[kind].name + 'のパーツ（' + cnt + '個。服の袖など一緒に動くパーツも含む）と、肩・肘・手首などの関節をまとめて動かします。曲げたままでも使えます。ロック中のパーツも動きます。続けて押した分は「元に戻す」1回で戻ります。</p></div>';
   }
+  {
+    const ps = posesOf();
+    if (poseSelId && !ps.some(function (q) { return q.id === poseSelId; })) poseSelId = null;
+    h += '<div class="fld poseSaveBox" style="margin-top:10px;"><label>ポーズの保存</label>' +
+      (ps.length ? '<div class="poseChips">' + ps.map(function (q) {
+        return '<button class="pill sm' + (q.id === poseSelId ? " on" : "") + '" data-poseload="' + q.id + '" title="押すとこのポーズになります">' + esc(q.name) + "</button>";
+      }).join("") + "</div>" : '<p class="mini" style="margin:2px 0 6px;">まだありません。曲げ方と腕の重なりを決めたら、名前を付けて保存できます。</p>') +
+      '<div class="poseRow"><input type="text" id="poseNameIn" placeholder="ポーズの名前（例：腕組み）" maxlength="30" style="flex:1;min-width:0;"><button class="pill sm" id="poseSaveBtn">＋ 今のポーズを保存</button></div>' +
+      (poseSelId ? '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseOverBtn">選んだポーズを今の形で上書き</button><button class="pill sm" id="poseRenBtn">名前を変える</button><button class="pill sm" id="poseDelBtn">消す</button></div>' : "") +
+      '<p class="note">保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります（着せ替えツールでも使えるように）。呼び出すと、今の形からなめらかに動きます。</p></div>';
+  }
   h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>' +
-    '<p class="note">試し曲げは見た目の確認用で、データは変わりません（書き出しにも入りません）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
+    '<p class="note">試し曲げは見た目の確認用で、パーツの形は変わりません（保存したポーズだけは書き出しにも入ります）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
   box.innerHTML = h;
   box.querySelector("#poseSym").addEventListener("change", function (e) { poseSym = e.target.checked; });
   box.querySelectorAll("[data-pose]").forEach(function (r) {
@@ -1599,7 +1647,43 @@ function renderPose() {
   box.querySelectorAll("[data-poselayer]").forEach(function (sl) {
     sl.addEventListener("change", function () { poseLayer[sl.dataset.poselayer] = sl.value; renderStage(); });
   });
-  box.querySelector("#poseReset").addEventListener("click", function () { pose = {}; poseLayer = { R: "", L: "" }; renderPose(); renderStage(); });
+  box.querySelectorAll("[data-poseload]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const q = posesOf().find(function (x) { return x.id === b.dataset.poseload; });
+      if (!q) return;
+      poseSelId = q.id;
+      applyPoseSmooth(q.angles || {}, q.layer);
+    });
+  });
+  box.querySelector("#poseSaveBtn").addEventListener("click", function () {
+    const inp = box.querySelector("#poseNameIn");
+    const nm = (inp.value || "").trim() || ("ポーズ" + (posesOf().length + 1));
+    pushUndo();
+    const q = { id: "pose_" + Date.now().toString(36), name: nm, angles: cleanAngles(pose), layer: Object.assign({}, poseLayer) };
+    posesOf().push(q); poseSelId = q.id;
+    save(); renderPose();
+  });
+  const selPose = function () { return posesOf().find(function (x) { return x.id === poseSelId; }); };
+  const ob = box.querySelector("#poseOverBtn");
+  if (ob) ob.addEventListener("click", function () {
+    const q = selPose(); if (!q) return;
+    if (!confirm("「" + q.name + "」を今の曲げ方・腕の重なりで上書きしますか？")) return;
+    pushUndo(); q.angles = cleanAngles(pose); q.layer = Object.assign({}, poseLayer); save(); renderPose();
+  });
+  const rb = box.querySelector("#poseRenBtn");
+  if (rb) rb.addEventListener("click", function () {
+    const q = selPose(); if (!q) return;
+    const nm = prompt("ポーズの新しい名前", q.name);
+    if (nm === null || !nm.trim()) return;
+    pushUndo(); q.name = nm.trim().slice(0, 30); save(); renderPose();
+  });
+  const db = box.querySelector("#poseDelBtn");
+  if (db) db.addEventListener("click", function () {
+    const q = selPose(); if (!q) return;
+    if (!confirm("ポーズ「" + q.name + "」を消しますか？（元に戻すで戻せます）")) return;
+    pushUndo(); docData.poses = posesOf().filter(function (x) { return x.id !== q.id; }); poseSelId = null; save(); renderPose();
+  });
+  box.querySelector("#poseReset").addEventListener("click", function () { cancelAnimationFrame(poseAnim); poseSelId = null; pose = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
   const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; }));
@@ -3175,6 +3259,10 @@ function pushUndo() {
   undoStack.push(snapshot());
   if (undoStack.length > 80) undoStack.shift();
   redoStack = [];
+  /* 画面全体を描き直さない操作（ポーズの保存・手足をずらす等）でも、「元に戻す」をすぐ押せるように */
+  const ub = document.getElementById("undoBtn"), rb = document.getElementById("redoBtn");
+  if (ub) ub.disabled = false;
+  if (rb) rb.disabled = true;
 }
 function restore(snap) {
   const o = JSON.parse(snap);
