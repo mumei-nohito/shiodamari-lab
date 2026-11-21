@@ -175,6 +175,8 @@
   .poseRow { display:grid; grid-template-columns:5.5em 1fr 3.2em; gap:6px; align-items:center; font-size:12.5px; margin:3px 0; }
   .poseRow input[type=range] { width:100%; }
   .poseName { font-weight:700; color:var(--fg); white-space:nowrap; }
+  .recBox { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:12px; padding:10px 12px; }
+  .recBox .mini { color:inherit; }
   .poseChips { display:flex; flex-wrap:wrap; gap:5px; margin:2px 0 8px; }
   .poseSaveBox .poseRow { display:flex; gap:6px; align-items:center; }
   .poseLayerBox .poseRow { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px; align-items:center; }
@@ -255,8 +257,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「ポーズの保存」を追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「表情（変形）」を追加しました。まばたきなどを、点の動きでなめらかに作れます。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 14:00</span>プロパティに「表情（変形）」を追加。パーツの点の位置違い（例：閉じた目）を名前を付けて記録し、スライダー0〜100%で元の形からなめらかに変形させられます（Live2Dのメッシュの代わり）。同じ名前で複数のパーツ（上まつ毛・白目など）に記録すると一緒に動き、白目でマスクした瞳も白目に合わせて隠れます。移動・拡大・回転・鏡写し・点の追加と削除にも、変形の形がついていきます。</div>
     <div class="newsItem"><span>11/21 13:20</span>試し曲げに「ポーズの保存」を追加。曲げ方と腕の重なりに名前を付けて保存し、ボタン一つで呼び出せます（今の形からなめらかに動きます）。上書き・名前の変更・削除もできます。保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</div>
     <div class="newsItem"><span>11/21 13:00</span>試し曲げの「腕の重なり」を、上腕と「前腕と手」で別々に選べるようにしました。上腕は体の横のまま、前腕と手だけ体の前に出す（腕組み）、のようなポーズが確かめられます。</div>
     <div class="newsItem"><span>11/21 02:40</span>関節の試し曲げの下に「手足を丸ごとずらす」を追加。右腕・左腕・右脚・左脚を選んで「外へ・内へ・上へ・下へ」を押すと、その手足のパーツ（服の袖など一緒に動くパーツも）と関節をまとめて動かします。反対側も左右対称に動かせて、曲げたままでも使えます。</div>
@@ -565,6 +568,10 @@
             <div class="sect" style="margin-top:8px;"><h3>試し曲げ</h3><div id="poseBox"></div></div>
             <p class="note">ツールバーの「関節」をONにすると、キャンバス上で関節をドラッグして動かせます。関節をクリックすると名前・位置を直したり消したりできます。パーツのプロパティでは、そのパーツが属する関節（始点・終点）も指定できます。</p>
             </div>
+          </details>
+          <details class="acc" id="morphAcc">
+            <summary>表情（変形）</summary>
+            <div class="accBody"><div id="morphBox"></div></div>
           </details>
           <div id="props"><p class="mini">パーツを選ぶと、ここで名前・色・点の調整ができます。</p></div>
         </div>
@@ -1076,6 +1083,7 @@ function clipSourceShapes(key) {
   return s ? clipShapeEl(s) : "";
 }
 function clipShapeEl(p) {
+  p = morphedPart(p);   /* マスクの形も変形についていく（白目が閉じると瞳も隠れる） */
   const sh = p.shape;
   if (sh.type === "rect") return '<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '"/>';
   if (sh.type === "polygon") return '<path d="' + polyPathD(sh.points) + '"/>';
@@ -1231,8 +1239,10 @@ function edgesAfterDelete(sh, k, nOld) {
   sh.lineEdges = Object.keys(out).map(Number).sort(function (a, b) { return a - b; });
 }
 function deletePolyPoint(sh, k) {
+  if (recMorph) { alert("変形の記録中は、点を消せません（点を動かすだけにしてください）。"); return; }
   const nOld = sh.points.length;
   sh.points.splice(k, 1);
+  morphDelete(sh, k);
   if (sh.type === "polygon") edgesAfterDelete(sh, k, nOld);
 }
 function strokeAttrsFor(sh) {
@@ -1483,6 +1493,151 @@ function moveLimb(kind, side, out, down) {
   if (limbSym) { const o = side === "R" ? "L" : "R"; shiftLimb(kind, o, sx(o) * out, down); }
   save(); renderStage();
 }
+/* ============ 表情（変形）：Live2Dのメッシュの代わりに、点の位置違いを覚えておく方式 ============
+   sh.morphs = { "まばたき・右": [点の配列（元の形と同じ数・同じ順番）], ... }
+   morphVals = { "まばたき・右": 0〜1 }（見た目の確認用。パーツの形そのものは変えない）
+   表示する時だけ「元の点 ＋ (変形の点 − 元の点) × 割合」で形を作る。複数の変形は足し合わせる */
+let morphVals = {};
+let recMorph = null;   /* 記録中：{ pid, name, base: 元の点 } */
+function morphNames() {
+  const set = {};
+  docData.parts.forEach(function (p) { if (p.shape && p.shape.morphs) Object.keys(p.shape.morphs).forEach(function (k) { set[k] = true; }); });
+  return Object.keys(set).sort();
+}
+function morphActive() { return Object.keys(morphVals).some(function (k) { return morphVals[k]; }); }
+function morphedPart(p) {
+  const sh = p.shape;
+  if (!sh || !sh.morphs || !Array.isArray(sh.points)) return p;
+  if (recMorph && recMorph.pid === p.id) return p;   /* 記録中のパーツは、今動かしている形をそのまま見せる */
+  const use = [];
+  Object.keys(sh.morphs).forEach(function (k) {
+    const v = (recMorph && recMorph.name === k) ? 1 : (morphVals[k] || 0);
+    if (v && sh.morphs[k] && sh.morphs[k].length === sh.points.length) use.push([sh.morphs[k], v]);
+  });
+  if (!use.length) return p;
+  const pts = sh.points.map(function (b, i) {
+    const o = b.slice();
+    use.forEach(function (u) {
+      const m = u[0][i];
+      o[0] += (m[0] - b[0]) * u[1]; o[1] += (m[1] - b[1]) * u[1];
+      if (sh.type === "stroke" && typeof b[2] === "number" && typeof m[2] === "number") o[2] += (m[2] - b[2]) * u[1];
+    });
+    return o;
+  });
+  const q = Object.assign({}, p);
+  q.shape = Object.assign({}, sh, { points: pts });
+  return q;
+}
+/* 点を足した・消した時に、変形の点も同じ場所に足す・消す（数と順番をそろえたままにする） */
+function morphInsert(sh, at, mk) {
+  if (!sh.morphs) return;
+  Object.keys(sh.morphs).forEach(function (k) { const m = sh.morphs[k]; if (Array.isArray(m)) m.splice(at, 0, mk(m)); });
+}
+function morphDelete(sh, at) {
+  if (!sh.morphs) return;
+  Object.keys(sh.morphs).forEach(function (k) { const m = sh.morphs[k]; if (Array.isArray(m)) m.splice(at, 1); });
+}
+function morphShift(sh, dx, dy) {
+  if (!sh.morphs) return;
+  Object.keys(sh.morphs).forEach(function (k) { (sh.morphs[k] || []).forEach(function (pt) { pt[0] += dx; pt[1] += dy; }); });
+}
+function startMorphRec(p, name) {
+  const sh = p.shape;
+  if (!sh || !Array.isArray(sh.points) || (sh.type !== "polygon" && sh.type !== "stroke")) { alert("変形は、多角形と線のパーツで記録できます。"); return; }
+  pushUndo();
+  morphVals = {};
+  recMorph = { pid: p.id, name: name, base: clone(sh.points) };
+  if (sh.morphs && sh.morphs[name] && sh.morphs[name].length === sh.points.length) sh.points = clone(sh.morphs[name]);   /* 前に記録した形から直す */
+  selPt = -1;
+  render();
+}
+function finishMorphRec(keep) {
+  if (!recMorph) return;
+  const p = partById(recMorph.pid);
+  if (p) {
+    const sh = p.shape;
+    if (keep) {
+      if (sh.points.length !== recMorph.base.length) {
+        alert("記録中に点の数が変わったので保存できませんでした。変形では点を足したり消したりせず、動かすだけにしてください。");
+        sh.points = recMorph.base;
+      } else {
+        if (!sh.morphs) sh.morphs = {};
+        /* 角・なめらかの種類は元の形に合わせる */
+        sh.morphs[recMorph.name] = sh.points.map(function (pt, i) { const o = pt.slice(); const b = recMorph.base[i]; o.length = b.length; for (let k = 2; k < b.length; k++) if (typeof b[k] === "string") o[k] = b[k]; return o; });
+        sh.points = recMorph.base;
+        morphVals[recMorph.name] = 1;   /* 記録した直後は、その形を見せておく */
+      }
+    } else sh.points = recMorph.base;
+  }
+  recMorph = null;
+  selPt = -1;
+  save(); render();
+}
+function renderMorph() {
+  const box = document.getElementById("morphBox");
+  if (!box) return;
+  const names = morphNames();
+  const sel = selId ? partById(selId) : null;
+  let h = "";
+  if (recMorph) {
+    const rp = partById(recMorph.pid);
+    h += '<div class="recBox"><b>● 変形を記録中：「' + esc(recMorph.name) + '」</b>' +
+      '<p class="mini">「' + esc(rp ? rp.name : "") + '」の点を動かして、変形した形（例：閉じた目）を作ってください。同じ名前の変形を持つほかのパーツは、変形した形（100%）で表示しています。点を足したり消したりはできません。</p>' +
+      '<div class="toolbar"><button class="pill main" id="morphRecSave">この形で保存</button><button class="pill" id="morphRecCancel">やめる</button></div></div>';
+    box.innerHTML = h;
+    box.querySelector("#morphRecSave").addEventListener("click", function () { finishMorphRec(true); });
+    box.querySelector("#morphRecCancel").addEventListener("click", function () { finishMorphRec(false); });
+    return;
+  }
+  if (names.length) {
+    h += '<div class="sect"><h3>変形の確認</h3>' + names.map(function (k) {
+      const v = Math.round((morphVals[k] || 0) * 100);
+      return '<div class="poseRow"><span class="poseName">' + esc(k) + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span></div>";
+    }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="morphZero">全部 0% に戻す</button></div>' +
+      '<p class="note">スライダーは見た目の確認用です（パーツの形は変わりません）。0%以外の間は、キャンバスでの形の編集はお休みです。</p></div>';
+  } else {
+    h += '<p class="mini">まだ変形がありません。パーツを選んで、下の「変形を記録」から作れます。</p>';
+  }
+  h += '<div class="sect" style="margin-top:10px;"><h3>選んだパーツの変形</h3>';
+  if (!sel || !Array.isArray(sel.shape.points) || (sel.shape.type !== "polygon" && sel.shape.type !== "stroke")) {
+    h += '<p class="mini">多角形か線のパーツを選ぶと、ここで変形を記録できます（まつ毛・白目・口など）。</p></div>';
+  } else {
+    const ms = sel.shape.morphs ? Object.keys(sel.shape.morphs) : [];
+    h += '<p class="mini" style="margin:0 0 6px;">「' + esc(sel.name) + '」</p>' +
+      (ms.length ? ms.map(function (k) { return '<div class="poseRow"><span class="poseName">' + esc(k) + '</span><button class="pill sm" data-morphedit="' + esc(k) + '">形を直す</button><button class="pill sm" data-morphdel="' + esc(k) + '">消す</button></div>'; }).join("") : "") +
+      '<div class="poseRow" style="margin-top:6px;"><input type="text" id="morphNameIn" list="morphNameList" placeholder="変形の名前（例：まばたき・右）" maxlength="30" style="flex:1;min-width:0;"><datalist id="morphNameList">' + names.map(function (k) { return '<option value="' + esc(k) + '">'; }).join("") + '</datalist>' +
+      '<button class="pill sm" id="morphRecBtn">● 変形を記録</button></div>' +
+      '<p class="note">まばたきなら、上まつ毛・白目・下まつ毛などに、同じ名前（例：まばたき・右）で1つずつ記録します。白目でマスクした瞳は、白目が閉じるのに合わせて隠れます。</p></div>';
+  }
+  box.innerHTML = h;
+  box.querySelectorAll("[data-morph]").forEach(function (r) {
+    r.addEventListener("input", function () {
+      const k = r.getAttribute("data-morph"), v = (+r.value) / 100;
+      if (v) morphVals[k] = v; else delete morphVals[k];
+      const lab = box.querySelector('[data-morphv="' + CSS.escape(k) + '"]'); if (lab) lab.textContent = r.value + "%";
+      renderStage();
+    });
+  });
+  const mz = box.querySelector("#morphZero");
+  if (mz) mz.addEventListener("click", function () { morphVals = {}; renderMorph(); renderStage(); });
+  const rb = box.querySelector("#morphRecBtn");
+  if (rb) rb.addEventListener("click", function () {
+    const nm = (box.querySelector("#morphNameIn").value || "").trim();
+    if (!nm) { alert("変形の名前を入れてください（例：まばたき・右）"); return; }
+    if (sel.shape.morphs && sel.shape.morphs[nm] && !confirm("「" + nm + "」はもう記録されています。形を直しますか？")) return;
+    startMorphRec(sel, nm);
+  });
+  box.querySelectorAll("[data-morphedit]").forEach(function (b) { b.addEventListener("click", function () { startMorphRec(sel, b.dataset.morphedit); }); });
+  box.querySelectorAll("[data-morphdel]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const k = b.dataset.morphdel;
+      if (!confirm("「" + sel.name + "」の変形「" + k + "」を消しますか？（元に戻すで戻せます）")) return;
+      pushUndo(); delete sel.shape.morphs[k]; if (!Object.keys(sel.shape.morphs).length) delete sel.shape.morphs;
+      if (!morphNames().includes(k)) delete morphVals[k];
+      save(); render();
+    });
+  });
+}
 /* ============ ポーズの保存 ============
    docData.poses = [{ id, name, angles: { 関節id: 角度 }, layer: { R, L, Rlow, Llow } }]
    アバターのデータに入るので、JSON・ZIP書き出しにも入る（着せ替えツールでポーズを選ぶ時にそのまま使える）。
@@ -1686,7 +1841,7 @@ function renderPose() {
   box.querySelector("#poseReset").addEventListener("click", function () { cancelAnimationFrame(poseAnim); poseSelId = null; pose = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
-  const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; }));
+  const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; })).map(morphedPart);
   /* 試し曲げ中は、関節の回転をかけて描く */
   /* 同じ回り方をする、続いたパーツはまとめて1つのグループで回す。
      1つずつ別のグループにすると、そのグループの中で重ね方（乗算など）が閉じてしまい、
@@ -1722,7 +1877,7 @@ function partsBBox() {
 
 /* ============ 描画 ============ */
 function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
-function render() { renderStage(); renderList(); renderProps(); renderPose();
+function render() { renderStage(); renderList(); renderProps(); renderPose(); renderMorph();
   document.getElementById("undoBtn").disabled = undoStack.length === 0;
   document.getElementById("redoBtn").disabled = redoStack.length === 0;
 }
@@ -1773,7 +1928,7 @@ function renderStage() {
       }
     });
   }
-  const sel = (selId && !poseActive()) ? partById(selId) : null;   /* 試し曲げ中は、選択の枠やハンドルを出さない */
+  const sel = (selId && !poseActive() && !(morphActive() && !recMorph)) ? partById(selId) : null;   /* 試し曲げ中・変形の確認中は、選択の枠やハンドルを出さない */
   if (sel && ed(sel.id).locked) { /* ロック中はハンドルを出さない */ }
   else if (sel && ghostOn) {
     const d = partPathD(sel);
@@ -1802,7 +1957,7 @@ function renderStage() {
     }
     if (sh.type === "polygon") {
       const pts = sh.points;
-      for (let i = 0; i < pts.length && !picking; i++) {
+      for (let i = 0; i < pts.length && !picking && !recMorph; i++) {   /* 変形の記録中は点を足せない */
         const a = pts[i], b = pts[(i + 1) % pts.length];
         out += '<rect class="mid" data-act="ins" data-i="' + i + '"' + (fading ? ' opacity="0"' : "") + ' vector-effect="non-scaling-stroke" x="' + ((a[0] + b[0]) / 2 - hr * 0.55) + '" y="' + ((a[1] + b[1]) / 2 - hr * 0.55) + '" width="' + (hr * 1.1) + '" height="' + (hr * 1.1) + '"/>';
       }
@@ -1812,7 +1967,7 @@ function renderStage() {
     } else if (sh.type === "stroke") {
       const P = sh.points || [];
       out += '<path d="M' + P.map(function (pt) { return pt[0] + " " + pt[1]; }).join("L") + '" fill="none" stroke="#b18cff" stroke-width="' + (vb.w * 0.0022) + '" stroke-dasharray="' + (vb.w * 0.01) + " " + (vb.w * 0.008) + '" opacity="0.55" pointer-events="none"/>';
-      for (let i = 0; i < P.length - 1; i++) {
+      for (let i = 0; i < P.length - 1 && !recMorph; i++) {
         const a = P[i], b = P[i + 1];
         out += '<rect class="mid" data-act="insS" data-i="' + i + '"' + (fading ? ' opacity="0"' : "") + ' vector-effect="non-scaling-stroke" x="' + ((a[0] + b[0]) / 2 - hr * 0.55) + '" y="' + ((a[1] + b[1]) / 2 - hr * 0.55) + '" width="' + (hr * 1.1) + '" height="' + (hr * 1.1) + '"/>';
       }
@@ -1858,6 +2013,7 @@ function scaledShape(sh, ax, ay, s) {
     return np;
   });
   if (c.strokeWidth) c.strokeWidth = r1(c.strokeWidth * s);
+  if (sh.morphs) Object.keys(sh.morphs).forEach(function (k) { c.morphs[k] = scaledShape({ type: sh.type, points: sh.morphs[k] }, ax, ay, s).points; });
   return c;
 }
 /* 縦と横を別々の倍率で拡大縮小（「縦横比を保つ」がオフの時）。線の太さは縦横の平均的な倍率で */
@@ -1872,6 +2028,7 @@ function scaledShapeXY(sh, ax, ay, sx, sy) {
     return np;
   });
   if (c.strokeWidth) c.strokeWidth = r1(c.strokeWidth * sw);
+  if (sh.morphs) Object.keys(sh.morphs).forEach(function (k) { c.morphs[k] = scaledShapeXY({ type: sh.type, points: sh.morphs[k] }, ax, ay, sx, sy).points; });
   return c;
 }
 function rotatedShape(sh, cx, cy, rad) {
@@ -1884,6 +2041,7 @@ function rotatedShape(sh, cx, cy, rad) {
     else if (pt[2]) np.push(pt[2]);
     return np;
   });
+  if (sh.morphs) Object.keys(sh.morphs).forEach(function (k) { c.morphs[k] = rotatedShape({ type: sh.type, points: sh.morphs[k] }, cx, cy, rad).points; });
   return c;
 }
 /* ============ 入れ子のフォルダ ============
@@ -2012,6 +2170,7 @@ function mirrorPartX(p) {
   const mx = function (x) { return Math.round((2 * centerX() - x) * 10) / 10; };
   if (sh.type === "polygon") sh.points.forEach(function (pt) { pt[0] = mx(pt[0]); });
   else if (sh.type === "stroke" && sh.points) sh.points.forEach(function (pt) { pt[0] = mx(pt[0]); });
+  if (sh.morphs) Object.keys(sh.morphs).forEach(function (k) { (sh.morphs[k] || []).forEach(function (pt) { pt[0] = mx(pt[0]); }); });
   else if (sh.type === "rect") sh.x = mx(sh.x + sh.w);
   if (sh.type === "stroke" && !sh.points) ["a", "b", "c"].forEach(function (k) { if (sh[k]) sh[k][0] = mx(sh[k][0]); });
   /* グラデーションも左右反転する（耳の影のように、付け根側へ寄せた色の流れが逆向きにならないように）
@@ -2069,6 +2228,7 @@ function mirrorCopyParts(parts, regroup, opt) {
     np.id = "u" + stamp + "m" + i;
     idMap[p.id] = np.id;
     mirrorPartX(np);
+    if (np.shape.morphs) { const nm2 = {}; Object.keys(np.shape.morphs).forEach(function (k) { nm2[swapLR(k)] = np.shape.morphs[k]; }); np.shape.morphs = nm2; }
     const nn = swapLR(np.name);
     np.name = nn !== np.name ? nn : np.name + "（反対側）";
     if (np.side === "左" || np.side === "右") np.side = np.side === "左" ? "右" : "左";
@@ -3110,8 +3270,9 @@ function renderProps() {
   on("pf_sallcr", "click", function () { pushUndo(); sh.points.forEach(function (sp, i) { if (i > 0 && i < sh.points.length - 1) { sp[2] = sp[2] || 0; sp[3] = "corner"; } }); afterEdit(); });
   on("pf_delsp", "click", function () {
     if (sh.points.length <= 2) return;
+    if (recMorph) { alert("変形の記録中は、点を消せません（点を動かすだけにしてください）。"); return; }
     pushUndo();
-    sh.points.splice(selPt, 1); selPt = -1;
+    sh.points.splice(selPt, 1); morphDelete(sh, selPt); selPt = -1;
     afterEdit();
   });
   on("pf_x", "change", function (e) { pushUndo(); sh.points[selPt][0] = parseFloat(e.target.value) || 0; afterEdit(); });
@@ -3265,6 +3426,7 @@ function pushUndo() {
   if (rb) rb.disabled = true;
 }
 function restore(snap) {
+  recMorph = null;   /* 元に戻す・やり直しをしたら、変形の記録は終わりにする */
   const o = JSON.parse(snap);
   docData = o.d; bandSel = o.b || {};
   if (Array.isArray(o.f)) edState.folders = o.f;   /* 空のフォルダの場所も元に戻す */
@@ -3280,6 +3442,7 @@ function afterEdit() { save(); render(); }
 function selectPart(id) { selId = id; selPt = -1; selJoint = null; render(); }
 function translatePart(p, dx, dy) {
   const sh = p.shape;
+  morphShift(sh, dx, dy);
   if (sh.type === "polygon") sh.points.forEach(function (pt) { pt[0] += dx; pt[1] += dy; });
   else if (sh.type === "stroke") {
     if (sh.points) sh.points.forEach(function (pt) { pt[0] += dx; pt[1] += dy; });
@@ -3545,11 +3708,13 @@ function aimUp(e) {
     const np = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     if (a[2] === "smooth" || b[2] === "smooth") np.push("smooth");
     pts.splice(i + 1, 0, np);
+    morphInsert(sel.shape, i + 1, function (m) { const ma = m[i], mb = m[(i + 1) % m.length]; const o = [(ma[0] + mb[0]) / 2, (ma[1] + mb[1]) / 2]; if (np[2]) o.push(np[2]); return o; });
     edgesAfterInsert(sel.shape, i);
     selPt = i + 1;
   } else if (tg.act === "insS" && sel.shape.type === "stroke") {
     pushUndo();
     const P = sel.shape.points, iS = tg.i, aS = P[iS], bS = P[iS + 1];
+    morphInsert(sel.shape, iS + 1, function (m) { const ma = m[iS], mb = m[iS + 1]; return [(ma[0] + mb[0]) / 2, (ma[1] + mb[1]) / 2, ((ma[2] || 0) + (mb[2] || 0)) / 2]; });
     P.splice(iS + 1, 0, [(aS[0] + bS[0]) / 2, (aS[1] + bS[1]) / 2, ((aS[2] || 0) + (bS[2] || 0)) / 2]);
     selPt = iS + 1;
   } else {
@@ -3601,7 +3766,17 @@ stage.addEventListener("pointerdown", function (e) {
     return;
   }
   /* 試し曲げ中は形を編集しない（ドラッグは画面の移動になる） */
-  if (!panMode && poseActive()) {
+  /* 変形の記録中は、記録しているパーツ以外を選ばない（間違えてほかのパーツを動かさないように） */
+  if (recMorph && !panMode) {
+    const hitP = t.closest ? t.closest("[data-pid]") : null;
+    if (hitP && hitP.getAttribute("data-pid") !== recMorph.pid && !(t.dataset && t.dataset.act)) {
+      drag = { kind: "pan", lx: e.clientX, ly: e.clientY };
+      stage.setPointerCapture(e.pointerId);
+      return;
+    }
+    if (selId !== recMorph.pid) selId = recMorph.pid;
+  }
+  if (!panMode && (poseActive() || (morphActive() && !recMorph))) {
     drag = { kind: "pan", lx: e.clientX, ly: e.clientY };
     stage.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -3655,6 +3830,7 @@ stage.addEventListener("pointerdown", function (e) {
     const np = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     if (a[2] === "smooth" || b[2] === "smooth") np.push("smooth");
     pts.splice(i + 1, 0, np);
+    morphInsert(sel.shape, i + 1, function (m) { const ma = m[i], mb = m[(i + 1) % m.length]; const o = [(ma[0] + mb[0]) / 2, (ma[1] + mb[1]) / 2]; if (np[2]) o.push(np[2]); return o; });
     edgesAfterInsert(sel.shape, i);
     selPt = i + 1;
     drag = { kind: "pt", i: selPt };
@@ -3674,6 +3850,7 @@ stage.addEventListener("pointerdown", function (e) {
     pushUndo();
     const P = sel.shape.points, iS = +t.dataset.i;
     const aS = P[iS], bS = P[iS + 1];
+    morphInsert(sel.shape, iS + 1, function (m) { const ma = m[iS], mb = m[iS + 1]; return [(ma[0] + mb[0]) / 2, (ma[1] + mb[1]) / 2, ((ma[2] || 0) + (mb[2] || 0)) / 2]; });
     P.splice(iS + 1, 0, [(aS[0] + bS[0]) / 2, (aS[1] + bS[1]) / 2, ((aS[2] || 0) + (bS[2] || 0)) / 2]);
     selPt = iS + 1;
     drag = { kind: "sp2", i: selPt };
