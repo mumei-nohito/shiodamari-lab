@@ -196,6 +196,9 @@
   .motKey.step { border-radius:2px; background:var(--card); }
   .motKey.on { background:#ff8c42; box-shadow:0 0 0 2px #ff8c42; }
   .motKeyBox { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; }
+  .defEdit { margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; display:flex; flex-direction:column; gap:6px; }
+  .defEdit label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .defFolders { max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 6px; display:flex; flex-direction:column; gap:2px; }
   .morphRow { display:grid; grid-template-columns:auto minmax(60px,1fr) auto auto; gap:6px; align-items:center; }
   .recBox { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:12px; padding:10px 12px; }
   .recBox .mini { color:inherit; }
@@ -282,8 +285,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 モーションのパネルを、画面の下に浮かぶパネルにしました（ツールバーの「🎬 モーション」）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「ゆれ・呼吸・体の動き」を追加しました（髪ゆれ・呼吸・体の傾き・上下に弾む）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 22:40</span>プロパティに「ゆれ・呼吸・体の動き」を追加。フォルダや体全体をまとめて動かす仕組み（Live2Dのデフォーマのようなもの）です。「ゆれ」は根元はそのまま毛先ほど大きく横にゆれ（髪・スカートなど）、「呼吸」は腰を基準に上半身が伸び縮み、「体の傾き」は腰を中心に上半身ごと傾き、「上下に弾む」は体ごと上下に動きます。どれもモーションの行にできます。</div>
     <div class="newsItem"><span>11/21 20:15</span>モーション（タイムライン）を、キャンバスの下から「画面の下に浮かぶパネル」に変えました。ツールバーの「🎬 モーション」で出し入れでき、パネルを出している間はキャンバスがパネルの上に収まる大きさになります。パネルにも「↶ 戻す・↷ やり直し」を付けました。高さは「▲ 大きく／▼ 小さく」で切り替えられます。</div>
     <div class="newsItem"><span>11/21 19:00</span>キャンバスの下に「🎬 モーション（タイムライン）」を追加。関節の角度と表情（変形）を、時間ごとのキーフレームで動かせます。キーフレームごとに「なめらか・一定・ゆっくり始まる・ゆっくり止まる・パッと切り替え」を選べて、細かく打てば動きの緩急も作れます。保存したポーズをキーフレームとして置く、変形の行に「瞬き」をワンタッチで入れる、くり返し再生もできます。モーションはアバターのデータに入り、書き出しにも入ります。</div>
     <div class="newsItem"><span>11/21 16:00</span>「↔ 反対側へ」を、名前に左右が無い変形（例：瞬き）でも使えるようにしました。同じ名前のまま反対側の目に写るので、スライダー1本で両目が動きます。あとからウインクしたくなったら「左右に分ける」で「瞬き・左」「瞬き・右」に分けられます。</div>
@@ -610,6 +614,10 @@
             <div class="sect" style="margin-top:8px;"><h3>試し曲げ</h3><div id="poseBox"></div></div>
             <p class="note">ツールバーの「関節」をONにすると、キャンバス上で関節をドラッグして動かせます。関節をクリックすると名前・位置を直したり消したりできます。パーツのプロパティでは、そのパーツが属する関節（始点・終点）も指定できます。</p>
             </div>
+          </details>
+          <details class="acc" id="defAcc">
+            <summary>ゆれ・呼吸・体の動き</summary>
+            <div class="accBody"><div id="defBox"></div></div>
           </details>
           <details class="acc" id="morphAcc">
             <summary>表情（変形）</summary>
@@ -1125,7 +1133,7 @@ function clipSourceShapes(key) {
   return s ? clipShapeEl(s) : "";
 }
 function clipShapeEl(p) {
-  p = morphedPart(p);   /* マスクの形も変形についていく（白目が閉じると瞳も隠れる） */
+  p = partForDraw(p);   /* マスクの形も変形・ゆれについていく（白目が閉じると瞳も隠れる） */
   const sh = p.shape;
   if (sh.type === "rect") return '<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '"/>';
   if (sh.type === "polygon") return '<path d="' + polyPathD(sh.points) + '"/>';
@@ -1758,6 +1766,156 @@ function renderMorph() {
     });
   });
 }
+/* ============ ゆれ・呼吸・体の動き（Live2Dのデフォーマのようなもの） ============
+   docData.deformers = [{ id, name, type, target, folders, amp, root }]
+   ・type：sway＝ゆれ（根元はそのまま、毛先ほど大きく横に）／breath＝呼吸（腰を基準に上下に伸び縮み）
+           lean＝体の傾き（腰を中心に回す）／bob＝上下に弾む
+   ・target：upper＝脚以外の体全部／all＝全部／folders＝選んだフォルダだけ
+   ・defVals = { id: -1〜1 }（見た目の確認用。パーツの形は変えない。モーションの行にもできる）
+   ・ゆれは点を動かす（頭の傾きより前にかけるので、頭が傾いても髪の根元は頭についたまま）。
+     呼吸・傾き・弾むは、関節の回転の外側からまとめてかける（腕を曲げていても一緒に動く） */
+const DEF_TYPES = {
+  sway: { label: "ゆれ", hint: "根元はそのまま、毛先ほど大きく横にゆれる（髪・スカートなど）", amp: 12, unit: "%", ampLabel: "ゆれの大きさ（高さに対して）" },
+  breath: { label: "呼吸", hint: "腰を基準に、上半身が少しだけ上下に伸び縮みする", amp: 3, unit: "%", ampLabel: "伸び縮みの大きさ" },
+  lean: { label: "体の傾き", hint: "腰を中心に、上半身ごと左右に傾く", amp: 8, unit: "度", ampLabel: "傾きの大きさ" },
+  bob: { label: "上下に弾む", hint: "体ごと上下に動く（ぴょこぴょこ）", amp: 10, unit: "px", ampLabel: "動く大きさ" }
+};
+let defVals = {}, defCache = null, defEditId = null;
+function deformersOf() { if (!Array.isArray(docData.deformers)) docData.deformers = []; return docData.deformers; }
+function defActive() { return Object.keys(defVals).some(function (k) { return defVals[k]; }); }
+function defTargetParts(d) {
+  return docData.parts.filter(function (p) {
+    if (p.category === "background") return false;
+    if (d.target === "all") return true;
+    if (d.target === "upper") { const k = rigSeg(p); return k !== "thigh" && k !== "shin" && k !== "foot"; }
+    return (d.folders || []).some(function (f) { return inFolder(p, f); });
+  });
+}
+function defPivot() {
+  const a = rigJointById("rig_hip_R"), b = rigJointById("rig_hip_L");
+  if (a && a.pos && b && b.pos) return [(a.pos[0] + b.pos[0]) / 2, (a.pos[1] + b.pos[1]) / 2];
+  const bb = partsBBox(); return [(bb.minX + bb.maxX) / 2, bb.minY + (bb.maxY - bb.minY) * 0.55];
+}
+function buildDefCache() {
+  const c = {}, pv = defPivot();
+  deformersOf().forEach(function (d) {
+    const v = defVals[d.id] || 0;
+    if (!v) return;
+    const ps = defTargetParts(d), ids = {};
+    let y0 = 1e9, y1 = -1e9;
+    ps.forEach(function (p) {
+      ids[p.id] = true;
+      if (d.type === "sway") (p.shape.points || []).forEach(function (pt) { if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; });
+    });
+    c[d.id] = { d: d, v: v, ids: ids, y0: y0, y1: y1, pv: pv };
+  });
+  defCache = c;
+}
+function swayPart(p) {
+  if (!defCache) return p;
+  const list = Object.keys(defCache).map(function (k) { return defCache[k]; }).filter(function (e) { return e.d.type === "sway" && e.ids[p.id] && e.y1 > e.y0; });
+  if (!list.length || !Array.isArray(p.shape.points)) return p;
+  const pts = p.shape.points.map(function (pt) {
+    const o = pt.slice();
+    list.forEach(function (e) {
+      const root = e.y0 + (e.d.root || 0) / 100 * (e.y1 - e.y0);
+      const h = Math.max(0, Math.min(1, (pt[1] - root) / Math.max(1, e.y1 - root)));
+      const amp = (e.d.amp != null ? e.d.amp : DEF_TYPES.sway.amp) / 100 * (e.y1 - e.y0);
+      o[0] += e.v * amp * Math.pow(h, 1.6);
+    });
+    return o;
+  });
+  const q = Object.assign({}, p); q.shape = Object.assign({}, p.shape, { points: pts }); return q;
+}
+function defTransform(p) {
+  if (!defCache) return "";
+  const out = [];
+  Object.keys(defCache).forEach(function (k) {
+    const e = defCache[k], d = e.d;
+    if (!e.ids[p.id] || d.type === "sway") return;
+    const amp = d.amp != null ? d.amp : DEF_TYPES[d.type].amp, px = e.pv[0], py = e.pv[1];
+    if (d.type === "lean") out.push("rotate(" + (e.v * amp).toFixed(2) + " " + px + " " + py + ")");
+    else if (d.type === "breath") { const s = 1 + e.v * amp / 100; out.push("translate(0 " + py + ") scale(1 " + s.toFixed(4) + ") translate(0 " + (-py) + ")"); }
+    else if (d.type === "bob") out.push("translate(0 " + (e.v * amp).toFixed(2) + ")");
+  });
+  return out.join(" ");
+}
+function partForDraw(p) { return swayPart(morphedPart(p)); }
+function addDeformer(type) {
+  const folders = [];
+  if (type === "sway") groupList().forEach(function (g) { if (/髪/.test(leafName(g.name)) && !folders.some(function (f) { return inFolder({ group: g.name }, f); })) folders.push(g.name); });
+  pushUndo();
+  const d = { id: "def_" + Date.now().toString(36), name: DEF_TYPES[type].label, type: type, target: type === "sway" ? "folders" : type === "bob" ? "all" : "upper", folders: folders, amp: DEF_TYPES[type].amp, root: 0 };
+  if (type === "sway") d.name = folders.length ? "髪ゆれ" : "ゆれ";
+  deformersOf().push(d); defEditId = d.id;
+  save(); renderDeform(); renderMotion();
+}
+function renderDeform() {
+  const box = document.getElementById("defBox");
+  if (!box || !docData) return;
+  const ds = deformersOf();
+  let h = "";
+  if (ds.length) {
+    h += ds.map(function (d) {
+      const v = Math.round((defVals[d.id] || 0) * 100);
+      return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(DEF_TYPES[d.type].hint) + '">' + esc(d.name) + '</span><input type="range" min="-100" max="100" step="1" value="' + v + '" data-defv="' + d.id + '"><span class="poseVal" data-defl="' + d.id + '">' + v + '%</span><button class="pill sm' + (defEditId === d.id ? " on" : "") + '" data-defedit="' + d.id + '">設定</button></div>';
+    }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="defZero">全部 0 に戻す</button></div>';
+  } else h += '<p class="mini">まだありません。下のボタンから足せます。</p>';
+  const d = ds.find(function (x) { return x.id === defEditId; });
+  if (d) {
+    const T = DEF_TYPES[d.type];
+    h += '<div class="defEdit"><div class="poseRow"><input type="text" id="defName" value="' + esc(d.name) + '" maxlength="20" style="flex:1;min-width:0;"><span class="mini">' + esc(T.label) + "</span></div>" +
+      '<p class="mini" style="margin:4px 0;">' + esc(T.hint) + "</p>" +
+      '<label class="mini">動かすもの <select id="defTarget">' +
+      [["upper", "脚以外の体ぜんぶ"], ["all", "ぜんぶ"], ["folders", "選んだフォルダだけ"]].map(function (o) { return '<option value="' + o[0] + '"' + (d.target === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select></label>";
+    if (d.target === "folders") {
+      h += '<div class="defFolders">' + groupList().map(function (g) {
+        const depth = g.name.split(FSEP).length - 1;
+        return '<label class="mini" style="padding-left:' + (depth * 14) + 'px;"><input type="checkbox" data-deff="' + esc(g.name) + '"' + ((d.folders || []).indexOf(g.name) >= 0 ? " checked" : "") + "> " + esc(leafName(g.name)) + "</label>";
+      }).join("") + "</div>";
+    }
+    h += '<label class="mini">' + esc(T.ampLabel) + ' <input type="range" id="defAmp" min="1" max="' + (d.type === "sway" ? 40 : d.type === "lean" ? 30 : d.type === "breath" ? 10 : 40) + '" step="1" value="' + (d.amp != null ? d.amp : T.amp) + '"> <span id="defAmpL">' + (d.amp != null ? d.amp : T.amp) + T.unit + "</span></label>";
+    if (d.type === "sway") h += '<label class="mini">根元の高さ（上から） <input type="range" id="defRoot" min="0" max="80" step="1" value="' + (d.root || 0) + '"> <span id="defRootL">' + (d.root || 0) + "%</span></label>";
+    h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="defDel">これを消す</button><button class="pill sm" id="defClose">設定を閉じる</button></div></div>';
+  }
+  h += '<div class="toolbar" style="margin-top:8px;">' + Object.keys(DEF_TYPES).map(function (k) { return '<button class="pill sm" data-defadd="' + k + '" title="' + esc(DEF_TYPES[k].hint) + '">＋ ' + esc(DEF_TYPES[k].label) + "</button>"; }).join("") + "</div>" +
+    '<p class="note">スライダーは見た目の確認用です（パーツの形は変わりません）。−側と＋側で反対向きに動きます。モーションの「＋ 動かすものを追加」から行にできるので、ゆっくり往復させると髪がふわふわ揺れます。0以外の間は、キャンバスでの形の編集はお休みです。</p>';
+  box.innerHTML = h;
+  box.querySelectorAll("[data-defv]").forEach(function (r) {
+    r.addEventListener("input", function () {
+      const id = r.dataset.defv, v = (+r.value) / 100;
+      if (v) defVals[id] = v; else delete defVals[id];
+      const l = box.querySelector('[data-defl="' + id + '"]'); if (l) l.textContent = r.value + "%";
+      renderStage();
+    });
+  });
+  const z = box.querySelector("#defZero"); if (z) z.addEventListener("click", function () { defVals = {}; renderDeform(); renderStage(); });
+  box.querySelectorAll("[data-defedit]").forEach(function (b) { b.addEventListener("click", function () { defEditId = defEditId === b.dataset.defedit ? null : b.dataset.defedit; renderDeform(); }); });
+  box.querySelectorAll("[data-defadd]").forEach(function (b) { b.addEventListener("click", function () { addDeformer(b.dataset.defadd); }); });
+  if (!d) return;
+  box.querySelector("#defName").addEventListener("change", function (e) { const v = e.target.value.trim(); if (!v) return; pushUndo(); d.name = v.slice(0, 20); save(); renderDeform(); renderMotion(); });
+  box.querySelector("#defTarget").addEventListener("change", function (e) { pushUndo(); d.target = e.target.value; save(); renderDeform(); renderStage(); });
+  box.querySelectorAll("[data-deff]").forEach(function (c) {
+    c.addEventListener("change", function () {
+      pushUndo();
+      const f = c.dataset.deff, fs = d.folders || (d.folders = []);
+      if (c.checked) { if (fs.indexOf(f) < 0) fs.push(f); } else d.folders = fs.filter(function (x) { return x !== f; });
+      save(); renderStage();
+    });
+  });
+  const amp = box.querySelector("#defAmp");
+  amp.addEventListener("input", function () { d.amp = +amp.value; box.querySelector("#defAmpL").textContent = amp.value + DEF_TYPES[d.type].unit; renderStage(); });
+  amp.addEventListener("change", function () { pushUndo(); save(); });
+  const rt = box.querySelector("#defRoot");
+  if (rt) { rt.addEventListener("input", function () { d.root = +rt.value; box.querySelector("#defRootL").textContent = rt.value + "%"; renderStage(); }); rt.addEventListener("change", function () { pushUndo(); save(); }); }
+  box.querySelector("#defDel").addEventListener("click", function () {
+    if (!confirm("「" + d.name + "」を消しますか？（元に戻すで戻せます）")) return;
+    pushUndo(); docData.deformers = ds.filter(function (x) { return x.id !== d.id; }); delete defVals[d.id];
+    (docData.motions || []).forEach(function (m) { m.tracks = m.tracks.filter(function (tr) { return tr.key !== "d:" + d.id; }); });
+    defEditId = null; save(); render();
+  });
+  box.querySelector("#defClose").addEventListener("click", function () { defEditId = null; renderDeform(); });
+}
 /* ============ モーション（タイムライン） ============
    docData.motions = [{ id, name, dur: 秒, loop: true, tracks: [{ key: "j:関節id" | "m:変形の名前", keys: [{ t: 秒, v: 値, ease }] }] }]
    ・関節の値は角度（度）、変形の値は 0〜1
@@ -1786,10 +1944,12 @@ function trackValue(tr, t) {
 }
 function trackLabel(key) {
   if (key.indexOf("j:") === 0) { const j = rigJointById(key.slice(2)); return "🦴 " + (j ? j.name : key.slice(2)); }
+  if (key.indexOf("d:") === 0) { const d = deformersOf().find(function (x) { return x.id === key.slice(2); }); return "🌬 " + (d ? d.name : "（消えたゆれ）"); }
   return "😊 " + key.slice(2);
 }
 function trackCurrent(key) {
   if (key.indexOf("j:") === 0) return pose[key.slice(2)] || 0;
+  if (key.indexOf("d:") === 0) return defVals[key.slice(2)] || 0;
   return morphVals[key.slice(2)] || 0;
 }
 /* 選んだ時間の値を、試し曲げ・変形に反映する（そのモーションにある行だけ） */
@@ -1799,11 +1959,12 @@ function applyMotionAt(m, t, light) {
     const v = trackValue(tr, t);
     if (v == null) return;
     if (tr.key.indexOf("j:") === 0) { const id = tr.key.slice(2); if (Math.abs(v) < 0.05) delete pose[id]; else pose[id] = Math.round(v * 10) / 10; }
+    else if (tr.key.indexOf("d:") === 0) { const id = tr.key.slice(2); if (Math.abs(v) < 0.001) delete defVals[id]; else defVals[id] = Math.max(-1, Math.min(1, v)); }
     else { const k = tr.key.slice(2); if (v < 0.001) delete morphVals[k]; else morphVals[k] = Math.min(1, Math.max(0, v)); }
   });
   if (!showJoints && Object.keys(pose).length) { showJoints = true; const jb = document.getElementById("jointsBtn"); if (jb) jb.classList.add("on"); }
   renderStage();
-  if (!light) { renderPose(); renderMorph(); }
+  if (!light) { renderPose(); renderMorph(); renderDeform(); }
 }
 function setKey(m, key, t, v) {
   let tr = m.tracks.find(function (x) { return x.key === key; });
@@ -1876,7 +2037,8 @@ function renderMotion() {
   const js = (docData.joints || []).filter(function (j) { return /^rig_/.test(j.id) && j.pos; });
   const have = {}; tracks.forEach(function (tr) { have[tr.key] = true; });
   const opts = js.filter(function (j) { return !have["j:" + j.id]; }).map(function (j) { return '<option value="j:' + j.id + '">🦴 ' + esc(j.name) + "</option>"; })
-    .concat(morphNames().filter(function (k) { return !have["m:" + k]; }).map(function (k) { return '<option value="m:' + esc(k) + '">😊 ' + esc(k) + "</option>"; }));
+    .concat(morphNames().filter(function (k) { return !have["m:" + k]; }).map(function (k) { return '<option value="m:' + esc(k) + '">😊 ' + esc(k) + "</option>"; }))
+    .concat(deformersOf().filter(function (d) { return !have["d:" + d.id]; }).map(function (d) { return '<option value="d:' + d.id + '">🌬 ' + esc(d.name) + "</option>"; }));
   h += '<div class="motTop" style="margin-top:6px;"><select id="motAddSel"><option value="">＋ 動かすものを追加…</option>' + opts.join("") + "</select>" +
     '<button class="pill sm" id="motRecBtn" title="今の試し曲げ・変形の値を、今の時間のキーフレームとして全部の行に記録します">◆ 今の形をこの時間に記録</button>' +
     (posesOf().length ? '<select id="motPoseSel"><option value="">◆ ポーズを置く…</option>' + posesOf().map(function (q) { return '<option value="' + q.id + '">' + esc(q.name) + "</option>"; }).join("") + "</select>" : "") + "</div>";
@@ -1894,7 +2056,7 @@ function renderMotion() {
   box.innerHTML = h;
   wireMotion(box, m);
 }
-function fmtTrackVal(key, v) { return key.indexOf("j:") === 0 ? (Math.round(v * 10) / 10) + "度" : Math.round(v * 100) + "%"; }
+function fmtTrackVal(key, v) { return key.indexOf("j:") === 0 ? (Math.round(v * 10) / 10) + "度" : Math.round(v * 100) + "%"; }   /* 変形 0〜100%、ゆれ −100〜100% */
 function wireMotion(box, m) {
   const $ = function (id) { return box.querySelector("#" + id); };
   $("motSel").addEventListener("change", function (e) { motStop(); motSelId = e.target.value || null; motTime = 0; motKeySel = null; renderMotion(); applyMotionAt(curMotion(), 0); });
@@ -1909,7 +2071,7 @@ function wireMotion(box, m) {
   if (!m) return;
   $("motRen").addEventListener("click", function () { const nm = prompt("モーションの新しい名前", m.name); if (nm === null || !nm.trim()) return; pushUndo(); m.name = nm.trim().slice(0, 30); save(); renderMotion(); });
   $("motDel").addEventListener("click", function () { if (!confirm("モーション「" + m.name + "」を消しますか？（元に戻すで戻せます）")) return; motStop(); pushUndo(); docData.motions = motionsOf().filter(function (x) { return x.id !== m.id; }); motSelId = null; motKeySel = null; save(); renderMotion(); });
-  $("motPlayBtn").addEventListener("click", function () { if (motPlaying) { motStop(); renderMotion(); renderPose(); renderMorph(); } else motPlay(); });
+  $("motPlayBtn").addEventListener("click", function () { if (motPlaying) { motStop(); renderMotion(); renderPose(); renderMorph(); renderDeform(); } else motPlay(); });
   $("motLoop").addEventListener("change", function (e) { pushUndo(); m.loop = e.target.checked; save(); });
   $("motDur").addEventListener("change", function (e) { const d = Math.max(0.2, Math.min(60, +e.target.value || 3)); pushUndo(); m.dur = Math.round(d * 100) / 100; if (motTime > m.dur) motTime = m.dur; save(); renderMotion(); });
   const sc = $("motScrub");
@@ -1985,7 +2147,7 @@ function wireMotion(box, m) {
   if (kt) {
     const tr = m.tracks[motKeySel.ti], k = tr.keys[motKeySel.ki], isJ = tr.key.indexOf("j:") === 0;
     kt.addEventListener("change", function () { pushUndo(); k.t = Math.max(0, Math.min(m.dur, Math.round((+kt.value || 0) * 100) / 100)); tr.keys.sort(function (a, b) { return a.t - b.t; }); motKeySel.ki = tr.keys.indexOf(k); save(); renderMotion(); });
-    kv.addEventListener("change", function () { pushUndo(); k.v = isJ ? (+kv.value || 0) : Math.max(0, Math.min(1, (+kv.value || 0) / 100)); save(); applyMotionAt(m, motTime); renderMotion(); });
+    kv.addEventListener("change", function () { pushUndo(); k.v = isJ ? (+kv.value || 0) : Math.max(tr.key.indexOf("d:") === 0 ? -1 : 0, Math.min(1, (+kv.value || 0) / 100)); save(); applyMotionAt(m, motTime); renderMotion(); });
     ke.addEventListener("change", function () { pushUndo(); k.ease = ke.value; save(); renderMotion(); });
     kd.addEventListener("click", function () { pushUndo(); tr.keys.splice(motKeySel.ki, 1); motKeySel = null; save(); renderMotion(); });
   }
@@ -2193,7 +2355,8 @@ function renderPose() {
   box.querySelector("#poseReset").addEventListener("click", function () { cancelAnimationFrame(poseAnim); poseSelId = null; pose = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
-  const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; })).map(morphedPart);
+  buildDefCache();
+  const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; })).map(partForDraw);
   /* 試し曲げ中は、関節の回転をかけて描く */
   /* 同じ回り方をする、続いたパーツはまとめて1つのグループで回す。
      1つずつ別のグループにすると、そのグループの中で重ね方（乗算など）が閉じてしまい、
@@ -2201,7 +2364,7 @@ function buildPartsSVG() {
   let out = "", cur = null, buf = "";
   const flush = function () { if (buf) out += cur ? '<g transform="' + cur + '">' + buf + "</g>" : buf; buf = ""; };
   vis.forEach(function (p) {
-    const tf = poseTransform(p) || "";
+    const tf = [defTransform(p), poseTransform(p)].filter(Boolean).join(" ");   /* 呼吸・傾きなどは、関節の回転の外側から */
     if (tf !== cur) { flush(); cur = tf; }
     buf += partSVG(p, false);
   });
@@ -2229,7 +2392,7 @@ function partsBBox() {
 
 /* ============ 描画 ============ */
 function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
-function render() { renderStage(); renderList(); renderProps(); renderPose(); renderMorph(); if (!motPlaying) renderMotion();
+function render() { renderStage(); renderList(); renderProps(); renderPose(); renderMorph(); renderDeform(); if (!motPlaying) renderMotion();
   document.getElementById("undoBtn").disabled = undoStack.length === 0;
   document.getElementById("redoBtn").disabled = redoStack.length === 0;
 }
@@ -2280,7 +2443,7 @@ function renderStage() {
       }
     });
   }
-  const sel = (selId && !poseActive() && !(morphActive() && !recMorph)) ? partById(selId) : null;   /* 試し曲げ中・変形の確認中は、選択の枠やハンドルを出さない */
+  const sel = (selId && !poseActive() && !defActive() && !(morphActive() && !recMorph)) ? partById(selId) : null;   /* 試し曲げ中・変形の確認中は、選択の枠やハンドルを出さない */
   if (sel && ed(sel.id).locked) { /* ロック中はハンドルを出さない */ }
   else if (sel && ghostOn) {
     const d = partPathD(sel);
@@ -2847,6 +3010,7 @@ function repath(old, neu) {
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(function (g) { return sw(normPath(g)); }).filter(Boolean)
     .filter(function (g, i, arr) { return arr.indexOf(g) === i; });
   Object.keys(collapsedGroups).forEach(function (k) { const n = sw(k); if (n !== k) { collapsedGroups[n] = collapsedGroups[k]; delete collapsedGroups[k]; } });
+  (docData.deformers || []).forEach(function (d) { if (d.folders) d.folders = d.folders.map(function (f) { return sw(f) || null; }).filter(Boolean); });
   if (edState.fade) Object.keys(edState.fade).forEach(function (k) { const n = sw(k); if (n !== k) { if (n) edState.fade[n] = edState.fade[k]; delete edState.fade[k]; } });
 }
 function renameGroup(name) {
@@ -2878,6 +3042,9 @@ function releaseGroup(name) {
   });
   if (Array.isArray(edState.folders)) edState.folders = edState.folders.map(normPath).filter(function (g) { return g !== name; })
     .map(function (g) { return g.indexOf(name + FSEP) === 0 ? (up ? up + FSEP : "") + g.slice(name.length + 1) : g; });
+  (docData.deformers || []).forEach(function (d) {
+    if (d.folders) d.folders = d.folders.map(function (f) { return f === name ? (up || null) : f.indexOf(name + FSEP) === 0 ? (up ? up + FSEP : "") + f.slice(name.length + 1) : f; }).filter(Boolean);
+  });
   if (edState.fade) {
     delete edState.fade[name];
     Object.keys(edState.fade).forEach(function (k) { if (k.indexOf(name + FSEP) === 0) { edState.fade[(up ? up + FSEP : "") + k.slice(name.length + 1)] = edState.fade[k]; delete edState.fade[k]; } });
@@ -4128,7 +4295,7 @@ stage.addEventListener("pointerdown", function (e) {
     }
     if (selId !== recMorph.pid) selId = recMorph.pid;
   }
-  if (!panMode && (poseActive() || (morphActive() && !recMorph))) {
+  if (!panMode && (poseActive() || defActive() || (morphActive() && !recMorph))) {
     drag = { kind: "pan", lx: e.clientX, ly: e.clientY };
     stage.setPointerCapture(e.pointerId);
     e.preventDefault();
