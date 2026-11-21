@@ -79,6 +79,11 @@
   .newsBody { margin-top:6px; max-height:160px; overflow-y:auto; font-size:12px; line-height:1.6; color:var(--fg); padding-right:6px; }
   .newsItem span { font-weight:700; color:var(--ac); margin-right:6px; }
   .jH.cur { fill:#e5484d; }
+  .eJ { fill:#fff; stroke:#ff8c42; stroke-width:2.5; cursor:pointer; vector-effect:non-scaling-stroke; }
+  .eJ.bent { fill:#ffd9bf; }
+  .eJ.cur { fill:#e5484d; stroke:#fff; }
+  .eRing { cursor:grab; pointer-events:stroke; }
+  .eKnob { fill:#e5484d; stroke:#fff; stroke-width:2; cursor:grab; vector-effect:non-scaling-stroke; }
   #underNotice, #vaultBox { position:fixed; inset:0; background:var(--shade); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
   .vaultCard { background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(480px, 94vw); max-height:84vh; overflow:auto; box-shadow:var(--pop); font-size:14px; }
   .vaultCard h3 { margin:0 0 6px; font-size:16px; color:var(--sub); }
@@ -285,8 +290,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「呼吸」で伸び縮みするのを胴体だけにしました（頭・髪・腕は形を変えずに一緒に上下）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「🦴 かんたんポーズ」を追加。腕や頭をつかんで回すだけで関節が曲がり、モーションにも自動で記録できます。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/22 01:00</span>「🦴 かんたんポーズ」を追加（イージーポーザーのような操作）。キャンバスの腕・脚・頭をつかんでドラッグすると、その根元の関節で回ります。関節の点を押すと輪っかが出て、輪っかや●でも回せます。ロック中のパーツもつかめます（形は変わりません）。モーションには「動かしたら自動で記録」を追加し、「◆ この形を記録」は、動かしているものの行を自動で作るようにしました（先に行を足さなくてOK）。</div>
     <div class="newsItem"><span>11/21 23:50</span>「呼吸」で伸び縮みするのを胴体だけにしました。頭・髪は首の付け根、腕は肩の付け根が動いた分だけ、形を変えずに一緒に上下します。</div>
     <div class="newsItem"><span>11/21 23:00</span>「体の傾き」の設定に「回す中心」を追加。腰のほか「右足もと」「左足もと」を選ぶと、その足に体重をかけて全身ごと傾きます（動かすものは自動で「ぜんぶ」に）。浮いた側の脚は、試し曲げの「股」で外に開いて足先を床に戻します。</div>
     <div class="newsItem"><span>11/21 22:40</span>プロパティに「ゆれ・呼吸・体の動き」を追加。フォルダや体全体をまとめて動かす仕組み（Live2Dのデフォーマのようなもの）です。「ゆれ」は根元はそのまま毛先ほど大きく横にゆれ（髪・スカートなど）、「呼吸」は腰を基準に上半身が伸び縮み、「体の傾き」は腰を中心に上半身ごと傾き、「上下に弾む」は体ごと上下に動きます。どれもモーションの行にできます。</div>
@@ -480,6 +486,9 @@
       <button class="pill" id="outlineBtn" title="すべてのパーツの輪郭を線で表示（重なり方や関節の玉の位置の確認に）">輪郭線</button>
       <button class="pill" id="motionDockBtn" title="モーション（タイムライン）のパネルを、画面の下に出す／しまう">🎬 モーション</button>
       <span class="tlabel">操作</span>
+      <button class="pill" id="easyBtn" title="キャンバスの腕・脚・頭をつかんで回すと、関節が曲がります（イージーポーザーのような操作）。関節の点を押すと、まわりに回すための輪っかが出ます">🦴 かんたんポーズ</button>
+      <button class="pill" id="easySymBtn" hidden title="オン：片方を曲げると、反対側も鏡写しに曲がる">↔ 左右対称</button>
+      <button class="pill" id="easyResetBtn" hidden title="曲げた関節を全部まっすぐに戻す">まっすぐに戻す</button>
       <button class="pill on" id="modePtBtn">点を動かす</button>
       <button class="pill" id="modePanBtn">画面を動かす</button>
       <button class="pill" id="modeUnderBtn">下絵を動かす</button>
@@ -812,6 +821,7 @@ let edState = {};
 let selId = null, selPt = -1;
 let edgePick = false;   /* 「線を出す辺」をキャンバスで選ぶモード */
 let selJoint = null;
+let easyMode = false, easyJoint = null;   /* 🦴 かんたんポーズ：つかんで回す関節 */
 let under = null, underImg = null, underCanvas = null;
 let underMoveMode = false, pickMode = false;
 function ed(id) { return edState[id] || {}; }
@@ -1332,7 +1342,7 @@ function partSVG(p, forExport) {
   const styles = [];
   /* マスクの包み（g）の中では合成が下絵に届かないため、複数マスク時は合成を一番外の包みに載せる */
   if (p.blend && p.blend !== "normal" && !multiClip) styles.push("mix-blend-mode:" + p.blend);
-  if (!forExport && (ed(p.id).locked || (fade < 1 && edState.fadeNoPick !== false))) styles.push("pointer-events:none");
+  if (!forExport && ((ed(p.id).locked && !easyMode) || (fade < 1 && edState.fadeNoPick !== false))) styles.push("pointer-events:none");   /* かんたんポーズ中は、ロック中のパーツもつかんで回せる（形は変えないので） */
   const styleAttr = styles.length ? ' style="' + styles.join(";") + '"' : "";
   const gid = forExport ? styleAttr : ' data-pid="' + p.id + '"' + styleAttr;
   const clip = (activeKeys.length === 1 && !cutKeys.length) ? ' clip-path="url(#' + clipKeyId(activeKeys[0]) + ')"' : "";
@@ -1743,6 +1753,7 @@ function renderMorph() {
       const lab = box.querySelector('[data-morphv="' + CSS.escape(k) + '"]'); if (lab) lab.textContent = r.value + "%";
       renderStage();
     });
+    r.addEventListener("change", function () { motAutoKey(["m:" + r.getAttribute("data-morph"), r.getAttribute("data-morph2") ? "m:" + r.getAttribute("data-morph2") : null]); });
   });
   const ml = box.querySelector("#morphLink");
   if (ml) ml.addEventListener("change", function () { morphLinkLR = ml.checked; try { LS.setItem("avatarMakerMorphLink", ml.checked ? "1" : "0"); } catch (e) {} renderMorph(); });
@@ -1919,6 +1930,7 @@ function renderDeform() {
       const l = box.querySelector('[data-defl="' + id + '"]'); if (l) l.textContent = r.value + "%";
       renderStage();
     });
+    r.addEventListener("change", function () { motAutoKey(["d:" + r.dataset.defv]); });
   });
   const z = box.querySelector("#defZero"); if (z) z.addEventListener("click", function () { defVals = {}; renderDeform(); renderStage(); });
   box.querySelectorAll("[data-defedit]").forEach(function (b) { b.addEventListener("click", function () { defEditId = defEditId === b.dataset.defedit ? null : b.dataset.defedit; renderDeform(); }); });
@@ -2011,6 +2023,33 @@ function setKey(m, key, t, v) {
   if (ex) ex.v = v; else tr.keys.push({ t: t, v: v, ease: "smooth" });
   tr.keys.sort(function (a, b) { return a.t - b.t; });
 }
+/* 行が無い物を記録する時は、行を作って 0秒に「動かす前（0）」のキーも入れる（途中から動き始めるように） */
+function recordKey(m, key, t, v) {
+  if (!m.tracks.some(function (x) { return x.key === key; }) && t > 0.005) setKey(m, key, 0, 0);
+  setKey(m, key, t, v);
+}
+/* 今、何かを動かしている（0以外の）もの全部の行の名前 */
+function movedKeys() {
+  const ks = [];
+  Object.keys(pose).forEach(function (k) { if (pose[k]) ks.push("j:" + k); });
+  Object.keys(morphVals).forEach(function (k) { if (morphVals[k]) ks.push("m:" + k); });
+  Object.keys(defVals).forEach(function (k) { if (defVals[k]) ks.push("d:" + k); });
+  return ks;
+}
+/* 動かしたら自動で記録：モーションのパネルが開いていて、モーションを選んでいる時だけ */
+let motAuto = true;
+try { motAuto = LS.getItem("avatarMakerMotAuto") !== "0"; } catch (e) {}
+function motDockOpen() { const d = document.getElementById("motionDock"); return !!(d && !d.hidden); }
+function motAutoKey(keys) {
+  const m = curMotion();
+  if (!motAuto || !m || !motDockOpen() || motPlaying) return;
+  keys = keys.filter(Boolean);
+  if (!keys.length) return;
+  pushUndo();
+  keys.forEach(function (k) { recordKey(m, k, motTime, trackCurrent(k)); });
+  save(); renderMotion();
+  aimTip("◆ " + motTime.toFixed(2) + " 秒に記録しました", 1400);
+}
 function motStop() { motPlaying = false; cancelAnimationFrame(motRaf); }
 function motPlay() {
   const m = curMotion(); if (!m) return;
@@ -2077,7 +2116,8 @@ function renderMotion() {
     .concat(morphNames().filter(function (k) { return !have["m:" + k]; }).map(function (k) { return '<option value="m:' + esc(k) + '">😊 ' + esc(k) + "</option>"; }))
     .concat(deformersOf().filter(function (d) { return !have["d:" + d.id]; }).map(function (d) { return '<option value="d:' + d.id + '">🌬 ' + esc(d.name) + "</option>"; }));
   h += '<div class="motTop" style="margin-top:6px;"><select id="motAddSel"><option value="">＋ 動かすものを追加…</option>' + opts.join("") + "</select>" +
-    '<button class="pill sm" id="motRecBtn" title="今の試し曲げ・変形の値を、今の時間のキーフレームとして全部の行に記録します">◆ 今の形をこの時間に記録</button>' +
+    '<button class="pill main sm" id="motRecBtn" title="今の試し曲げ・変形・ゆれの値を、今の時間のキーフレームとして記録します（動かしているものは行が自動でできます）">◆ この形を記録</button>' +
+    '<label class="mini" title="関節を曲げたり、スライダーを動かして指を離すたびに、今の時間に自動で記録します"><input type="checkbox" id="motAuto"' + (motAuto ? " checked" : "") + '> 動かしたら自動で記録</label>' +
     (posesOf().length ? '<select id="motPoseSel"><option value="">◆ ポーズを置く…</option>' + posesOf().map(function (q) { return '<option value="' + q.id + '">' + esc(q.name) + "</option>"; }).join("") + "</select>" : "") + "</div>";
   /* 選んだキーフレーム */
   const ks = motKeySel && tracks[motKeySel.ti] && tracks[motKeySel.ti].keys[motKeySel.ki];
@@ -2089,7 +2129,7 @@ function renderMotion() {
       '<label class="mini">次までの動き方 <select id="motKe">' + EASES.map(function (e) { return '<option value="' + e[0] + '"' + (ks.ease === e[0] ? " selected" : "") + ">" + e[1] + "</option>"; }).join("") + "</select></label>" +
       '<button class="pill sm" id="motKdel">消す</button></div>';
   }
-  h += '<p class="note">使い方：スライダーで時間を選ぶ →「関節」の試し曲げや「表情（変形）」のスライダーで形を作る →「◆ 今の形をこの時間に記録」。行の◆を押すと、時間・値・動き方を直せます（◆はドラッグで時間をずらせます）。キーフレームを細かく打つほど、動きの緩急を細かく作れます。モーションはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</p>';
+  h += '<p class="note">かんたんな使い方：上のスライダーで時間を選ぶ → 「🦴 かんたんポーズ」でキャンバスの腕や頭をつかんで回す（スライダーで表情やゆれを動かしてもOK）→ 「動かしたら自動で記録」がオンなら、それだけで◆が入ります。時間を変えて繰り返すと動きになります。<br>くわしく：スライダーで時間を選ぶ →「関節」の試し曲げや「表情（変形）」のスライダーで形を作る →「◆ この形を記録」。行の◆を押すと、時間・値・動き方を直せます（◆はドラッグで時間をずらせます）。キーフレームを細かく打つほど、動きの緩急を細かく作れます。モーションはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</p>';
   box.innerHTML = h;
   wireMotion(box, m);
 }
@@ -2135,11 +2175,17 @@ function wireMotion(box, m) {
     save(); renderMotion();
   });
   $("motRecBtn").addEventListener("click", function () {
-    if (!m.tracks.length) { alert("先に「＋ 動かすものを追加…」で、動かしたい関節や変形を行に追加してください。"); return; }
+    /* 行にあるもの＋今動かしているもの全部を、今の時間に記録（行が無ければ自動で作る） */
+    const keys = {};
+    m.tracks.forEach(function (tr) { keys[tr.key] = true; });
+    movedKeys().forEach(function (k) { keys[k] = true; });
+    if (!Object.keys(keys).length) { alert("まだ何も動かしていません。関節を曲げたり、表情やゆれのスライダーを動かしてから押してください。"); return; }
     pushUndo();
-    m.tracks.forEach(function (tr) { setKey(m, tr.key, motTime, trackCurrent(tr.key)); });
+    Object.keys(keys).forEach(function (k) { recordKey(m, k, motTime, trackCurrent(k)); });
     save(); renderMotion();
   });
+  const au = $("motAuto");
+  if (au) au.addEventListener("change", function () { motAuto = au.checked; try { LS.setItem("avatarMakerMotAuto", motAuto ? "1" : "0"); } catch (e) {} });
   const ps = $("motPoseSel");
   if (ps) ps.addEventListener("change", function () {
     const q = posesOf().find(function (x) { return x.id === ps.value; }); if (!q) return;
@@ -2322,7 +2368,7 @@ function renderPose() {
   h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>' +
     '<p class="note">試し曲げは見た目の確認用で、パーツの形は変わりません（保存したポーズだけは書き出しにも入ります）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
   box.innerHTML = h;
-  box.querySelector("#poseSym").addEventListener("change", function (e) { poseSym = e.target.checked; });
+  box.querySelector("#poseSym").addEventListener("change", function (e) { poseSym = e.target.checked; easySyncBtns(); });
   box.querySelectorAll("[data-pose]").forEach(function (r) {
     r.addEventListener("input", function () {
       const id = r.getAttribute("data-pose"), v = parseFloat(r.value) || 0;
@@ -2339,6 +2385,7 @@ function renderPose() {
       if (!showJoints) { showJoints = true; document.getElementById("jointsBtn").classList.add("on"); }
       renderStage();
     });
+    r.addEventListener("change", function () { const id = r.getAttribute("data-pose"); motAutoKey(["j:" + id, poseSym && /_[RL]$/.test(id) ? "j:" + id.replace(/_([RL])$/, function (m, s) { return s === "R" ? "_L" : "_R"; }) : null]); });
   });
   box.querySelector("#limbSel").addEventListener("change", function (e) { limbTarget = e.target.value; renderPose(); });
   box.querySelector("#limbStepSel").addEventListener("change", function (e) { limbStep = +e.target.value; });
@@ -2462,7 +2509,8 @@ function renderStage() {
   if (showCenter) {
     out += '<line x1="' + centerX() + '" y1="' + (vb.y - 50) + '" x2="' + centerX() + '" y2="' + (vb.y + vb.h + 50) + '" stroke="#e07840" stroke-width="' + (vb.w * 0.0035) + '" stroke-dasharray="' + (vb.w * 0.02) + " " + (vb.w * 0.014) + '" opacity="0.75" pointer-events="none"/>';
   }
-  if (showJoints && Array.isArray(docData.joints)) {
+  if (easyMode) out += easyHandlesSVG();
+  else if (showJoints && Array.isArray(docData.joints)) {
     docData.joints.forEach(function (j) {
       const jr = (stage.clientWidth ? 9 * vb.w / stage.clientWidth : vb.w * 0.016);
       const handle = function (pos, jk) {
@@ -4113,6 +4161,125 @@ document.getElementById("chkCopy").addEventListener("click", function () { copyP
 document.getElementById("chkMCopy").addEventListener("click", function () { mirrorCopyParts(checkedParts()); });
 document.getElementById("chkClear").addEventListener("click", function () { checkedIds.clear(); setMove = null; renderList(); });
 let collapsedGroups = {};
+/* ============ 🦴 かんたんポーズ ============
+   ・腕・脚・頭のパーツをつかんでドラッグ＝そのパーツの根元の関節で回す（手→手首、前腕→肘、上腕→肩、頭や髪→首…）
+   ・関節の点を押すと選べて、まわりに輪っかが出る。輪っかや●をドラッグしても回せる
+   ・体（胴体）や何もない所のドラッグは画面の移動
+   ・中身は今までの「試し曲げ」と同じ値なので、関節のスライダー・ポーズの保存・モーションにそのままつながる */
+const EASY_SEG_JOINT = { head: "neck", upperArm: "shoulder", foreArm: "elbow", hand: "wrist", thigh: "hip", shin: "knee", foot: "ankle" };
+function easySetMode(on) {
+  easyMode = !!on; easyJoint = null;
+  const b = document.getElementById("easyBtn"); if (b) b.classList.toggle("on", easyMode);
+  if (easyMode) poseSym = false;   /* 手を振るなど、片方だけ動かすことが多いので最初はオフ */
+  easySyncBtns();
+  if (easyMode) {
+    selId = null; selPt = -1; selJoint = null;
+    const js = (docData.joints || []).filter(function (j) { return /^rig_/.test(j.id) && j.pos; });
+    if (!js.length) aimTip("先に「関節」の「関節を自動で置く」で関節を置いてね", 3500);
+    else aimTip("🦴 腕や頭をつかんで回すと曲がります。関節の点を押すと輪っかが出ます", 3500);
+  } else aimTip("");
+  render();
+}
+function easySyncBtns() {
+  const sb = document.getElementById("easySymBtn"), rb = document.getElementById("easyResetBtn");
+  if (sb) { sb.hidden = !easyMode; sb.classList.toggle("on", !!poseSym); }
+  if (rb) rb.hidden = !easyMode;
+}
+function easyJointDef(id) { const base = id.replace(/^rig_/, "").replace(/_[RL]$/, ""); return RIG.joints.find(function (d) { return d.base === base; }) || { range: 90, base: base }; }
+/* 関節から、その先（子の関節）への向き。輪っかの●を骨の向きに置くため */
+function easyBoneDir(j) {
+  const m = /^rig_(\w+?)(?:_([RL]))?$/.exec(j.id); if (!m) return [0, 1];
+  const child = { shoulder: "elbow", elbow: "wrist", hip: "knee", knee: "ankle" }[m[1]];
+  const cj = child ? rigJointById(rigJointId(child, m[2])) : null;
+  let v = m[1] === "neck" ? [0, -1] : [0, 1];
+  if (cj && cj.pos) { const dx = cj.pos[0] - j.pos[0], dy = cj.pos[1] - j.pos[1], l = Math.hypot(dx, dy); if (l > 1) v = [dx / l, dy / l]; }
+  else if (m[1] === "wrist") { const e = rigJointById(rigJointId("elbow", m[2])); if (e && e.pos) { const dx = j.pos[0] - e.pos[0], dy = j.pos[1] - e.pos[1], l = Math.hypot(dx, dy); if (l > 1) v = [dx / l, dy / l]; } }
+  /* 親から自分までの曲げ角を足す（2Dの回転は足し算でつながる） */
+  const parents = { elbow: ["shoulder"], wrist: ["shoulder", "elbow"], knee: ["hip"], ankle: ["hip", "knee"] }[m[1]] || [];
+  let a = pose[j.id] || 0; parents.forEach(function (b) { a += pose[rigJointId(b, m[2])] || 0; });
+  const r = a * Math.PI / 180;
+  return [v[0] * Math.cos(r) - v[1] * Math.sin(r), v[0] * Math.sin(r) + v[1] * Math.cos(r)];
+}
+function easyHandlesSVG() {
+  const js = (docData.joints || []).filter(function (j) { return /^rig_/.test(j.id) && j.pos; });
+  const px = function (n) { const cw = stage.clientWidth || 600; return n * vb.w / cw; };
+  let o = "";
+  js.forEach(function (j) {
+    const p = posedJointPos(j), cur = j.id === easyJoint, bent = !!pose[j.id];
+    o += '<circle class="eJ' + (cur ? " cur" : "") + (bent ? " bent" : "") + '" data-act="ejoint" data-jid="' + j.id + '" cx="' + p[0] + '" cy="' + p[1] + '" r="' + px(cur ? 8 : 6.5) + '"><title>' + esc(j.name) + "（押すと輪っかが出ます）</title></circle>";
+  });
+  const j = easyJoint ? rigJointById(easyJoint) : null;
+  if (j && j.pos) {
+    const p = posedJointPos(j), R = px(46), d = easyBoneDir(j), k = [p[0] + d[0] * R, p[1] + d[1] * R], v = pose[j.id] || 0;
+    o += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + R + '" fill="none" stroke="#e5484d" stroke-width="2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none" opacity="0.9"/>' +
+      '<circle class="eRing" data-act="ering" cx="' + p[0] + '" cy="' + p[1] + '" r="' + R + '" fill="none" stroke="#000" stroke-opacity="0" stroke-width="' + px(22) + '"><title>ドラッグで回す</title></circle>' +
+      '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + k[0] + '" y2="' + k[1] + '" stroke="#e5484d" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"/>' +
+      '<circle class="eKnob" data-act="ering" cx="' + k[0] + '" cy="' + k[1] + '" r="' + px(9) + '"><title>ドラッグで回す</title></circle>' +
+      '<text x="' + (p[0] + R * 0.75) + '" y="' + (p[1] - R * 0.8) + '" font-size="' + px(15) + '" fill="#e5484d" font-weight="700" pointer-events="none" paint-order="stroke" stroke="#fff" stroke-width="' + px(3) + '">' + esc(j.name) + " " + (Math.round(v * 10) / 10) + "°</text>";
+  }
+  return o;
+}
+function easyStartRot(e, jid) {
+  const j = rigJointById(jid); if (!j || !j.pos) return false;
+  motStop(); cancelAnimationFrame(poseAnim);
+  const p = posedJointPos(j), q = toSvg(e);
+  easyJoint = jid;
+  drag = { kind: "easyRot", jid: jid, pv: p, last: Math.atan2(q.y - p[1], q.x - p[0]), acc: 0, v0: pose[jid] || 0, moved: false };
+  stage.setPointerCapture(e.pointerId);
+  return true;
+}
+function easyDown(e, t) {
+  if (e.button !== 0 && e.pointerType === "mouse") return;
+  const act = t.dataset && t.dataset.act;
+  if (act === "ejoint") {
+    easyJoint = t.dataset.jid;
+    drag = { kind: "pan", lx: e.clientX, ly: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+    renderStage();
+    return;
+  }
+  if (act === "ering" && easyJoint) { easyStartRot(e, easyJoint); renderStage(); return; }
+  const g = t.closest ? t.closest("[data-pid]") : null;
+  const p = g ? partById(g.dataset.pid) : null;
+  const sg = p ? rigSeg(p) : null;
+  if (sg && EASY_SEG_JOINT[sg]) {
+    const sd = sg === "head" ? null : rigSide(p);
+    const jid = rigJointId(EASY_SEG_JOINT[sg], sd);
+    if ((sg === "head" || sd) && rigJointById(jid) && rigJointById(jid).pos && easyStartRot(e, jid)) { renderStage(); return; }
+  }
+  /* 体や何もない所：画面の移動（軽く押しただけなら、輪っかを消す） */
+  drag = { kind: "pan", lx: e.clientX, ly: e.clientY, easyTap: true };
+  stage.setPointerCapture(e.pointerId);
+}
+function easyMove(e) {
+  const d = drag, q = toSvg(e);
+  const a = Math.atan2(q.y - d.pv[1], q.x - d.pv[0]);
+  let da = a - d.last; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+  d.last = a; d.acc += da * 180 / Math.PI;
+  if (!d.moved && Math.abs(d.acc) < 0.5) return;
+  d.moved = true;
+  const rg = easyJointDef(d.jid).range;
+  const v = Math.round(Math.max(-rg, Math.min(rg, d.v0 + d.acc)) * 10) / 10;
+  if (Math.abs(v) < 0.05) delete pose[d.jid]; else pose[d.jid] = v;
+  if (poseSym && /_[RL]$/.test(d.jid)) {
+    const other = d.jid.replace(/_([RL])$/, function (m, s) { return s === "R" ? "_L" : "_R"; });
+    if (rigJointById(other)) { if (v) pose[other] = -v; else delete pose[other]; }
+  }
+  if (!showJoints) { showJoints = true; document.getElementById("jointsBtn").classList.add("on"); }
+  aimTip("🦴 " + (rigJointById(d.jid) || {}).name + "　" + v + "°");
+  renderStage();
+}
+function easyUp() {
+  const d = drag; drag = null;
+  aimTip("");
+  if (d.moved) {
+    renderPose();
+    const keys = ["j:" + d.jid];
+    if (poseSym && /_[RL]$/.test(d.jid)) keys.push("j:" + d.jid.replace(/_([RL])$/, function (m, s) { return s === "R" ? "_L" : "_R"; }));
+    motAutoKey(keys);
+  }
+  renderStage();
+}
 function toSvg(e) {
   const pt = new DOMPoint(e.clientX, e.clientY);
   return pt.matrixTransform(stage.getScreenCTM().inverse());
@@ -4332,6 +4499,7 @@ stage.addEventListener("pointerdown", function (e) {
     }
     if (selId !== recMorph.pid) selId = recMorph.pid;
   }
+  if (easyMode && !panMode && !recMorph) { easyDown(e, t); return; }
   if (!panMode && (poseActive() || defActive() || (morphActive() && !recMorph))) {
     drag = { kind: "pan", lx: e.clientX, ly: e.clientY };
     stage.setPointerCapture(e.pointerId);
@@ -4480,6 +4648,7 @@ stage.addEventListener("pointermove", function (e) {
   }
   if (!drag) return;
   if (drag.kind === "aim" || drag.kind === "aimMove") { aimMoveEv(e); return; }
+  if (drag.kind === "easyRot") { easyMove(e); return; }
   const sel = selId ? partById(selId) : null;
   if (drag.kind === "pan") {
     const scale = vb.w / stage.clientWidth;
@@ -4555,6 +4724,8 @@ stage.addEventListener("pointerup", function (e) {
   /* 二本指のうち一本を離した時は、残った指で何も始めない（次に全部離すまで待つ） */
   if (drag && drag.kind === "gesture" && activePointers.size > 0) { drag = { kind: "gestureEnd" }; return; }
   if (drag && (drag.kind === "aim" || drag.kind === "aimMove")) { aimUp(e); return; }
+  if (drag && drag.kind === "easyRot") { easyUp(); return; }
+  if (drag && drag.easyTap && Math.hypot(e.clientX - drag.lx, e.clientY - drag.ly) < 4 && easyJoint) easyJoint = null;
   if (drag) { if (drag.kind === "umove") saveUnder(); drag = null; save(); render(); }
 });
 stage.addEventListener("pointercancel", function (e) { activePointers.delete(e.pointerId); drag = null; aimHide(); });
@@ -4629,6 +4800,12 @@ document.getElementById("redoBtn").addEventListener("click", function () {
 });
 toggleBtn("centerBtn", function (on) { showCenter = on; renderStage(); });
 toggleBtn("jointsBtn", function (on) { showJoints = on; renderStage(); });
+toggleBtn("easyBtn", function (on) { easySetMode(on); });
+document.getElementById("easySymBtn").addEventListener("click", function () { poseSym = !poseSym; easySyncBtns(); renderPose(); });
+document.getElementById("easyResetBtn").addEventListener("click", function () {
+  const ks = Object.keys(pose).filter(function (k) { return pose[k]; }).map(function (k) { return "j:" + k; });
+  pose = {}; renderPose(); renderStage(); motAutoKey(ks);
+});
 toggleBtn("ghostBtn", function (on) { ghostOn = on; renderStage(); });
 toggleBtn("outlineBtn", function (on) { outlineOn = on; renderStage(); });
 (function () {
