@@ -1580,13 +1580,17 @@ function startMorphRec(p, name) {
   if (!sh || !Array.isArray(sh.points) || (sh.type !== "polygon" && sh.type !== "stroke")) { alert("変形は、多角形と線のパーツで記録できます。"); return; }
   pushUndo();
   morphVals = {};
-  recMorph = { pid: p.id, name: name, base: clone(sh.points) };
+  recMorph = { pid: p.id, name: name, base: clone(sh.points), mark: undoStack.length };   /* mark：ここより後の「元に戻す」は記録中の点の動き */
   if (sh.morphs && sh.morphs[name] && sh.morphs[name].length === sh.points.length) sh.points = clone(sh.morphs[name]);   /* 前に記録した形から直す */
   selPt = -1;
   render();
 }
 function finishMorphRec(keep) {
   if (!recMorph) return;
+  /* 記録中の細かい「元に戻す」の記録はまとめて片付ける（保存・やめるの後で、作りかけの形に戻ってしまわないように）。
+     記録を始める前の状態は残すので、保存した後に「元に戻す」を押すと、変形を記録する前に戻る */
+  if (undoStack.length > recMorph.mark) undoStack.length = recMorph.mark;
+  redoStack = [];
   const p = partById(recMorph.pid);
   if (p) {
     const sh = p.shape;
@@ -4071,13 +4075,20 @@ function toggleBtn(id, fn) {
 }
 document.getElementById("undoBtn").addEventListener("click", function () {
   if (!undoStack.length) return;
+  /* 変形の記録中は、記録中に動かした点だけを1つずつ戻す（記録は続ける）。
+     記録を始めたところより前まで戻すと、記録をやめて元の形に戻る */
+  const rec = recMorph, inRec = rec && undoStack.length > rec.mark;
   redoStack.push(snapshot());
   restore(undoStack.pop());
+  if (inRec) { recMorph = rec; selId = rec.pid; render(); }
+  else if (rec) { redoStack = []; render(); }
 });
 document.getElementById("redoBtn").addEventListener("click", function () {
   if (!redoStack.length) return;
+  const rec = recMorph;
   undoStack.push(snapshot());
   restore(redoStack.pop());
+  if (rec) { recMorph = rec; selId = rec.pid; render(); }
 });
 toggleBtn("centerBtn", function (on) { showCenter = on; renderStage(); });
 toggleBtn("jointsBtn", function (on) { showJoints = on; renderStage(); });
