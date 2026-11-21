@@ -285,8 +285,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「体の傾き」の回す中心を、片足の足もとにも選べるようにしました（片足に体重をかけるポーズに）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「呼吸」で伸び縮みするのを胴体だけにしました（頭・髪・腕は形を変えずに一緒に上下）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 23:50</span>「呼吸」で伸び縮みするのを胴体だけにしました。頭・髪は首の付け根、腕は肩の付け根が動いた分だけ、形を変えずに一緒に上下します。</div>
     <div class="newsItem"><span>11/21 23:00</span>「体の傾き」の設定に「回す中心」を追加。腰のほか「右足もと」「左足もと」を選ぶと、その足に体重をかけて全身ごと傾きます（動かすものは自動で「ぜんぶ」に）。浮いた側の脚は、試し曲げの「股」で外に開いて足先を床に戻します。</div>
     <div class="newsItem"><span>11/21 22:40</span>プロパティに「ゆれ・呼吸・体の動き」を追加。フォルダや体全体をまとめて動かす仕組み（Live2Dのデフォーマのようなもの）です。「ゆれ」は根元はそのまま毛先ほど大きく横にゆれ（髪・スカートなど）、「呼吸」は腰を基準に上半身が伸び縮み、「体の傾き」は腰を中心に上半身ごと傾き、「上下に弾む」は体ごと上下に動きます。どれもモーションの行にできます。</div>
     <div class="newsItem"><span>11/21 20:15</span>モーション（タイムライン）を、キャンバスの下から「画面の下に浮かぶパネル」に変えました。ツールバーの「🎬 モーション」で出し入れでき、パネルを出している間はキャンバスがパネルの上に収まる大きさになります。パネルにも「↶ 戻す・↷ やり直し」を付けました。高さは「▲ 大きく／▼ 小さく」で切り替えられます。</div>
@@ -1777,7 +1778,7 @@ function renderMorph() {
      呼吸・傾き・弾むは、関節の回転の外側からまとめてかける（腕を曲げていても一緒に動く） */
 const DEF_TYPES = {
   sway: { label: "ゆれ", hint: "根元はそのまま、毛先ほど大きく横にゆれる（髪・スカートなど）", amp: 12, unit: "%", ampLabel: "ゆれの大きさ（高さに対して）" },
-  breath: { label: "呼吸", hint: "腰を基準に、上半身が少しだけ上下に伸び縮みする", amp: 3, unit: "%", ampLabel: "伸び縮みの大きさ" },
+  breath: { label: "呼吸", hint: "腰から上の胴体が少しだけ上下に伸び縮みする（ズボンなど腰から下の服はそのまま。頭・髪・腕は形を変えずに一緒に上下する）", amp: 3, unit: "%", ampLabel: "伸び縮みの大きさ" },
   lean: { label: "体の傾き", hint: "腰を中心に上半身ごと傾く。回す中心を片足の足もとにすると、その足に体重をかけて全身ごと傾く", amp: 8, unit: "度", ampLabel: "傾きの大きさ" },
   bob: { label: "上下に弾む", hint: "体ごと上下に動く（ぴょこぴょこ）", amp: 10, unit: "px", ampLabel: "動く大きさ" }
 };
@@ -1816,8 +1817,16 @@ function buildDefCache() {
       ids[p.id] = true;
       if (d.type === "sway") (p.shape.points || []).forEach(function (pt) { if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; });
     });
-    const fp = (d.type === "lean" && (d.pivot === "footR" || d.pivot === "footL")) ? footPivot(d.pivot.slice(-1)) : null;
-    c[d.id] = { d: d, v: v, ids: ids, y0: y0, y1: y1, pv: fp || pv };
+    let fp = (d.type === "lean" && (d.pivot === "footR" || d.pivot === "footL")) ? footPivot(d.pivot.slice(-1)) : null;
+    /* 呼吸：腰より下が中心のパーツ（ズボン・スカートなど）は動かさない。脚から浮かないように */
+    const still = {};
+    if (d.type === "breath") ps.forEach(function (p) {
+      const k = rigSeg(p); if (k === "head" || k === "upperArm" || k === "foreArm" || k === "hand") return;
+      const pts = partPts(p); if (!pts.length) return;
+      let a = 1e9, b = -1e9; pts.forEach(function (pt) { if (pt[1] < a) a = pt[1]; if (pt[1] > b) b = pt[1]; });
+      if ((a + b) / 2 > pv[1]) still[p.id] = true;
+    });
+    c[d.id] = { d: d, v: v, ids: ids, y0: y0, y1: y1, pv: fp || pv, still: still };
   });
   defCache = c;
 }
@@ -1845,7 +1854,16 @@ function defTransform(p) {
     if (!e.ids[p.id] || d.type === "sway") return;
     const amp = d.amp != null ? d.amp : DEF_TYPES[d.type].amp, px = e.pv[0], py = e.pv[1];
     if (d.type === "lean") out.push("rotate(" + (e.v * amp).toFixed(2) + " " + px + " " + py + ")");
-    else if (d.type === "breath") { const s = 1 + e.v * amp / 100; out.push("translate(0 " + py + ") scale(1 " + s.toFixed(4) + ") translate(0 " + (-py) + ")"); }
+    else if (d.type === "breath") {
+      /* 伸び縮みするのは胴体だけ。頭・髪は首の付け根、腕は肩の付け根が動いた分だけ一緒に上下する */
+      const s = 1 + e.v * amp / 100, seg = rigSeg(p);
+      let anchor = null;
+      if (seg === "head") anchor = rigJointById("rig_neck");
+      else if (seg === "upperArm" || seg === "foreArm" || seg === "hand") anchor = rigJointById("rig_shoulder_" + (rigSide(p) || "R"));
+      if (e.still && e.still[p.id]) return;
+      if (anchor && anchor.pos) out.push("translate(0 " + ((anchor.pos[1] - py) * (s - 1)).toFixed(3) + ")");
+      else out.push("translate(0 " + py + ") scale(1 " + s.toFixed(4) + ") translate(0 " + (-py) + ")");
+    }
     else if (d.type === "bob") out.push("translate(0 " + (e.v * amp).toFixed(2) + ")");
   });
   return out.join(" ");
