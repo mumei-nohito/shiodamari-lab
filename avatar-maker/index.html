@@ -175,7 +175,15 @@
   .poseRow { display:grid; grid-template-columns:5.5em 1fr 3.2em; gap:6px; align-items:center; font-size:12.5px; margin:3px 0; }
   .poseRow input[type=range] { width:100%; }
   .poseName { font-weight:700; color:var(--fg); white-space:nowrap; }
-  .motionAcc { margin-top:10px; }
+  /* モーションのパネル：画面の下に浮かべて、キャンバスを見ながら作業する（本棚ラボのパネルと同じ考え方） */
+  #motionDock { position:fixed; left:12px; right:12px; bottom:0; z-index:46; height:var(--mdockh, 300px); display:flex; flex-direction:column;
+    background:var(--card); color:var(--fg); border:1.5px solid var(--ac); border-bottom:none; border-radius:14px 14px 0 0; box-shadow:0 -6px 22px rgba(0,0,0,.25); }
+  #motionDock[hidden] { display:none; }
+  .motDockHead { display:flex; gap:6px; align-items:center; padding:7px 10px; border-bottom:1px solid var(--line); }
+  .motDockBody { flex:1; min-height:0; overflow:auto; padding:4px 12px 10px; overscroll-behavior:contain; }
+  body.motOpen { padding-bottom:calc(var(--mdockh, 300px) + 8px); }
+  body.motOpen #stage { max-height:calc(100vh - var(--mdockh, 300px) - 150px); min-height:220px; }
+  #motionDockBtn.on { background:var(--ac); color:var(--on); border-color:var(--ac); }
   .motTop { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:4px 0; }
   .motGrid { display:grid; grid-template-columns:minmax(110px, 190px) minmax(0, 1fr); gap:3px 8px; margin-top:6px; align-items:center; }
   .motLabel { display:flex; gap:4px; align-items:center; font-size:12.5px; font-weight:700; min-width:0; }
@@ -249,6 +257,9 @@
     #sidePanel.sheet-shut .panelScroll { display:none; }
     body { padding-bottom:var(--shpad, 34dvh); }
     #stage { max-height:calc(100dvh - var(--shpad, 34dvh) - 24px); }
+    #motionDock { left:0; right:0; bottom:var(--shpad, 34dvh); height:min(var(--mdockh, 300px), 40dvh); border-radius:14px 14px 0 0; }
+    body.motOpen { padding-bottom:calc(var(--shpad, 34dvh) + min(var(--mdockh, 300px), 40dvh)); }
+    body.motOpen #stage { max-height:calc(100dvh - var(--shpad, 34dvh) - min(var(--mdockh, 300px), 40dvh) - 24px); min-height:160px; }
     .top { padding:14px 14px 2px; }
   }
 </style>
@@ -271,8 +282,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「🎬 モーション（タイムライン）」を追加しました（キーフレームで関節と表情を動かせます）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 モーションのパネルを、画面の下に浮かぶパネルにしました（ツールバーの「🎬 モーション」）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 20:15</span>モーション（タイムライン）を、キャンバスの下から「画面の下に浮かぶパネル」に変えました。ツールバーの「🎬 モーション」で出し入れでき、パネルを出している間はキャンバスがパネルの上に収まる大きさになります。パネルにも「↶ 戻す・↷ やり直し」を付けました。高さは「▲ 大きく／▼ 小さく」で切り替えられます。</div>
     <div class="newsItem"><span>11/21 19:00</span>キャンバスの下に「🎬 モーション（タイムライン）」を追加。関節の角度と表情（変形）を、時間ごとのキーフレームで動かせます。キーフレームごとに「なめらか・一定・ゆっくり始まる・ゆっくり止まる・パッと切り替え」を選べて、細かく打てば動きの緩急も作れます。保存したポーズをキーフレームとして置く、変形の行に「瞬き」をワンタッチで入れる、くり返し再生もできます。モーションはアバターのデータに入り、書き出しにも入ります。</div>
     <div class="newsItem"><span>11/21 16:00</span>「↔ 反対側へ」を、名前に左右が無い変形（例：瞬き）でも使えるようにしました。同じ名前のまま反対側の目に写るので、スライダー1本で両目が動きます。あとからウインクしたくなったら「左右に分ける」で「瞬き・左」「瞬き・右」に分けられます。</div>
     <div class="newsItem"><span>11/21 14:00</span>「表情（変形）」に「↔ 反対側へ」を追加。「まばたき・左」を記録したら、反対側の目（名前の左右を入れ替えたパーツ）へ鏡写しで写せます。元の形からの動きを写すので、反対側の目の形が少し違っても大丈夫です。「左右をいっしょに動かす」がオンの時は、左右のペアの変形がスライダー1本で一緒に動きます（ウインクしたい時はオフに）。</div>
@@ -439,6 +451,17 @@
 </div>
 
 <div class="aimCross" id="aimCross"></div><div class="aimRing" id="aimRing"></div><div class="aimRing grab" id="aimGrabRing"></div><div class="aimTip" id="aimTip"></div>
+<div id="motionDock" hidden>
+  <div class="motDockHead">
+    <b>🎬 モーション</b>
+    <button class="gbtn" id="mdUndo" title="元に戻す">↶ 戻す</button>
+    <button class="gbtn" id="mdRedo" title="やり直し">↷ やり直し</button>
+    <span style="flex:1"></span>
+    <button class="gbtn" id="mdSize" title="パネルの高さを切り替える">▲ 大きく</button>
+    <button class="gbtn" id="mdClose" title="パネルをしまう">✕ しまう</button>
+  </div>
+  <div class="motDockBody"><div id="motionBox"></div></div>
+</div>
 <main id="layout">
   <section class="card" id="stageWrap">
     <div class="toolbar">
@@ -449,6 +472,7 @@
       <button class="pill" id="jointsBtn">関節</button>
       <button class="pill" id="ghostBtn">反転ゴースト</button>
       <button class="pill" id="outlineBtn" title="すべてのパーツの輪郭を線で表示（重なり方や関節の玉の位置の確認に）">輪郭線</button>
+      <button class="pill" id="motionDockBtn" title="モーション（タイムライン）のパネルを、画面の下に出す／しまう">🎬 モーション</button>
       <span class="tlabel">操作</span>
       <button class="pill on" id="modePtBtn">点を動かす</button>
       <button class="pill" id="modePanBtn">画面を動かす</button>
@@ -474,10 +498,7 @@
       <button class="pill" id="vaultBtn">📚 保管庫</button>
       <span class="mini">編集中：<b id="curAvatarName">―</b></span>
     </div>
-    <details class="acc motionAcc" id="motionAcc">
-      <summary>🎬 モーション（タイムライン）</summary>
-      <div class="accBody"><div id="motionBox"></div></div>
-    </details>
+
     <p class="note">JSONは形だけのデータ（着せ替えツールに渡す用）。ZIPは下絵の画像と位置、フォルダなどの作業状態まで入るので、別の端末やブラウザで続きをする時に使います。本棚ラボのバックアップZIPからの取り込みは次の版で対応します。</p>
   </section>
 
@@ -1818,7 +1839,7 @@ function syncMotHead() {
 }
 function renderMotion() {
   const box = document.getElementById("motionBox");
-  if (!box) return;
+  if (!box || !docData) return;
   const ms = motionsOf();
   if (motSelId && !curMotion()) motSelId = null;
   if (!motSelId && ms.length) motSelId = ms[0].id;
@@ -4354,6 +4375,37 @@ stage.addEventListener("wheel", function (e) {
 function toggleBtn(id, fn) {
   document.getElementById(id).addEventListener("click", function () { this.classList.toggle("on"); fn(this.classList.contains("on")); });
 }
+/* PCでは、モーションのパネルをキャンバスの列の幅だけに置く（右のパネルの関節・表情のスライダーを隠さないように） */
+function placeMotionDock() {
+  const dock = document.getElementById("motionDock");
+  if (!dock || dock.hidden) return;
+  if (window.innerWidth <= 720) { dock.style.left = ""; dock.style.width = ""; dock.style.right = ""; return; }
+  const col = document.getElementById("stage").closest("section") || document.getElementById("stage").parentNode;
+  const r = col.getBoundingClientRect();
+  dock.style.left = Math.max(0, r.left) + "px"; dock.style.width = r.width + "px"; dock.style.right = "auto";
+}
+window.addEventListener("resize", placeMotionDock);
+/* モーションのパネルを出す・しまう・高さを変える（開いているか・高さを覚えておく） */
+(function () {
+  const dock = document.getElementById("motionDock"), btn = document.getElementById("motionDockBtn"), sz = document.getElementById("mdSize");
+  let big = false;
+  const apply = function (open) {
+    dock.hidden = !open; placeMotionDock(); btn.classList.toggle("on", open); document.body.classList.toggle("motOpen", open);
+    document.documentElement.style.setProperty("--mdockh", big ? "58vh" : "300px");
+    sz.textContent = big ? "▼ 小さく" : "▲ 大きく";
+    try { LS.setItem("avatarMakerMotionDock", open ? (big ? "big" : "1") : "0"); } catch (e) {}
+    if (open) renderMotion();
+    renderStage();
+  };
+  btn.addEventListener("click", function () { apply(dock.hidden); });
+  document.getElementById("mdClose").addEventListener("click", function () { apply(false); });
+  sz.addEventListener("click", function () { big = !big; apply(true); });
+  document.getElementById("mdUndo").addEventListener("click", function () { document.getElementById("undoBtn").click(); });
+  document.getElementById("mdRedo").addEventListener("click", function () { document.getElementById("redoBtn").click(); });
+  let st = "0"; try { st = LS.getItem("avatarMakerMotionDock") || "0"; } catch (e) {}
+  big = st === "big";
+  if (st !== "0") setTimeout(function () { apply(true); }, 0);   /* 起動の準備（データの読み込み）が終わってから開く */
+})();
 document.getElementById("undoBtn").addEventListener("click", function () {
   if (!undoStack.length) return;
   /* 変形の記録中は、記録中に動かした点だけを1つずつ戻す（記録は続ける）。
@@ -4441,6 +4493,7 @@ function curSideW() { return document.getElementById("sidePanel").getBoundingCli
   let saved = SIDEW_DEF;
   try { const v = parseFloat(LS.getItem(SIDEW_KEY)); if (v > 0) saved = v; } catch (e) {}
   setSideW(saved, false);
+  setTimeout(placeMotionDock, 0);
   const rz = document.getElementById("sideResizer");
   let st = null;
   rz.addEventListener("pointerdown", function (e) {
@@ -4451,6 +4504,7 @@ function curSideW() { return document.getElementById("sidePanel").getBoundingCli
   rz.addEventListener("pointermove", function (e) {
     if (!st) return;
     setSideW(st.w + (st.x - e.clientX), false);
+    placeMotionDock();
   });
   const end = function () {
     if (!st) return;
@@ -4465,7 +4519,7 @@ function curSideW() { return document.getElementById("sidePanel").getBoundingCli
     /* 名前を確かめたい時用：画面の半分くらいまで一気に広げる。もう一度押すと元の幅 */
     if (curSideW() > SIDEW_DEF + 60) setSideW(SIDEW_DEF);
     else setSideW(Math.max(560, window.innerWidth * 0.55));
-    renderStage();
+    renderStage(); placeMotionDock();
   });
   window.addEventListener("resize", function () {
     if (window.innerWidth > 720 && curSideW() > sideWMax()) setSideW(sideWMax(), false);
@@ -4474,10 +4528,12 @@ function curSideW() { return document.getElementById("sidePanel").getBoundingCli
 document.getElementById("collapseSide").addEventListener("click", function () {
   document.getElementById("sidePanel").classList.add("closed");
   document.getElementById("layout").classList.add("closedR");
+  setTimeout(placeMotionDock, 0);
 });
 document.getElementById("expandSide").addEventListener("click", function () {
   document.getElementById("sidePanel").classList.remove("closed");
   document.getElementById("layout").classList.remove("closedR");
+  setTimeout(placeMotionDock, 0);
 });
 /* スマホの下のパネル：高さ（大・中・畳む）を切り替えて覚えておく。ページ下の余白もパネルの高さに合わせる */
 const SHEET_KEY = "avatarMakerSheet";
