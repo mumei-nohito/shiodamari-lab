@@ -175,6 +175,8 @@
   .poseRow { display:grid; grid-template-columns:5.5em 1fr 3.2em; gap:6px; align-items:center; font-size:12.5px; margin:3px 0; }
   .poseRow input[type=range] { width:100%; }
   .poseName { font-weight:700; color:var(--fg); white-space:nowrap; }
+  .poseLayerBox .poseRow { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px; align-items:center; }
+  .poseLayerBox select { width:100%; min-width:0; }
   .poseVal { text-align:right; color:var(--mut); font-variant-numeric:tabular-nums; }
   .gaddRow { display:flex; flex-wrap:wrap; gap:4px; align-items:center; padding:4px 2px 2px; border-top:1px dashed var(--line); margin-top:3px; }
   .gkids { margin-left:5px; padding-left:6px; border-left:2px solid var(--line); }
@@ -251,8 +253,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 試し曲げに「手足を丸ごとずらす」を追加しました（腕を外側へ、など）。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 腕の重なりを「上腕」と「前腕と手」で別々に選べるようにしました（腕組みなどに）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 13:00</span>試し曲げの「腕の重なり」を、上腕と「前腕と手」で別々に選べるようにしました。上腕は体の横のまま、前腕と手だけ体の前に出す（腕組み）、のようなポーズが確かめられます。</div>
     <div class="newsItem"><span>11/21 02:40</span>関節の試し曲げの下に「手足を丸ごとずらす」を追加。右腕・左腕・右脚・左脚を選んで「外へ・内へ・上へ・下へ」を押すと、その手足のパーツ（服の袖など一緒に動くパーツも）と関節をまとめて動かします。反対側も左右対称に動かせて、曲げたままでも使えます。</div>
     <div class="newsItem"><span>11/21 02:20</span>試し曲げに「腕の重なり」を追加。右腕・左腕ごとに「頭や体より手前」「体と頭の後ろ（後ろ髪よりは手前）」を切り替えて、手を頭の後ろに回すポーズなどを確かめられます。服の袖など腕と一緒に動くパーツもついてきます。見た目の確認用で、データの重なり順は変わりません。</div>
     <div class="newsItem"><span>11/21 02:00</span>「頭」のような一番上の階層のフォルダの中身の間に、腕（関節で動くパーツ）が挟まっている時も「⚠ 重なりがバラバラ」を出すようにしました。まっすぐの時は重ならなくても、試し曲げで腕を上げると「顔や耳より手前・髪より奥」に入り込んでしまうためです。</div>
@@ -1447,7 +1450,7 @@ let pose = {};
 let poseSym = true;
 /* 試し曲げ用：腕の重なりの切り替え（見た目だけ。データの重なり順は変えない）
    ""＝データの順番のまま／"front"＝頭や体より手前／"back"＝体と頭の後ろ（後ろ髪よりは手前） */
-let poseLayer = { R: "", L: "" };
+let poseLayer = { R: "", L: "", Rlow: "", Llow: "" };   /* R・L＝上腕、Rlow・Llow＝前腕と手（"same"なら上腕と同じ） */
 /* ============ 手足を丸ごとずらす ============
    腕（または脚）のパーツ・その手足と一緒に動く服のパーツ・その手足の関節を、まとめて同じだけ動かす。
    試し曲げ中でも使える（曲げたまま見比べながら、外へ・内へ寄せられる） */
@@ -1479,12 +1482,14 @@ function moveLimb(kind, side, out, down) {
 }
 function isArmPart(p) { const k = rigSeg(p); return k === "upperArm" || k === "foreArm" || k === "hand"; }
 function drawOrder(list) {
-  if (!poseLayer.R && !poseLayer.L) return list;
+  if (!poseLayer.R && !poseLayer.L && !poseLayer.Rlow && !poseLayer.Llow) return list;
   const torso = docData.parts.filter(function (q) { return q.category !== "background" && !rigSeg(q); });
   const backZ = torso.length ? Math.min.apply(null, torso.map(function (q) { return q.z; })) - 0.5 : -0.5;
   const key = function (p) {
     if (isArmPart(p)) {
-      const lay = poseLayer[rigSide(p)];
+      const sd = rigSide(p), low = rigSeg(p) !== "upperArm";
+      /* 前腕・手は、別に決めていなければ上腕と同じ（腕組みなど、前腕だけ体の前に出す時は別々に） */
+      const lay = (low && poseLayer[sd + "low"]) ? poseLayer[sd + "low"] : poseLayer[sd];
       if (lay === "front") return 1e6 + p.z;
       if (lay === "back") return backZ + p.z * 1e-6;
     }
@@ -1543,16 +1548,19 @@ function renderPose() {
     const v = pose[j.id] || 0;
     h += '<div class="poseRow"><span class="poseName">' + esc(j.name) + '</span><input type="range" min="' + (-def.range) + '" max="' + def.range + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
   });
-  const layOpt = function (side) {
-    const v = poseLayer[side] || "";
-    return '<select data-poselayer="' + side + '">' +
-      '<option value=""' + (v === "" ? " selected" : "") + '>いつもの順番</option>' +
-      '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体より前）</option>' +
+  const layOpt = function (side, low) {
+    const key = side + (low ? "low" : ""), v = poseLayer[key] || "";
+    return '<select data-poselayer="' + key + '">' +
+      '<option value=""' + (v === "" ? " selected" : "") + '>' + (low ? "上腕と同じ" : "いつもの順番") + '</option>' +
+      '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体の前）</option>' +
       '<option value="back"' + (v === "back" ? " selected" : "") + '>後ろ（頭・体の奥）</option></select>';
   };
-  h += '<div class="fld" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
-    '<div class="poseRow"><span class="poseName">右腕</span>' + layOpt("R") + '</div>' +
-    '<div class="poseRow"><span class="poseName">左腕</span>' + layOpt("L") + '</div>' +
+  h += '<div class="fld poseLayerBox" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
+    '<div class="poseRow"><span class="poseName">右・上腕</span>' + layOpt("R") + '</div>' +
+    '<div class="poseRow"><span class="poseName">右・前腕と手</span>' + layOpt("R", true) + '</div>' +
+    '<div class="poseRow"><span class="poseName">左・上腕</span>' + layOpt("L") + '</div>' +
+    '<div class="poseRow"><span class="poseName">左・前腕と手</span>' + layOpt("L", true) + '</div>' +
+    '<p class="note">例：腕組み＝上腕は「いつもの順番」のまま、前腕と手だけ「手前」にして、肘を曲げる。斜め向きで奥の腕を隠す＝その腕を「後ろ」に。</p>' +
     '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>';
   {
     const tg = limbTarget.split(":"), kind = tg[0], side = tg[1] || "R";
@@ -1599,7 +1607,7 @@ function renderPose() {
   box.querySelectorAll("[data-poselayer]").forEach(function (sl) {
     sl.addEventListener("change", function () { poseLayer[sl.dataset.poselayer] = sl.value; renderStage(); });
   });
-  box.querySelector("#poseReset").addEventListener("click", function () { pose = {}; poseLayer = { R: "", L: "" }; renderPose(); renderStage(); });
+  box.querySelector("#poseReset").addEventListener("click", function () { pose = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
   const vis = drawOrder(sortedParts().filter(function (p) { return !ed(p.id).hidden; }));
