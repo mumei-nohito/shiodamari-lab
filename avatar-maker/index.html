@@ -258,8 +258,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 変形を反対側へ写す「↔ 反対側へ」と、左右いっしょに動かすスライダーを追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 名前に左右が無い変形（例：瞬き）も「↔ 反対側へ」で写せるようにしました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 16:00</span>「↔ 反対側へ」を、名前に左右が無い変形（例：瞬き）でも使えるようにしました。同じ名前のまま反対側の目に写るので、スライダー1本で両目が動きます。あとからウインクしたくなったら「左右に分ける」で「瞬き・左」「瞬き・右」に分けられます。</div>
     <div class="newsItem"><span>11/21 14:00</span>「表情（変形）」に「↔ 反対側へ」を追加。「まばたき・左」を記録したら、反対側の目（名前の左右を入れ替えたパーツ）へ鏡写しで写せます。元の形からの動きを写すので、反対側の目の形が少し違っても大丈夫です。「左右をいっしょに動かす」がオンの時は、左右のペアの変形がスライダー1本で一緒に動きます（ウインクしたい時はオフに）。</div>
     <div class="newsItem"><span>11/21 14:00</span>プロパティに「表情（変形）」を追加。パーツの点の位置違い（例：閉じた目）を名前を付けて記録し、スライダー0〜100%で元の形からなめらかに変形させられます（Live2Dのメッシュの代わり）。同じ名前で複数のパーツ（上まつ毛・白目など）に記録すると一緒に動き、白目でマスクした瞳も白目に合わせて隠れます。移動・拡大・回転・鏡写し・点の追加と削除にも、変形の形がついていきます。</div>
     <div class="newsItem"><span>11/21 13:20</span>試し曲げに「ポーズの保存」を追加。曲げ方と腕の重なりに名前を付けて保存し、ボタン一つで呼び出せます（今の形からなめらかに動きます）。上書き・名前の変更・削除もできます。保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</div>
@@ -1504,16 +1505,43 @@ let recMorph = null;   /* 記録中：{ pid, name, base: 元の点 } */
 /* 「まばたき・左」と「まばたき・右」のように左右だけ違う名前の変形は、ふだんは1本のスライダーで一緒に動かす（ウインクしたい時は切る） */
 let morphLinkLR = (function () { try { return LS.getItem("avatarMakerMorphLink") !== "0"; } catch (e) { return true; } })();
 function morphPartner(k) { const o = swapLR(k); return (o !== k && morphNames().indexOf(o) >= 0) ? o : null; }
+/* 名前に左右が無い変形が、左右両方のパーツに付いているか（「左右に分ける」を出すかどうか） */
+function morphSplittable(k) {
+  let l = false, r = false;
+  docData.parts.forEach(function (p) {
+    if (!(p.shape && p.shape.morphs && p.shape.morphs[k])) return;
+    const sd = /左/.test(p.name + "/" + (p.group || "")) ? "L" : /右/.test(p.name + "/" + (p.group || "")) ? "R" : "";
+    if (sd === "L") l = true; if (sd === "R") r = true;
+  });
+  return l && r;
+}
+function splitMorphLR(k) {
+  pushUndo();
+  let n = 0;
+  docData.parts.forEach(function (p) {
+    const ms = p.shape && p.shape.morphs;
+    if (!ms || !ms[k]) return;
+    const nm = p.name + "/" + (p.group || "");
+    const sd = /左/.test(nm) ? "左" : /右/.test(nm) ? "右" : "";
+    if (!sd) return;
+    ms[k + "・" + sd] = ms[k]; delete ms[k]; n++;
+  });
+  if (morphVals[k] != null) { morphVals[k + "・左"] = morphVals[k + "・右"] = morphVals[k]; delete morphVals[k]; }
+  save(); render();
+  alert("「" + k + "」を「" + k + "・左」「" + k + "・右」に分けました（" + n + "パーツ）。\n「左右をいっしょに動かす」をオフにすると、片目ずつ動かせます（ウインク）。");
+}
 function morphBaseLabel(k) { return k.replace(/[・ー\-_ ]?[左右](?=$|[・ー\-_ ])/, "") || k; }
 /* 変形を反対側のパーツへ写す。反対側のパーツ＝名前とフォルダの左右を入れ替えたもの（鏡写しコピーで作ったものなら、点の順番が同じ）。
    元の形からの動き（ずれ）を左右反転して写すので、反対側の目の形が少し違っていても、その目の形を元に閉じる */
 function copyMorphToOtherSide(name) {
   const done = [], skip = [];
-  const to = swapLR(name);
+  const to = swapLR(name);   /* 名前に左右が無い時（例：瞬き）は同じ名前で写す → スライダー1本で両目が動く */
   pushUndo();
-  docData.parts.forEach(function (p) {
-    const m = p.shape && p.shape.morphs && p.shape.morphs[name];
-    if (!m) return;
+  const sources = docData.parts.filter(function (p) { return p.shape && p.shape.morphs && p.shape.morphs[name]; });
+  const written = {};
+  sources.forEach(function (p) {
+    if (written[p.id]) return;   /* 今回写した先のパーツから、また写し返さない */
+    const m = p.shape.morphs[name];
     const on = swapLR(p.name), og = p.group ? swapLR(p.group) : p.group;
     const q = docData.parts.find(function (x) { return x.id !== p.id && x.name === on && (x.group || null) === (og || null); });
     if (!q || on === p.name) { skip.push("「" + p.name + "」（反対側のパーツが見つからない）"); return; }
@@ -1527,6 +1555,7 @@ function copyMorphToOtherSide(name) {
     });
     if (!q.shape.morphs) q.shape.morphs = {};
     q.shape.morphs[to] = out;
+    written[q.id] = true;
     done.push(q.name);
   });
   save(); render();
@@ -1638,9 +1667,10 @@ function renderMorph() {
         const v = Math.round((morphVals[k] || 0) * 100);
         const label = pk ? morphBaseLabel(k) + "（左右）" : k;
         return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(pk ? k + "・" + pk : k) + '">' + esc(label) + '</span><input type="range" min="0" max="100" step="1" value="' + v + '" data-morph="' + esc(k) + '"' + (pk ? ' data-morph2="' + esc(pk) + '"' : "") + '><span class="poseVal" data-morphv="' + esc(k) + '">' + v + "%</span>" +
-          (!pk && swapLR(k) !== k ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します">↔ 反対側へ</button>' : "") + "</div>";
+          (!pk ? '<button class="pill sm" data-morphcopy="' + esc(k) + '" title="この変形を、反対側の同じパーツ（左右を入れ替えた名前）へ鏡写しで写します' + (swapLR(k) === k ? "。名前に左右が無いので同じ名前で写り、スライダー1本で両側が動きます" : "") + '">↔ 反対側へ</button>' : "") +
+          (swapLR(k) === k && morphSplittable(k) ? '<button class="pill sm" data-morphsplit="' + esc(k) + '" title="左のパーツの分を「' + esc(k) + '・左」、右のパーツの分を「' + esc(k) + '・右」に分けて、ウインクできるようにします">左右に分ける</button>' : "") + "</div>";
       }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="morphZero">全部 0% に戻す</button></div>' +
-      '<p class="note">「まばたき・左」のように名前に左右が入った変形は「↔ 反対側へ」で、反対側の目（鏡写しで作ったパーツ）にも写せます。</p>' +
+      '<p class="note">「↔ 反対側へ」で、反対側の目（名前の左右を入れ替えたパーツ）にも写せます。名前に左右が無い変形（例：瞬き）は同じ名前で写るので、スライダー1本で両目が動きます。ウインクしたくなったら「左右に分ける」。</p>' +
       '<p class="note">スライダーは見た目の確認用です（パーツの形は変わりません）。0%以外の間は、キャンバスでの形の編集はお休みです。</p></div>';
   } else {
     h += '<p class="mini">まだ変形がありません。パーツを選んで、下の「変形を記録」から作れます。</p>';
@@ -1668,6 +1698,7 @@ function renderMorph() {
   const ml = box.querySelector("#morphLink");
   if (ml) ml.addEventListener("change", function () { morphLinkLR = ml.checked; try { LS.setItem("avatarMakerMorphLink", ml.checked ? "1" : "0"); } catch (e) {} renderMorph(); });
   box.querySelectorAll("[data-morphcopy]").forEach(function (b) { b.addEventListener("click", function () { copyMorphToOtherSide(b.dataset.morphcopy); }); });
+  box.querySelectorAll("[data-morphsplit]").forEach(function (b) { b.addEventListener("click", function () { splitMorphLR(b.dataset.morphsplit); }); });
   const mz = box.querySelector("#morphZero");
   if (mz) mz.addEventListener("click", function () { morphVals = {}; renderMorph(); renderStage(); });
   const rb = box.querySelector("#morphRecBtn");
