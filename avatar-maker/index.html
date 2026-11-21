@@ -175,6 +175,19 @@
   .poseRow { display:grid; grid-template-columns:5.5em 1fr 3.2em; gap:6px; align-items:center; font-size:12.5px; margin:3px 0; }
   .poseRow input[type=range] { width:100%; }
   .poseName { font-weight:700; color:var(--fg); white-space:nowrap; }
+  .motionAcc { margin-top:10px; }
+  .motTop { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:4px 0; }
+  .motGrid { display:grid; grid-template-columns:minmax(110px, 190px) minmax(0, 1fr); gap:3px 8px; margin-top:6px; align-items:center; }
+  .motLabel { display:flex; gap:4px; align-items:center; font-size:12.5px; font-weight:700; min-width:0; }
+  .motLabel span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  .motLane { position:relative; height:26px; background:var(--soft); border:1px solid var(--line); border-radius:6px; cursor:pointer; touch-action:none; }
+  .motRuler { height:18px; background:transparent; border:none; border-bottom:1px solid var(--line); border-radius:0; cursor:default; }
+  .motTick { position:absolute; top:0; transform:translateX(-50%); font-size:10.5px; color:var(--mut); }
+  .motHead { position:absolute; top:-2px; bottom:-2px; width:2px; margin-left:-1px; background:#e0457b; pointer-events:none; }
+  .motKey { position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; background:var(--ac); border:2px solid var(--card); transform:rotate(45deg); cursor:grab; box-shadow:0 0 0 1px var(--ac); }
+  .motKey.step { border-radius:2px; background:var(--card); }
+  .motKey.on { background:#ff8c42; box-shadow:0 0 0 2px #ff8c42; }
+  .motKeyBox { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; }
   .morphRow { display:grid; grid-template-columns:auto minmax(60px,1fr) auto auto; gap:6px; align-items:center; }
   .recBox { background:var(--warnbg, #fff4e0); color:var(--warnfg, #8a4b00); border:1.5px solid var(--warnhd, #b3540e); border-radius:12px; padding:10px 12px; }
   .recBox .mini { color:inherit; }
@@ -258,8 +271,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 名前に左右が無い変形（例：瞬き）も「↔ 反対側へ」で写せるようにしました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/21 「🎬 モーション（タイムライン）」を追加しました（キーフレームで関節と表情を動かせます）。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/21 19:00</span>キャンバスの下に「🎬 モーション（タイムライン）」を追加。関節の角度と表情（変形）を、時間ごとのキーフレームで動かせます。キーフレームごとに「なめらか・一定・ゆっくり始まる・ゆっくり止まる・パッと切り替え」を選べて、細かく打てば動きの緩急も作れます。保存したポーズをキーフレームとして置く、変形の行に「瞬き」をワンタッチで入れる、くり返し再生もできます。モーションはアバターのデータに入り、書き出しにも入ります。</div>
     <div class="newsItem"><span>11/21 16:00</span>「↔ 反対側へ」を、名前に左右が無い変形（例：瞬き）でも使えるようにしました。同じ名前のまま反対側の目に写るので、スライダー1本で両目が動きます。あとからウインクしたくなったら「左右に分ける」で「瞬き・左」「瞬き・右」に分けられます。</div>
     <div class="newsItem"><span>11/21 14:00</span>「表情（変形）」に「↔ 反対側へ」を追加。「まばたき・左」を記録したら、反対側の目（名前の左右を入れ替えたパーツ）へ鏡写しで写せます。元の形からの動きを写すので、反対側の目の形が少し違っても大丈夫です。「左右をいっしょに動かす」がオンの時は、左右のペアの変形がスライダー1本で一緒に動きます（ウインクしたい時はオフに）。</div>
     <div class="newsItem"><span>11/21 14:00</span>プロパティに「表情（変形）」を追加。パーツの点の位置違い（例：閉じた目）を名前を付けて記録し、スライダー0〜100%で元の形からなめらかに変形させられます（Live2Dのメッシュの代わり）。同じ名前で複数のパーツ（上まつ毛・白目など）に記録すると一緒に動き、白目でマスクした瞳も白目に合わせて隠れます。移動・拡大・回転・鏡写し・点の追加と削除にも、変形の形がついていきます。</div>
@@ -460,6 +474,10 @@
       <button class="pill" id="vaultBtn">📚 保管庫</button>
       <span class="mini">編集中：<b id="curAvatarName">―</b></span>
     </div>
+    <details class="acc motionAcc" id="motionAcc">
+      <summary>🎬 モーション（タイムライン）</summary>
+      <div class="accBody"><div id="motionBox"></div></div>
+    </details>
     <p class="note">JSONは形だけのデータ（着せ替えツールに渡す用）。ZIPは下絵の画像と位置、フォルダなどの作業状態まで入るので、別の端末やブラウザで続きをする時に使います。本棚ラボのバックアップZIPからの取り込みは次の版で対応します。</p>
   </section>
 
@@ -1719,6 +1737,238 @@ function renderMorph() {
     });
   });
 }
+/* ============ モーション（タイムライン） ============
+   docData.motions = [{ id, name, dur: 秒, loop: true, tracks: [{ key: "j:関節id" | "m:変形の名前", keys: [{ t: 秒, v: 値, ease }] }] }]
+   ・関節の値は角度（度）、変形の値は 0〜1
+   ・ease＝そのキーフレームから次のキーフレームまでの動き方：smooth なめらか／linear 一定／in ゆっくり始まる／out ゆっくり止まる／step パッと切り替え
+   ・キーフレームを細かく打てば、グラフエディタの代わりに動きの緩急を作れる */
+const EASES = [["smooth", "なめらか"], ["linear", "一定"], ["in", "ゆっくり始まる"], ["out", "ゆっくり止まる"], ["step", "パッと切り替え"]];
+let motSelId = null, motTime = 0, motPlaying = false, motRaf = 0, motKeySel = null;   /* motKeySel = { ti: 行の番号, ki: キーの番号 } */
+function motionsOf() { if (!Array.isArray(docData.motions)) docData.motions = []; return docData.motions; }
+function curMotion() { return motionsOf().find(function (m) { return m.id === motSelId; }) || null; }
+function easeU(e, u) {
+  if (e === "linear") return u;
+  if (e === "in") return u * u;
+  if (e === "out") return 1 - (1 - u) * (1 - u);
+  if (e === "step") return 0;
+  return u * u * (3 - 2 * u);
+}
+function trackValue(tr, t) {
+  const ks = tr.keys;
+  if (!ks.length) return null;
+  if (t <= ks[0].t) return ks[0].v;
+  for (let i = 0; i < ks.length - 1; i++) {
+    const a = ks[i], b = ks[i + 1];
+    if (t >= a.t && t <= b.t) { const u = b.t > a.t ? (t - a.t) / (b.t - a.t) : 1; return a.v + (b.v - a.v) * easeU(a.ease, u); }
+  }
+  return ks[ks.length - 1].v;
+}
+function trackLabel(key) {
+  if (key.indexOf("j:") === 0) { const j = rigJointById(key.slice(2)); return "🦴 " + (j ? j.name : key.slice(2)); }
+  return "😊 " + key.slice(2);
+}
+function trackCurrent(key) {
+  if (key.indexOf("j:") === 0) return pose[key.slice(2)] || 0;
+  return morphVals[key.slice(2)] || 0;
+}
+/* 選んだ時間の値を、試し曲げ・変形に反映する（そのモーションにある行だけ） */
+function applyMotionAt(m, t, light) {
+  if (!m) return;
+  m.tracks.forEach(function (tr) {
+    const v = trackValue(tr, t);
+    if (v == null) return;
+    if (tr.key.indexOf("j:") === 0) { const id = tr.key.slice(2); if (Math.abs(v) < 0.05) delete pose[id]; else pose[id] = Math.round(v * 10) / 10; }
+    else { const k = tr.key.slice(2); if (v < 0.001) delete morphVals[k]; else morphVals[k] = Math.min(1, Math.max(0, v)); }
+  });
+  if (!showJoints && Object.keys(pose).length) { showJoints = true; const jb = document.getElementById("jointsBtn"); if (jb) jb.classList.add("on"); }
+  renderStage();
+  if (!light) { renderPose(); renderMorph(); }
+}
+function setKey(m, key, t, v) {
+  let tr = m.tracks.find(function (x) { return x.key === key; });
+  if (!tr) { tr = { key: key, keys: [] }; m.tracks.push(tr); }
+  t = Math.round(t * 100) / 100;
+  const ex = tr.keys.find(function (k) { return Math.abs(k.t - t) < 0.005; });
+  if (ex) ex.v = v; else tr.keys.push({ t: t, v: v, ease: "smooth" });
+  tr.keys.sort(function (a, b) { return a.t - b.t; });
+}
+function motStop() { motPlaying = false; cancelAnimationFrame(motRaf); }
+function motPlay() {
+  const m = curMotion(); if (!m) return;
+  motPlaying = true;
+  let last = performance.now();
+  if (motTime >= m.dur - 0.001) motTime = 0;
+  const step = function (now) {
+    if (!motPlaying) return;
+    motTime += (now - last) / 1000; last = now;
+    if (motTime >= m.dur) { if (m.loop) motTime = motTime % m.dur; else { motTime = m.dur; motPlaying = false; } }
+    applyMotionAt(m, motTime, true);
+    syncMotHead();
+    if (motPlaying) motRaf = requestAnimationFrame(step); else renderMotion();
+  };
+  motRaf = requestAnimationFrame(step);
+  renderMotion();
+}
+function syncMotHead() {
+  const m = curMotion(); if (!m) return;
+  const pct = (motTime / m.dur * 100) + "%";
+  document.querySelectorAll(".motHead").forEach(function (h) { h.style.left = pct; });
+  const tl = document.getElementById("motTimeLbl"); if (tl) tl.textContent = motTime.toFixed(2) + " 秒";
+  const sc = document.getElementById("motScrub"); if (sc && document.activeElement !== sc) sc.value = Math.round(motTime * 100);
+}
+function renderMotion() {
+  const box = document.getElementById("motionBox");
+  if (!box) return;
+  const ms = motionsOf();
+  if (motSelId && !curMotion()) motSelId = null;
+  if (!motSelId && ms.length) motSelId = ms[0].id;
+  const m = curMotion();
+  let h = '<div class="motTop"><select id="motSel">' + (ms.length ? ms.map(function (x) { return '<option value="' + x.id + '"' + (x.id === motSelId ? " selected" : "") + ">" + esc(x.name) + "</option>"; }).join("") : '<option value="">（まだありません）</option>') + "</select>" +
+    '<button class="pill sm" id="motNew">＋ 新しいモーション</button>' +
+    (m ? '<button class="pill sm" id="motRen">名前</button><button class="pill sm" id="motDel">消す</button>' : "") + "</div>";
+  if (!m) {
+    h += '<p class="note">「＋ 新しいモーション」で作り始めます。例：「待機」（呼吸と瞬き）、「手を振る」。</p>';
+    box.innerHTML = h; wireMotion(box, null); return;
+  }
+  const tracks = m.tracks;
+  h += '<div class="motTop">' +
+    '<button class="pill main sm" id="motPlayBtn">' + (motPlaying ? "■ 止める" : "▶ 再生") + "</button>" +
+    '<label class="mini"><input type="checkbox" id="motLoop"' + (m.loop ? " checked" : "") + "> くり返す</label>" +
+    '<label class="mini">長さ <input type="number" id="motDur" min="0.2" max="60" step="0.1" value="' + m.dur + '" style="width:64px;"> 秒</label>' +
+    '<span class="mini" id="motTimeLbl">' + motTime.toFixed(2) + " 秒</span></div>" +
+    '<input type="range" id="motScrub" min="0" max="' + Math.round(m.dur * 100) + '" step="1" value="' + Math.round(motTime * 100) + '" style="width:100%;">';
+  /* 目盛り */
+  let ruler = "";
+  const stepS = m.dur <= 3 ? 0.5 : m.dur <= 10 ? 1 : 5;
+  for (let s = 0; s <= m.dur + 1e-6; s += stepS) ruler += '<span class="motTick" style="left:' + (s / m.dur * 100) + '%">' + (Math.round(s * 10) / 10) + "</span>";
+  h += '<div class="motGrid"><div class="motLabel motRulerL"></div><div class="motLane motRuler">' + ruler + '<div class="motHead" style="left:' + (motTime / m.dur * 100) + '%"></div></div>';
+  tracks.forEach(function (tr, ti) {
+    h += '<div class="motLabel"><span title="' + esc(tr.key) + '">' + esc(trackLabel(tr.key)) + '</span><button class="gbtn" data-motrm="' + ti + '" title="この行を消す">×</button>' +
+      (tr.key.indexOf("m:") === 0 ? '<button class="gbtn" data-motblink="' + ti + '" title="今の時間から、閉じる→開くの瞬きを入れる（約0.25秒）">瞬き</button>' : "") + "</div>" +
+      '<div class="motLane" data-motlane="' + ti + '">' + tr.keys.map(function (k, ki) {
+        const on = motKeySel && motKeySel.ti === ti && motKeySel.ki === ki;
+        return '<span class="motKey' + (on ? " on" : "") + (k.ease === "step" ? " step" : "") + '" data-motkey="' + ti + ":" + ki + '" style="left:' + (k.t / m.dur * 100) + '%" title="' + k.t.toFixed(2) + "秒：" + fmtTrackVal(tr.key, k.v) + '"></span>';
+      }).join("") + '<div class="motHead" style="left:' + (motTime / m.dur * 100) + '%"></div></div>';
+  });
+  h += "</div>";
+  /* 行を足す */
+  const js = (docData.joints || []).filter(function (j) { return /^rig_/.test(j.id) && j.pos; });
+  const have = {}; tracks.forEach(function (tr) { have[tr.key] = true; });
+  const opts = js.filter(function (j) { return !have["j:" + j.id]; }).map(function (j) { return '<option value="j:' + j.id + '">🦴 ' + esc(j.name) + "</option>"; })
+    .concat(morphNames().filter(function (k) { return !have["m:" + k]; }).map(function (k) { return '<option value="m:' + esc(k) + '">😊 ' + esc(k) + "</option>"; }));
+  h += '<div class="motTop" style="margin-top:6px;"><select id="motAddSel"><option value="">＋ 動かすものを追加…</option>' + opts.join("") + "</select>" +
+    '<button class="pill sm" id="motRecBtn" title="今の試し曲げ・変形の値を、今の時間のキーフレームとして全部の行に記録します">◆ 今の形をこの時間に記録</button>' +
+    (posesOf().length ? '<select id="motPoseSel"><option value="">◆ ポーズを置く…</option>' + posesOf().map(function (q) { return '<option value="' + q.id + '">' + esc(q.name) + "</option>"; }).join("") + "</select>" : "") + "</div>";
+  /* 選んだキーフレーム */
+  const ks = motKeySel && tracks[motKeySel.ti] && tracks[motKeySel.ti].keys[motKeySel.ki];
+  if (ks) {
+    const tr = tracks[motKeySel.ti], isJ = tr.key.indexOf("j:") === 0;
+    h += '<div class="motKeyBox"><b>◆ ' + esc(trackLabel(tr.key)) + "</b>" +
+      '<label class="mini">時間 <input type="number" id="motKt" min="0" max="' + m.dur + '" step="0.01" value="' + ks.t + '" style="width:70px;"> 秒</label>' +
+      '<label class="mini">値 <input type="number" id="motKv" step="' + (isJ ? 1 : 1) + '" value="' + (isJ ? ks.v : Math.round(ks.v * 100)) + '" style="width:70px;"> ' + (isJ ? "度" : "%") + "</label>" +
+      '<label class="mini">次までの動き方 <select id="motKe">' + EASES.map(function (e) { return '<option value="' + e[0] + '"' + (ks.ease === e[0] ? " selected" : "") + ">" + e[1] + "</option>"; }).join("") + "</select></label>" +
+      '<button class="pill sm" id="motKdel">消す</button></div>';
+  }
+  h += '<p class="note">使い方：スライダーで時間を選ぶ →「関節」の試し曲げや「表情（変形）」のスライダーで形を作る →「◆ 今の形をこの時間に記録」。行の◆を押すと、時間・値・動き方を直せます（◆はドラッグで時間をずらせます）。キーフレームを細かく打つほど、動きの緩急を細かく作れます。モーションはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります。</p>';
+  box.innerHTML = h;
+  wireMotion(box, m);
+}
+function fmtTrackVal(key, v) { return key.indexOf("j:") === 0 ? (Math.round(v * 10) / 10) + "度" : Math.round(v * 100) + "%"; }
+function wireMotion(box, m) {
+  const $ = function (id) { return box.querySelector("#" + id); };
+  $("motSel").addEventListener("change", function (e) { motStop(); motSelId = e.target.value || null; motTime = 0; motKeySel = null; renderMotion(); applyMotionAt(curMotion(), 0); });
+  $("motNew").addEventListener("click", function () {
+    const nm = prompt("モーションの名前（例：待機、手を振る）", "モーション" + (motionsOf().length + 1));
+    if (nm === null) return;
+    pushUndo();
+    const nmot = { id: "mot_" + Date.now().toString(36), name: (nm.trim() || "モーション").slice(0, 30), dur: 3, loop: true, tracks: [] };
+    motionsOf().push(nmot); motSelId = nmot.id; motTime = 0; motKeySel = null;
+    save(); renderMotion();
+  });
+  if (!m) return;
+  $("motRen").addEventListener("click", function () { const nm = prompt("モーションの新しい名前", m.name); if (nm === null || !nm.trim()) return; pushUndo(); m.name = nm.trim().slice(0, 30); save(); renderMotion(); });
+  $("motDel").addEventListener("click", function () { if (!confirm("モーション「" + m.name + "」を消しますか？（元に戻すで戻せます）")) return; motStop(); pushUndo(); docData.motions = motionsOf().filter(function (x) { return x.id !== m.id; }); motSelId = null; motKeySel = null; save(); renderMotion(); });
+  $("motPlayBtn").addEventListener("click", function () { if (motPlaying) { motStop(); renderMotion(); renderPose(); renderMorph(); } else motPlay(); });
+  $("motLoop").addEventListener("change", function (e) { pushUndo(); m.loop = e.target.checked; save(); });
+  $("motDur").addEventListener("change", function (e) { const d = Math.max(0.2, Math.min(60, +e.target.value || 3)); pushUndo(); m.dur = Math.round(d * 100) / 100; if (motTime > m.dur) motTime = m.dur; save(); renderMotion(); });
+  const sc = $("motScrub");
+  sc.addEventListener("input", function () { motStop(); motTime = (+sc.value) / 100; applyMotionAt(m, motTime, true); syncMotHead(); });
+  sc.addEventListener("change", function () { applyMotionAt(m, motTime); renderMotion(); });
+  box.querySelectorAll("[data-motrm]").forEach(function (b) { b.addEventListener("click", function () { const ti = +b.dataset.motrm; if (!confirm("「" + trackLabel(m.tracks[ti].key) + "」の行を消しますか？")) return; pushUndo(); m.tracks.splice(ti, 1); motKeySel = null; save(); renderMotion(); }); });
+  box.querySelectorAll("[data-motblink]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const tr = m.tracks[+b.dataset.motblink], t0 = motTime;
+      pushUndo();
+      [[t0, 0, "in"], [t0 + 0.08, 1, "out"], [t0 + 0.12, 1, "smooth"], [t0 + 0.26, 0, "smooth"]].forEach(function (a) {
+        if (a[0] > m.dur + 1e-6) return;
+        setKey(m, tr.key, a[0], a[1]);
+        const k = tr.keys.find(function (x) { return Math.abs(x.t - Math.round(a[0] * 100) / 100) < 0.005; }); if (k) k.ease = a[2];
+      });
+      save(); renderMotion();
+    });
+  });
+  const add = $("motAddSel");
+  add.addEventListener("change", function () {
+    const key = add.value; if (!key) return;
+    pushUndo();
+    m.tracks.push({ key: key, keys: [{ t: 0, v: trackCurrent(key), ease: "smooth" }] });
+    save(); renderMotion();
+  });
+  $("motRecBtn").addEventListener("click", function () {
+    if (!m.tracks.length) { alert("先に「＋ 動かすものを追加…」で、動かしたい関節や変形を行に追加してください。"); return; }
+    pushUndo();
+    m.tracks.forEach(function (tr) { setKey(m, tr.key, motTime, trackCurrent(tr.key)); });
+    save(); renderMotion();
+  });
+  const ps = $("motPoseSel");
+  if (ps) ps.addEventListener("change", function () {
+    const q = posesOf().find(function (x) { return x.id === ps.value; }); if (!q) return;
+    pushUndo();
+    /* ポーズにある関節は行が無ければ足す。モーションにある関節で、ポーズに入っていないものは 0 にする */
+    Object.keys(q.angles || {}).forEach(function (id) { if (!m.tracks.some(function (tr) { return tr.key === "j:" + id; })) m.tracks.push({ key: "j:" + id, keys: [] }); });
+    m.tracks.forEach(function (tr) { if (tr.key.indexOf("j:") === 0) setKey(m, tr.key, motTime, (q.angles || {})[tr.key.slice(2)] || 0); });
+    m.tracks.forEach(function (tr) { if (!tr.keys.length) tr.keys.push({ t: 0, v: 0, ease: "smooth" }); });
+    save(); renderMotion(); applyMotionAt(m, motTime);
+  });
+  /* ◆ 選ぶ・ドラッグで時間をずらす */
+  box.querySelectorAll("[data-motkey]").forEach(function (el) {
+    el.addEventListener("pointerdown", function (e) {
+      e.stopPropagation(); e.preventDefault();
+      const p = el.dataset.motkey.split(":"), ti = +p[0], ki = +p[1];
+      const tr = m.tracks[ti], k = tr.keys[ki], lane = el.parentNode, rect = lane.getBoundingClientRect();
+      motKeySel = { ti: ti, ki: ki };
+      let moved = false;
+      const mv = function (ev) {
+        const t = Math.max(0, Math.min(m.dur, (ev.clientX - rect.left) / rect.width * m.dur));
+        if (!moved && Math.abs(ev.clientX - e.clientX) < 3) return;
+        if (!moved) { pushUndo(); moved = true; }
+        k.t = Math.round(t * 100) / 100; el.style.left = (k.t / m.dur * 100) + "%";
+      };
+      const up = function () {
+        window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up);
+        if (moved) { tr.keys.sort(function (a, b) { return a.t - b.t; }); motKeySel = { ti: ti, ki: tr.keys.indexOf(k) }; save(); }
+        motStop(); motTime = k.t; applyMotionAt(m, motTime); renderMotion();
+      };
+      window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+    });
+  });
+  box.querySelectorAll("[data-motlane]").forEach(function (lane) {
+    lane.addEventListener("pointerdown", function (e) {
+      if (e.target.dataset && e.target.dataset.motkey) return;
+      const rect = lane.getBoundingClientRect();
+      motStop(); motTime = Math.round(Math.max(0, Math.min(m.dur, (e.clientX - rect.left) / rect.width * m.dur)) * 100) / 100;
+      applyMotionAt(m, motTime); renderMotion();
+    });
+  });
+  const kt = $("motKt"), kv = $("motKv"), ke = $("motKe"), kd = $("motKdel");
+  if (kt) {
+    const tr = m.tracks[motKeySel.ti], k = tr.keys[motKeySel.ki], isJ = tr.key.indexOf("j:") === 0;
+    kt.addEventListener("change", function () { pushUndo(); k.t = Math.max(0, Math.min(m.dur, Math.round((+kt.value || 0) * 100) / 100)); tr.keys.sort(function (a, b) { return a.t - b.t; }); motKeySel.ki = tr.keys.indexOf(k); save(); renderMotion(); });
+    kv.addEventListener("change", function () { pushUndo(); k.v = isJ ? (+kv.value || 0) : Math.max(0, Math.min(1, (+kv.value || 0) / 100)); save(); applyMotionAt(m, motTime); renderMotion(); });
+    ke.addEventListener("change", function () { pushUndo(); k.ease = ke.value; save(); renderMotion(); });
+    kd.addEventListener("click", function () { pushUndo(); tr.keys.splice(motKeySel.ki, 1); motKeySel = null; save(); renderMotion(); });
+  }
+}
 /* ============ ポーズの保存 ============
    docData.poses = [{ id, name, angles: { 関節id: 角度 }, layer: { R, L, Rlow, Llow } }]
    アバターのデータに入るので、JSON・ZIP書き出しにも入る（着せ替えツールでポーズを選ぶ時にそのまま使える）。
@@ -1958,7 +2208,7 @@ function partsBBox() {
 
 /* ============ 描画 ============ */
 function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
-function render() { renderStage(); renderList(); renderProps(); renderPose(); renderMorph();
+function render() { renderStage(); renderList(); renderProps(); renderPose(); renderMorph(); if (!motPlaying) renderMotion();
   document.getElementById("undoBtn").disabled = undoStack.length === 0;
   document.getElementById("redoBtn").disabled = redoStack.length === 0;
 }
