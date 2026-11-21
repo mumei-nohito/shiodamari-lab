@@ -1778,7 +1778,9 @@ function finishMorphRec(keep) {
 /* ============ 🌐 顔の向きの下書き（地球儀方式） ============
    頭を「ボール」とみなして、ボールを横に回した時に表面の点がどう動くかで、各パーツの「向き」の変形を自動で作る。
    ・真ん中（目・鼻・口）は大きく、端（輪郭のそば）は少しだけ動いて潰れる。おでこ・あごは動く幅が小さい
-   ・前髪は顔より手前（大きいボール）なので多めに、後ろ髪は奥なので逆向きに少しだけ、顔の輪郭はほとんど動かない
+   ・前髪は顔より手前（大きいボール）なので多めに、後ろ髪は奥なので逆向きに少しだけ
+   ・顔の輪郭は上（頭の形）はそのまま、下ほど口と一緒に動いて、あごの先が中心線についていく
+   ・耳は形を崩さずまるごと動く。向いた側は少し外へ（奥へ）、反対側は内側へ大きめに寄る
    作るのは「下書き」。気になる所は、そのパーツの「形を直す」で手直しする */
 const TURN_R = "顔の向き（画面→）", TURN_L = "顔の向き（画面←）";
 let turnOpt = { dir: 1, deg: 20, folders: null };
@@ -1818,6 +1820,7 @@ function turnDepth(p, face) {
   if (/耳/.test(nm)) return { s: 1, m: 0.8 };
   return { s: 1, m: 1 };
 }
+function partCenterX(p) { let a = 1e9, b = -1e9; p.shape.points.forEach(function (q) { a = Math.min(a, q[0]); b = Math.max(b, q[0]); }); return (a + b) / 2; }
 function makeTurnMorph(name, dir, deg, folders) {
   const ps = turnParts(folders);
   if (!ps.length) { alert("選んだフォルダに、変形できるパーツ（多角形・線）がありません。"); return; }
@@ -1830,16 +1833,42 @@ function makeTurnMorph(name, dir, deg, folders) {
   const exists = ps.some(function (p) { return p.shape.morphs && p.shape.morphs[name]; });
   if (exists && !confirm("「" + name + "」はもうあります。作り直しますか？（手直しした形も、自動の下書きで上書きされます）")) return;
   pushUndo();
+  const fy0 = fb.bb.y0, fh = Math.max(1, fb.bb.y1 - fb.bb.y0);
+  /* 耳：形は崩さずまるごと動かす。耳の付け根を、ボールの横（正面から75度）にあるとみなして回す。
+     向いた側の耳は少し外へ（奥へ回り込む）、反対側の耳は内側へ大きめに寄る（横顔が見えてくる） */
+  const earMove = {};
+  [-1, 1].forEach(function (sd) {
+    const ears = ps.filter(function (p) { return /耳/.test(p.name + "/" + (p.group || "")) && Math.sign(partCenterX(p) - cx) === sd; });
+    if (!ears.length) return;
+    let A = 1e9; ears.forEach(function (p) { p.shape.points.forEach(function (q) { A = Math.min(A, Math.abs(q[0] - cx)); }); });
+    const L0 = 75 * Math.PI / 180, R = A / Math.sin(L0);
+    earMove[sd] = R * Math.sin(sd * L0 + th) - sd * A;
+  });
+  /* 横にまっすぐ回した時の、点の新しい横位置（ボールの表面） */
+  const sphereX = function (x, y, a, b) {
+    const v = Math.max(-0.97, Math.min(0.97, (y - cy) / b));
+    const r = a * Math.cos(Math.asin(v));
+    const u = (x - cx) / r;
+    /* ボールの外（広がった髪など）は、縁の点と同じ割合で縮む（縁でつながるように） */
+    return Math.abs(u) <= 1 ? cx + r * Math.sin(Math.asin(u) + th) : cx + (x - cx) * Math.cos(th);
+  };
   ps.forEach(function (p) {
+    const nm = p.name + "/" + (p.group || "");
+    const isEar = /耳/.test(nm), isFace = (fb.face && p.id === fb.face.id) || /輪郭|顔・影|顔の影/.test(p.name);
     const dp = turnDepth(p, fb.face), a = rx * dp.s, b = ry * dp.s * 1.5;
+    const ed = isEar ? earMove[Math.sign(partCenterX(p) - cx)] || 0 : 0;
     const out = p.shape.points.map(function (q) {
       const o = q.slice();
-      const v = Math.max(-0.97, Math.min(0.97, (q[1] - cy) / b));
-      const r = a * Math.cos(Math.asin(v));
-      const u = (q[0] - cx) / r;
-      /* ボールの外（耳や広がった髪）は、縁の点と同じ割合で縮む（縁でつながるように） */
-      const nx = Math.abs(u) <= 1 ? cx + r * Math.sin(Math.asin(u) + th) : cx + (q[0] - cx) * Math.cos(th);
-      o[0] = Math.round((q[0] + (nx - q[0]) * dp.m) * 10) / 10;
+      let nx;
+      if (isEar) nx = q[0] + ed;
+      else if (isFace) {
+        /* 顔の輪郭：上はそのまま（頭の形）、下へ行くほど口と一緒に動く（あごの先が中心線についていく） */
+        const t = Math.max(0, Math.min(1, ((q[1] - fy0) / fh - 0.3) / 0.6)), w = t * t * (3 - 2 * t);
+        const v = Math.max(-0.97, Math.min(0.97, (q[1] - cy) / b)) * 0.55;
+        const r = a * Math.cos(Math.asin(v)), u = Math.max(-1, Math.min(1, (q[0] - cx) / r));
+        nx = q[0] + (cx + r * Math.sin(Math.asin(u) + th) - q[0]) * w;
+      } else nx = q[0] + (sphereX(q[0], q[1], a, b) - q[0]) * dp.m;
+      o[0] = Math.round(nx * 10) / 10;
       return o;
     });
     if (!p.shape.morphs) p.shape.morphs = {};
