@@ -41,7 +41,7 @@
   #sidePanel.closed .sideResizer { display:none; }
   .panelScroll { overflow:auto; max-height:calc(100vh - 175px); padding-right:2px; }
   .tabs { display:flex; gap:4px; }
-  .tab { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:5px 10px; font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:var(--fg); white-space:nowrap; flex:1; overflow:hidden; }
+  .tab { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:3px 10px; font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; color:var(--fg); white-space:nowrap; flex:1; overflow:hidden; }
   .acc { border:1px solid var(--line); border-radius:10px; margin-top:9px; background:var(--card); }
   .acc > summary { cursor:pointer; font-weight:700; font-size:13px; color:var(--sub); padding:7px 10px; list-style:none; }
   .acc > summary::-webkit-details-marker { display:none; }
@@ -108,7 +108,7 @@
     border-radius:10px; touch-action:none; }
   .toolbar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; align-items:center; }
   .pill { border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:999px;
-    padding:5px 13px; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
+    padding:2px 12px; line-height:1.55; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
   .pill:hover { border-color:var(--ac); }
   .pill.on { background:var(--ac); border-color:var(--ac); color:var(--on); }
   .pill:disabled { opacity:.38; cursor:default; }
@@ -234,6 +234,9 @@
   .poseLayerBox .poseRow { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px; align-items:center; }
   .poseLayerBox select { width:100%; min-width:0; }
   .poseVal { text-align:right; color:var(--mut); font-variant-numeric:tabular-nums; }
+  .addPartRow { border:1px dashed var(--line); border-radius:10px; padding:5px 8px; margin:-2px 0 8px; }
+  .addPartRow[hidden] { display:none; }
+  .listTools { gap:5px; }
   .gaddRow { display:flex; flex-wrap:wrap; gap:4px; align-items:center; padding:4px 2px 2px; border-top:1px dashed var(--line); margin-top:3px; }
   .gkids { margin-left:5px; padding-left:6px; border-left:2px solid var(--line); }
   .gkids > .ghead.sub { margin-top:6px; }
@@ -246,7 +249,9 @@
   .phead .tabs { flex:none; }
   .pheadBtns { display:flex; gap:4px; margin-left:auto; }
   .phead h2 { margin:2px 0 8px; }
-  .pill.sm { padding:2px 9px; font-size:11px; }
+  .pill.sm { padding:1px 9px; font-size:11px; line-height:1.5; }
+  /* スマホ・タブレット（指で触る画面）は、押しやすさのために少し高さを残す */
+  @media (pointer:coarse) { .pill { padding:5px 13px; } .pill.sm { padding:3px 10px; } }
   .expandTab { display:none; }
   .panel.closed .panelBody { display:none; }
   .panel.closed .expandTab { display:block; writing-mode:vertical-rl; margin:2px auto; border:1px solid var(--line); background:var(--card); border-radius:999px; padding:12px 5px; font-family:inherit; font-weight:700; font-size:12px; color:var(--fg); cursor:pointer; }
@@ -312,8 +317,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 指の関節を追加。右のパネルの説明は「？ 説明」に畳み、関節のパネルは項目ごとに折り畳めるようにしました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 ボタンの上下の余白を減らし、パーツ一覧の「＋ 丸・四角・線」を「＋ パーツ ▾」にまとめました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/23 21:30</span>丸いボタンの上下の余白を減らして、画面に表示できる量を増やしました（スマホなど指で触る画面では、押しやすさのため今まで通り）。パーツ一覧の上の「＋ 丸を追加」「＋ 四角を追加」「＋ 線を追加」は「＋ パーツ ▾」にまとめ、押すと丸・四角・線を選べます。「＋ フォルダ」「全部畳む」「全部開く」「📋 おすすめ」と1〜2行に収まります。</div>
     <div class="newsItem"><span>11/23 21:00</span>右のパネルとモーションのパネルの説明文を「？ 説明」ボタンに畳みました（押すと開きます）。関節のパネルは「首・腕」「脚」「✋ 右手の指」「腕の重なり」「手足を丸ごとずらす」「ポーズの保存」をそれぞれ折り畳めるようにし、開き具合を覚えておきます。「まっすぐに戻す」は上に移動しました。</div>
     <div class="newsItem"><span>11/23 20:30</span>指の関節を追加しました。手のパーツの名前を「右手・人差し指・根元」「右手・人差し指・先」のようにすると（横向きでまとめた指は「右手・指・根元」など）、「関節を自動で置く」で指の付け根と途中に関節が置かれます。関節パネルの「✋ 右手の指」で、「握る」（親指以外がいっせいに曲がる）と「親指」のスライダー、1本ずつのスライダーが使えます。かんたんポーズでは指のパーツをつかむと、その節で曲がります。モーション・ポーズの保存・手足を丸ごとずらすにも対応しています。</div>
     <div class="newsItem"><span>11/22 07:40</span>「選んだパーツの変形」で、長い変形の名前（顔の向きなど）が「形を直す」ボタンに隠れて見えなかったのを直しました。名前は折り返して全部表示し、矢印も大きく表示します。</div>
@@ -408,7 +414,7 @@
     <p class="mini">
       ・左の一覧か、キャンバスのパーツをクリックすると選択でき、そのパーツの点が表示されます。<br>
       ・選択中のパーツの内側をドラッグすると、パーツ全体を移動できます。<br>
-      ・「＋ 丸／四角／線を追加」で新しいパーツを足せます。追加したら点を増やしたり動かしたりして好きな形に変えていってください。<br>
+      ・パーツ一覧の「＋ パーツ ▾」から丸・四角・線を選んで、新しいパーツを足せます。追加したら点を増やしたり動かしたりして好きな形に変えていってください。<br>
       ・選択中のパーツには全体の枠とハンドルが出ます。右下の青い●＝サイズ変更（左上の角を支点に、比率を保って拡縮）、上のオレンジの●＝回転です（四角パーツは回転なし）。<br>
       ・PCでは、右のパネル（パーツ一覧・プロパティ）の左端の線をドラッグすると幅を変えられます。「⇔ 広く」で画面の半分くらいまで広がり、「畳む」でしまえます。
     </p>
@@ -641,14 +647,18 @@
       </div>
       <div class="panelScroll" id="panelScroll">
         <div id="tabList">
-          <div class="toolbar">
-            <button class="pill" id="addCircleBtn">＋ 丸を追加</button>
-            <button class="pill" id="addSquareBtn">＋ 四角を追加</button>
-            <button class="pill" id="addLineBtn">＋ 線を追加</button>
-            <button class="pill" id="addFolderBtn">＋ フォルダを追加</button>
+          <div class="toolbar listTools">
+            <button class="pill" id="addPartMenuBtn" aria-expanded="false" title="丸・四角・線のパーツを作ります（フォルダの中に作る時は、フォルダの「＋パーツ」から）">＋ パーツ ▾</button>
+            <button class="pill" id="addFolderBtn" title="新しいフォルダを作ります">＋ フォルダ</button>
             <button class="pill sm" id="foldAllBtn" title="すべてのフォルダを畳む">▶ 全部畳む</button>
             <button class="pill sm" id="openAllBtn" title="すべてのフォルダを開く">▼ 全部開く</button>
-            <button class="pill" id="guideBtn" title="おすすめのフォルダ分けを、横に浮かべて見ながら作業できます">📋 おすすめフォルダ</button>
+            <button class="pill sm" id="guideBtn" title="おすすめのフォルダ分けを、横に浮かべて見ながら作業できます">📋 おすすめ</button>
+          </div>
+          <div class="gaddRow addPartRow" id="addPartRow" hidden>
+            <span class="mini">作るパーツ：</span>
+            <button class="gbtn" id="addCircleBtn">＋ 丸</button>
+            <button class="gbtn" id="addSquareBtn">＋ 四角</button>
+            <button class="gbtn" id="addLineBtn">＋ 線</button>
           </div>
           <div id="checkBar" style="display:none; border:1.5px solid var(--ac); border-radius:10px; padding:7px 9px; margin-bottom:8px;">
             <span class="mini"><b id="checkCount">0</b>個のパーツをチェック中（フォルダの代わりに、選んだパーツだけへ操作できます）</span>
@@ -4550,6 +4560,13 @@ function addPart(kind, folder) {
   setTab("props");
 }
 document.getElementById("addFolderBtn").addEventListener("click", function () { addFolder(); });
+/* 「＋ パーツ ▾」：丸・四角・線を選ぶ小さな列を開け閉め（作ったら閉じる） */
+(function () {
+  const b = document.getElementById("addPartMenuBtn"), row = document.getElementById("addPartRow");
+  const set = function (open) { row.hidden = !open; b.setAttribute("aria-expanded", open ? "true" : "false"); b.classList.toggle("on", open); };
+  b.addEventListener("click", function () { set(row.hidden); });
+  ["addCircleBtn", "addSquareBtn", "addLineBtn"].forEach(function (id) { document.getElementById(id).addEventListener("click", function () { setTimeout(function () { set(false); }, 0); }); });
+})();
 document.getElementById("autoJointBtn").addEventListener("click", rigAutoPlace);
 document.getElementById("foldAllBtn").addEventListener("click", function () { setAllFolders(true); });
 document.getElementById("openAllBtn").addEventListener("click", function () { setAllFolders(false); });
