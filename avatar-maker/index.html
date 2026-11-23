@@ -204,10 +204,18 @@
   .defEdit { margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; display:flex; flex-direction:column; gap:6px; }
   .defEdit label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .defFolders { max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 6px; display:flex; flex-direction:column; gap:2px; }
-  .fingerBox { margin:8px 0 4px; border:1px solid var(--line); border-radius:10px; padding:4px 8px; }
+  details.sub { margin:6px 0; border:1px solid var(--line); border-radius:10px; padding:0 8px; }
+  details.sub > summary { cursor:pointer; font-weight:700; font-size:12.5px; padding:7px 0; color:var(--fg); }
+  details.sub[open] > summary { border-bottom:1px dashed var(--line); margin-bottom:6px; }
+  details.sub .subBody { padding:0 0 8px; }
+  .poseTop { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin:2px 0 6px; }
+  .poseTop label { display:flex; gap:6px; align-items:center; }
+  .qbtn { display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line); background:transparent; color:var(--mut); border-radius:999px; font-size:11.5px; padding:1px 9px 1px 3px; margin:4px 0; cursor:pointer; font-family:inherit; line-height:1.5; }
+  .qbtn b { display:inline-flex; width:17px; height:17px; border-radius:50%; align-items:center; justify-content:center; background:var(--line); color:var(--fg); font-size:11px; }
+  .qbtn[aria-expanded="true"] { color:var(--ac); border-color:var(--ac); }
+  .qbtn[aria-expanded="true"] b { background:var(--ac); color:var(--on); }
   .fingerBox .poseRow { grid-template-columns:6.5em 1fr 3.2em; }
   .fingerBox .poseName { white-space:normal; line-height:1.25; }
-  .fingerBox > summary { cursor:pointer; font-weight:700; font-size:12.5px; padding:2px 0; }
   .turnFolders { display:flex; flex-wrap:wrap; gap:2px 12px; font-size:12.5px; margin:0 0 6px; }
   .turnFolders label { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
   .turnRow { display:flex; align-items:center; gap:8px; margin:4px 0; min-width:0; }
@@ -304,8 +312,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 指の関節を追加。指を付け根と途中の2か所で曲げられ、「握る」スライダーでいっせいに曲がります。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 指の関節を追加。右のパネルの説明は「？ 説明」に畳み、関節のパネルは項目ごとに折り畳めるようにしました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/23 21:00</span>右のパネルとモーションのパネルの説明文を「？ 説明」ボタンに畳みました（押すと開きます）。関節のパネルは「首・腕」「脚」「✋ 右手の指」「腕の重なり」「手足を丸ごとずらす」「ポーズの保存」をそれぞれ折り畳めるようにし、開き具合を覚えておきます。「まっすぐに戻す」は上に移動しました。</div>
     <div class="newsItem"><span>11/23 20:30</span>指の関節を追加しました。手のパーツの名前を「右手・人差し指・根元」「右手・人差し指・先」のようにすると（横向きでまとめた指は「右手・指・根元」など）、「関節を自動で置く」で指の付け根と途中に関節が置かれます。関節パネルの「✋ 右手の指」で、「握る」（親指以外がいっせいに曲がる）と「親指」のスライダー、1本ずつのスライダーが使えます。かんたんポーズでは指のパーツをつかむと、その節で曲がります。モーション・ポーズの保存・手足を丸ごとずらすにも対応しています。</div>
     <div class="newsItem"><span>11/22 07:40</span>「選んだパーツの変形」で、長い変形の名前（顔の向きなど）が「形を直す」ボタンに隠れて見えなかったのを直しました。名前は折り返して全部表示し、矢印も大きく表示します。</div>
     <div class="newsItem"><span>11/22 02:30</span>「表情（変形）」に「🌐 顔の向きを自動で下書き」を追加。頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります（真ん中の目・口は大きく、端は少しだけ動いて潰れ、前髪は多め・後ろ髪は逆向きに少し、顔の輪郭はほとんど動きません）。できた「顔の向き（画面→）」は「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」にできます（反対側のパーツがあればそこへ、真ん中のパーツは自分自身へ写します）。</div>
@@ -712,7 +721,6 @@
               <span class="mini" id="jointCount"></span>
             </div>
             <div class="sect" style="margin-top:8px;"><h3>試し曲げ</h3><div id="poseBox"></div></div>
-            <p class="note">ツールバーの「関節」をONにすると、キャンバス上で関節をドラッグして動かせます。関節をクリックすると名前・位置を直したり消したりできます。パーツのプロパティでは、そのパーツが属する関節（始点・終点）も指定できます。</p>
             </div>
           </details>
           <details class="acc" id="defAcc">
@@ -2655,6 +2663,17 @@ function posedJointPos(j) {
   return posePoint(j.pos, jointParents(j.id));
 }
 let gripVals = {}, fingerOpen = {};
+/* 折りたためる小見出し（開き具合は覚えておく） */
+let subOpen = (function () { try { return JSON.parse(LS.getItem("avatarMakerSubOpen") || "{}"); } catch (e) { return {}; } })();
+function subAcc(key, title, body, def) {
+  const open = key in subOpen ? subOpen[key] : def;
+  return '<details class="sub" data-sub="' + key + '"' + (open ? " open" : "") + '><summary>' + title + '</summary><div class="subBody">' + body + "</div></details>";
+}
+function bindSubAcc(root) {
+  root.querySelectorAll("details.sub[data-sub]").forEach(function (d) {
+    d.addEventListener("toggle", function () { subOpen[d.dataset.sub] = d.open; try { LS.setItem("avatarMakerSubOpen", JSON.stringify(subOpen)); } catch (e) {} });
+  });
+}
 function poseSliderRow(j, label) {
   const rg = jointRange(j.id), v = pose[j.id] || 0;
   return '<div class="poseRow"><span class="poseName" title="' + esc(j.name) + '">' + esc(label || j.name) + '</span><input type="range" min="' + (-rg) + '" max="' + rg + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
@@ -2679,28 +2698,70 @@ function applyGrip(key, g) {
   if (poseSym) { const o = sd === "R" ? "L" : "R"; gripVals[o + (thumb ? "t" : "")] = g; set(o, -g); }
   return ids;
 }
+/* ============ 説明文を「？ 説明」に畳む ============
+   右のパネルとモーションのパネルの説明（.note）は、ふだんは畳んで「？ 説明」のボタンだけにする。
+   続いている説明はまとめて1つのボタンに。開いた説明は、描き直しても開いたまま */
+let qOpen = {};
+function qKey(t) { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return "q" + (h >>> 0).toString(36); }
+function foldNotes(root) {
+  root.querySelectorAll(".note:not([data-qf])").forEach(function (n) {
+    if (n.dataset.qf || n.classList.contains("keep") || n.closest("#newsBox,#helpBox,.storeNotice,.recBox")) return;
+    /* 短いお知らせ（状態の表示）は畳まない */
+    if (n.textContent.trim().length < 30) { n.dataset.qf = "short"; return; }
+    const prev = n.previousElementSibling;
+    /* 1つ前も畳んだ説明なら、同じボタンにまとめる */
+    if (prev && prev.classList.contains("note") && prev.dataset.qk) {
+      n.dataset.qf = "1"; n.hidden = prev.hidden; n.dataset.qk = prev.dataset.qk;
+      return;
+    }
+    const k = qKey(n.textContent.slice(0, 80));
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "qbtn"; b.dataset.qk = k;
+    b.innerHTML = "<b>？</b> 説明";
+    b.setAttribute("aria-expanded", qOpen[k] ? "true" : "false");
+    n.parentNode.insertBefore(b, n);
+    n.dataset.qf = "1"; n.dataset.qk = k; n.hidden = !qOpen[k];
+  });
+}
+document.addEventListener("click", function (e) {
+  const b = e.target.closest && e.target.closest(".qbtn"); if (!b) return;
+  const k = b.dataset.qk, open = !qOpen[k]; qOpen[k] = open;
+  b.setAttribute("aria-expanded", open ? "true" : "false");
+  let n = b.nextElementSibling;
+  while (n && n.classList.contains("note") && n.dataset.qk === k) { n.hidden = !open; n = n.nextElementSibling; }
+});
+(function () {
+  let busy = false;
+  const go = function () {
+    if (busy) return; busy = true;
+    [document.getElementById("sidePanel"), document.getElementById("motionDock")].filter(Boolean).forEach(foldNotes);
+    busy = false;
+  };
+  const mo = new MutationObserver(go);
+  const start = function () { go(); mo.observe(document.body, { childList: true, subtree: true }); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else setTimeout(start, 0);
+})();
 function renderPose() {
   const box = document.getElementById("poseBox");
   if (!box) return;
   const js = (docData.joints || []).filter(function (j) { return /^rig_/.test(j.id) && j.pos; });
-  if (!js.length) { box.innerHTML = '<p class="note">「関節を自動で置く」を押すと、ここに試し曲げのスライダーが出ます。</p>'; return; }
-  const order = ["rig_neck"]; ["shoulder", "elbow", "wrist", "hip", "knee", "ankle"].forEach(function (b) { order.push(rigJointId(b, "R"), rigJointId(b, "L")); });
-  const sorted = order.map(rigJointById).filter(function (j) { return j && j.pos; });
-  let h = '<label class="mini" style="display:flex;gap:6px;align-items:center;margin:2px 0 6px;"><input type="checkbox" id="poseSym"' + (poseSym ? " checked" : "") + '>左右対称に曲げる</label>';
-  sorted.forEach(function (j) {
-    h += poseSliderRow(j);
-  });
+  if (!js.length) { box.innerHTML = '<p class="note keep">「関節を自動で置く」を押すと、ここに試し曲げのスライダーが出ます。</p>'; return; }
+  const pick = function (bases) { const o = []; bases.forEach(function (b) { if (b === "neck") o.push("rig_neck"); else o.push(rigJointId(b, "R"), rigJointId(b, "L")); }); return o.map(rigJointById).filter(function (j) { return j && j.pos; }); };
+  const armJs = pick(["neck", "shoulder", "elbow", "wrist"]), legJs = pick(["hip", "knee", "ankle"]);
+  let h = '<div class="poseTop"><label class="mini"><input type="checkbox" id="poseSym"' + (poseSym ? " checked" : "") + '> 左右対称に曲げる</label><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>';
+  if (armJs.length) h += subAcc("pArm", "首・腕", armJs.map(function (j) { return poseSliderRow(j); }).join(""), true);
+  if (legJs.length) h += subAcc("pLeg", "脚", legJs.map(function (j) { return poseSliderRow(j); }).join(""), false);
   {
     /* 指：手ごとに「握る」「親指」のまとめスライダーと、1つずつのスライダー */
     ["R", "L"].forEach(function (sd) {
       const fj = []; FINGERS.forEach(function (F) { [1, 2].forEach(function (n) { const j = rigJointById(fingerJointId(F.k, n, sd)); if (j && j.pos) fj.push(j); }); });
       if (!fj.length) return;
       const hasT = fj.some(function (j) { return /^rig_fthumb/.test(j.id); }), hasO = fj.some(function (j) { return !/^rig_fthumb/.test(j.id); });
-      h += '<details class="fingerBox"' + (fingerOpen[sd] ? " open" : "") + ' data-fside="' + sd + '"><summary>✋ ' + (sd === "R" ? "右" : "左") + "手の指（" + fj.length + "）</summary>" +
+      h += '<details class="sub fingerBox"' + (fingerOpen[sd] ? " open" : "") + ' data-fside="' + sd + '"><summary>✋ ' + (sd === "R" ? "右" : "左") + "手の指（" + fj.length + '）</summary><div class="subBody">' +
         (hasO ? '<div class="poseRow"><span class="poseName">握る</span><input type="range" min="-100" max="100" step="1" value="' + (gripVals[sd] || 0) + '" data-grip="' + sd + '"><span class="poseVal" id="gv_' + sd + '">' + (gripVals[sd] || 0) + "%</span></div>" : "") +
         (hasT ? '<div class="poseRow"><span class="poseName">親指</span><input type="range" min="-100" max="100" step="1" value="' + (gripVals[sd + "t"] || 0) + '" data-grip="' + sd + 't"><span class="poseVal" id="gv_' + sd + 't">' + (gripVals[sd + "t"] || 0) + "%</span></div>" : "") +
         '<p class="note" style="margin:2px 0 6px;">「握る」で親指以外の指の関節がいっせいに曲がります（付け根は少し、途中は大きめ）。曲がる向きが逆なら − 側へ。</p>' +
-        fj.map(function (j) { const f = fingerOfBase(j.id.replace(/^rig_/, "").replace(/_[RL]$/, "")); return poseSliderRow(j, FINGERS.find(function (F) { return F.k === f.k; }).name + (f.n === 1 ? "・付け根" : "・途中")); }).join("") + "</details>";
+        fj.map(function (j) { const f = fingerOfBase(j.id.replace(/^rig_/, "").replace(/_[RL]$/, "")); return poseSliderRow(j, FINGERS.find(function (F) { return F.k === f.k; }).name + (f.n === 1 ? "・付け根" : "・途中")); }).join("") + "</div></details>";
     });
   }
   const layOpt = function (side, low) {
@@ -2710,37 +2771,36 @@ function renderPose() {
       '<option value="front"' + (v === "front" ? " selected" : "") + '>手前（頭・体の前）</option>' +
       '<option value="back"' + (v === "back" ? " selected" : "") + '>後ろ（頭・体の奥）</option></select>';
   };
-  h += '<div class="fld poseLayerBox" style="margin-top:10px;"><label>腕の重なり（試し曲げ用）</label>' +
+  h += subAcc("pLayer", "腕の重なり", '<div class="poseLayerBox">' +
     '<div class="poseRow"><span class="poseName">右・上腕</span>' + layOpt("R") + '</div>' +
     '<div class="poseRow"><span class="poseName">右・前腕と手</span>' + layOpt("R", true) + '</div>' +
     '<div class="poseRow"><span class="poseName">左・上腕</span>' + layOpt("L") + '</div>' +
     '<div class="poseRow"><span class="poseName">左・前腕と手</span>' + layOpt("L", true) + '</div>' +
     '<p class="note">例：腕組み＝上腕は「いつもの順番」のまま、前腕と手だけ「手前」にして、肘を曲げる。斜め向きで奥の腕を隠す＝その腕を「後ろ」に。</p>' +
-    '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>';
+    '<p class="note">手を頭の後ろに回す・顔の前に出す、のようなポーズを確かめる時に。「後ろ」は後ろ髪よりは手前になります。服の袖など、腕と一緒に動くパーツもついてきます。データの重なり順は変わりません。</p></div>', false);
   {
     const tg = limbTarget.split(":"), kind = tg[0], side = tg[1] || "R";
     const cnt = limbPartsOf(kind, side).length;
-    h += '<div class="fld" style="margin-top:10px;"><label>手足を丸ごとずらす</label>' +
-      '<div class="poseRow"><select id="limbSel">' +
+    h += subAcc("pLimb", "手足を丸ごとずらす", '<div class="poseRow"><select id="limbSel">' +
       [["arm:R", "右腕"], ["arm:L", "左腕"], ["leg:R", "右脚"], ["leg:L", "左脚"]].map(function (o) { return '<option value="' + o[0] + '"' + (limbTarget === o[0] || (limbTarget === o[0].split(":")[0] && o[0].slice(-1) === "R") ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
       '</select><select id="limbStepSel">' + [1, 2, 5, 10].map(function (v) { return '<option value="' + v + '"' + (limbStep === v ? " selected" : "") + ">" + v + "pxずつ</option>"; }).join("") + "</select></div>" +
       '<div class="toolbar" style="margin:6px 0;"><button class="pill sm" data-limb="out">⇠ 外へ</button><button class="pill sm" data-limb="in">内へ ⇢</button><button class="pill sm" data-limb="up">↑ 上へ</button><button class="pill sm" data-limb="down">↓ 下へ</button></div>' +
       '<label class="mini"><input type="checkbox" id="limbSym"' + (limbSym ? " checked" : "") + '> 反対側も左右対称に動かす</label>' +
-      '<p class="note">' + LIMBS[kind].name + 'のパーツ（' + cnt + '個。服の袖など一緒に動くパーツも含む）と、肩・肘・手首などの関節をまとめて動かします。曲げたままでも使えます。ロック中のパーツも動きます。続けて押した分は「元に戻す」1回で戻ります。</p></div>';
+      '<p class="note">' + LIMBS[kind].name + 'のパーツ（' + cnt + '個。服の袖など一緒に動くパーツも含む）と、肩・肘・手首などの関節をまとめて動かします。曲げたままでも使えます。ロック中のパーツも動きます。続けて押した分は「元に戻す」1回で戻ります。</p>', false);
   }
   {
     const ps = posesOf();
     if (poseSelId && !ps.some(function (q) { return q.id === poseSelId; })) poseSelId = null;
-    h += '<div class="fld poseSaveBox" style="margin-top:10px;"><label>ポーズの保存</label>' +
+    h += subAcc("pSave", "ポーズの保存" + (ps.length ? "（" + ps.length + "）" : ""), '<div class="poseSaveBox">' +
       (ps.length ? '<div class="poseChips">' + ps.map(function (q) {
         return '<button class="pill sm' + (q.id === poseSelId ? " on" : "") + '" data-poseload="' + q.id + '" title="押すとこのポーズになります">' + esc(q.name) + "</button>";
       }).join("") + "</div>" : '<p class="mini" style="margin:2px 0 6px;">まだありません。曲げ方と腕の重なりを決めたら、名前を付けて保存できます。</p>') +
       '<div class="poseRow"><input type="text" id="poseNameIn" placeholder="ポーズの名前（例：腕組み）" maxlength="30" style="flex:1;min-width:0;"><button class="pill sm" id="poseSaveBtn">＋ 今のポーズを保存</button></div>' +
       (poseSelId ? '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseOverBtn">選んだポーズを今の形で上書き</button><button class="pill sm" id="poseRenBtn">名前を変える</button><button class="pill sm" id="poseDelBtn">消す</button></div>' : "") +
-      '<p class="note">保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります（着せ替えツールでも使えるように）。呼び出すと、今の形からなめらかに動きます。</p></div>';
+      '<p class="note">保存したポーズはアバターのデータに入るので、JSON・ZIPの書き出しにも入ります（着せ替えツールでも使えるように）。呼び出すと、今の形からなめらかに動きます。</p></div>', false);
   }
-  h += '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="poseReset">まっすぐに戻す</button></div>' +
-    '<p class="note">試し曲げは見た目の確認用で、パーツの形は変わりません（保存したポーズだけは書き出しにも入ります）。曲げている間は、キャンバスでの形の編集はお休みです。</p>';
+  h += '<p class="note">試し曲げは見た目の確認用で、パーツの形は変わりません（保存したポーズだけは書き出しにも入ります）。曲げている間は、キャンバスでの形の編集はお休みです。</p>' +
+    '<p class="note">ツールバーの「関節」をONにすると、キャンバス上で関節をドラッグして動かせます。関節をクリックすると名前・位置を直したり消したりできます。パーツのプロパティでは、そのパーツが属する関節（始点・終点）も指定できます。</p>';
   box.innerHTML = h;
   box.querySelector("#poseSym").addEventListener("change", function (e) { poseSym = e.target.checked; easySyncBtns(); });
   box.querySelectorAll("[data-pose]").forEach(function (r) {
@@ -2762,6 +2822,7 @@ function renderPose() {
     r.addEventListener("change", function () { const id = r.getAttribute("data-pose"); motAutoKey(["j:" + id, poseSym && /_[RL]$/.test(id) ? "j:" + id.replace(/_([RL])$/, function (m, s) { return s === "R" ? "_L" : "_R"; }) : null]); });
   });
   box.querySelectorAll(".fingerBox").forEach(function (d) { d.addEventListener("toggle", function () { fingerOpen[d.dataset.fside] = d.open; }); });
+  bindSubAcc(box);
   box.querySelectorAll("[data-grip]").forEach(function (r) {
     r.addEventListener("input", function () {
       const k = r.dataset.grip, g = parseFloat(r.value) || 0;
