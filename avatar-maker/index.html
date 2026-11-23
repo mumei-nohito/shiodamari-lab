@@ -204,6 +204,10 @@
   .defEdit { margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; display:flex; flex-direction:column; gap:6px; }
   .defEdit label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .defFolders { max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 6px; display:flex; flex-direction:column; gap:2px; }
+  .fingerBox { margin:8px 0 4px; border:1px solid var(--line); border-radius:10px; padding:4px 8px; }
+  .fingerBox .poseRow { grid-template-columns:6.5em 1fr 3.2em; }
+  .fingerBox .poseName { white-space:normal; line-height:1.25; }
+  .fingerBox > summary { cursor:pointer; font-weight:700; font-size:12.5px; padding:2px 0; }
   .turnFolders { display:flex; flex-wrap:wrap; gap:2px 12px; font-size:12.5px; margin:0 0 6px; }
   .turnFolders label { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
   .turnRow { display:flex; align-items:center; gap:8px; margin:4px 0; min-width:0; }
@@ -300,8 +304,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/22 「表情（変形）」の「選んだパーツの変形」で、変形の名前がボタンに隠れていたのを直しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 指の関節を追加。指を付け根と途中の2か所で曲げられ、「握る」スライダーでいっせいに曲がります。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/23 20:30</span>指の関節を追加しました。手のパーツの名前を「右手・人差し指・根元」「右手・人差し指・先」のようにすると（横向きでまとめた指は「右手・指・根元」など）、「関節を自動で置く」で指の付け根と途中に関節が置かれます。関節パネルの「✋ 右手の指」で、「握る」（親指以外がいっせいに曲がる）と「親指」のスライダー、1本ずつのスライダーが使えます。かんたんポーズでは指のパーツをつかむと、その節で曲がります。モーション・ポーズの保存・手足を丸ごとずらすにも対応しています。</div>
     <div class="newsItem"><span>11/22 07:40</span>「選んだパーツの変形」で、長い変形の名前（顔の向きなど）が「形を直す」ボタンに隠れて見えなかったのを直しました。名前は折り返して全部表示し、矢印も大きく表示します。</div>
     <div class="newsItem"><span>11/22 02:30</span>「表情（変形）」に「🌐 顔の向きを自動で下書き」を追加。頭をボールに見立てて、横を向いた形の変形を全部のパーツに自動で作ります（真ん中の目・口は大きく、端は少しだけ動いて潰れ、前髪は多め・後ろ髪は逆向きに少し、顔の輪郭はほとんど動きません）。できた「顔の向き（画面→）」は「⇄ 逆向きを作る」で、鏡写しの「顔の向き（画面←）」にできます（反対側のパーツがあればそこへ、真ん中のパーツは自分自身へ写します）。</div>
     <div class="newsItem"><span>11/22 01:50</span>「使い方」を最近の機能に合わせて書き足しました。新しく「関節とポーズ」「🦴 かんたんポーズ」「表情（変形）と瞬き」「ゆれ・呼吸・体の動き」「🎬 モーション」の章を作り、瞬きと手を振る動きの作り方を手順つきで載せました。くり抜き・フォルダの透かし・重なりがバラバラ・パネルの幅なども追加しています。</div>
@@ -461,6 +466,8 @@
     <summary>関節とポーズ</summary>
     <p class="mini">
       ・まずプロパティの「関節」で「関節を自動で置く」を押します。パーツやフォルダの名前（上腕・前腕・手、太腿・すね・足、首）から、首・肩・肘・手首・股・膝・足首が置かれます。左右は名前の「右・左」（キャラ本人から見た向き）で見分けます。<br>
+      ・指の関節：手のパーツを指ごと・節ごとに分けると、指の付け根と途中の2か所で曲げられます。名前は「右手・人差し指・根元」「右手・人差し指・先」のように、<b>手（「右手」フォルダの中でもOK）＋指の名前＋根元／先</b>にします。指の名前は「親指・人差し指・中指・薬指・小指」。横向きの手で4本をまとめて描いた時は「右手・指・根元」「右手・指・先」のように「指」だけでOKです。影や線のパーツも同じ名前を含めると一緒に曲がります（例：「右手・指・先・影」）。節のつなぎ目は丸く描いておくと、曲げても継ぎ目が目立ちません。名前を付けたら「関節を自動で置く」を押し直すと、指の関節も置かれます。<br>
+      ・指の試し曲げは「✋ 右手の指」の中にあります。「握る」で親指以外がいっせいに曲がり（付け根は少し、途中は大きめ）、「親指」で親指が曲がります。1本ずつのスライダーもあります。かんたんポーズでは、指のパーツをつかむとその節の関節で曲がります。<br>
       ・関節の点のまわりの点線の円は「付け根の理想の丸み」です。腕や脚の付け根をこの円に沿った丸い形にしておくと、曲げても継ぎ目が崩れにくくなります。<br>
       ・「関節」表示をオンにすると、関節の点をドラッグで動かして位置を直せます。クリックで名前・座標の編集、追加・削除もできます。<br>
       ・試し曲げ：関節ごとのスライダーで腕や脚を曲げられます。肩を回すと肘から先もついてきます。頭のフォルダの中と髪のパーツは、首と一緒に動きます。データは変わらず、「まっすぐに戻す」で元通りです。<br>
@@ -1489,6 +1496,48 @@ const RIG = {
   chainOf: { head: ["neck"], upperArm: ["shoulder"], foreArm: ["shoulder", "elbow"], hand: ["shoulder", "elbow", "wrist"],
              thigh: ["hip"], shin: ["hip", "knee"], foot: ["hip", "knee", "ankle"] }
 };
+/* ============ 指の関節 ============
+   手のパーツ（名前かフォルダに「手」）のうち、名前に指の名前があるものは指として、付け根と途中の2か所で曲がる。
+   名前の例：「右手・人差し指・根元」「右手・人差し指・先」（「先」が付いたら先の節、それ以外は根元の節）
+   横向きの手で4本をまとめて描いた時は「右手・指・根元」「右手・指・先」のように「指」だけでOK */
+const FINGERS = [
+  { k: "thumb", re: /親指/, name: "親指" },
+  { k: "index", re: /人差し指|人さし指|ひとさし指/, name: "人差し指" },
+  { k: "middle", re: /中指/, name: "中指" },
+  { k: "ring", re: /薬指/, name: "薬指" },
+  { k: "pinky", re: /小指/, name: "小指" },
+  { k: "four", re: /指/, name: "指" }
+];
+const FINGER_RANGE = 110;
+/* パーツがどの指のどの節か：{ k, n(1＝根元の節／2＝先の節) } */
+function rigFinger(p) {
+  if (rigSeg(p) !== "hand") return null;
+  const txt = [p.name || ""].concat((p.group || "").split(FSEP).reverse());
+  for (let i = 0; i < txt.length; i++) {
+    const f = FINGERS.find(function (F) { return F.re.test(txt[i]); });
+    if (f) return { k: f.k, n: /先/.test(txt.slice(0, i + 1).join("/")) ? 2 : 1 };
+  }
+  return null;
+}
+function fingerJointId(k, n, side) { return "rig_f" + k + n + "_" + side; }
+function fingerOfBase(base) { const m = /^f(thumb|index|middle|ring|pinky|four)([12])$/.exec(base || ""); return m ? { k: m[1], n: +m[2] } : null; }
+/* その関節より根元側の関節（回転がついてくる順） */
+function jointParents(id) {
+  const m = /^rig_(\w+?)(?:_([RL]))?$/.exec(id); if (!m) return [];
+  const f = fingerOfBase(m[1]);
+  if (f) {
+    const ps = ["shoulder", "elbow", "wrist"].map(function (b) { return rigJointId(b, m[2]); });
+    if (f.n === 2) ps.push(fingerJointId(f.k, 1, m[2]));
+    return ps;
+  }
+  return ({ elbow: ["shoulder"], wrist: ["shoulder", "elbow"], knee: ["hip"], ankle: ["hip", "knee"] }[m[1]] || []).map(function (b) { return rigJointId(b, m[2]); });
+}
+function jointRange(id) {
+  const base = id.replace(/^rig_/, "").replace(/_[RL]$/, "");
+  if (fingerOfBase(base)) return FINGER_RANGE;
+  const d = RIG.joints.find(function (x) { return x.base === base; });
+  return d ? d.range : 90;
+}
 function rigSide(p) {
   const nm = p.name || "", g = p.group || "";
   const pick = function (s) { const r = s.lastIndexOf("右"), l = s.lastIndexOf("左"); return r < 0 && l < 0 ? null : (r > l ? "R" : "L"); };
@@ -1508,7 +1557,10 @@ function rigSeg(p) {
   return null;
 }
 function rigJointId(base, side) { return base === "neck" ? "rig_neck" : "rig_" + base + "_" + side; }
-function rigJointName(base, side) { const d = RIG.joints.find(function (j) { return j.base === base; }); return d.name + (base === "neck" ? "" : (side === "R" ? "・右" : "・左")); }
+function rigJointName(base, side) {
+  const f = fingerOfBase(base);
+  if (f) return FINGERS.find(function (F) { return F.k === f.k; }).name + (f.n === 1 ? "の付け根" : "の途中") + (side === "R" ? "・右" : "・左");
+  const d = RIG.joints.find(function (j) { return j.base === base; }); return d.name + (base === "neck" ? "" : (side === "R" ? "・右" : "・左")); }
 function partPts(p) {
   const sh = p.shape;
   if (sh.type === "polygon" || (sh.type === "stroke" && sh.points)) return sh.points.map(function (q) { return [q[0], q[1]]; });
@@ -1579,6 +1631,28 @@ function rigEstimate() {
       }
     }
   });
+  /* 指：根元の節の「手のひら側の端」に付け根、根元の節と先の節の間に途中の関節 */
+  ["R", "L"].forEach(function (sd) {
+    const hands = docData.parts.filter(function (p) { return !ed(p.id).hidden && rigSeg(p) === "hand" && rigSide(p) === sd; });
+    if (!hands.length) return;
+    const palmParts = hands.filter(function (p) { return !rigFinger(p); });
+    const palmPts = rigGroupPts(palmParts.length ? palmParts : hands);
+    if (!palmPts.length) return;
+    let px = 0, py = 0; palmPts.forEach(function (q) { px += q[0]; py += q[1]; }); const palmC = [px / palmPts.length, py / palmPts.length];
+    const biggest = function (ps) { return ps.slice().sort(function (a, b) { const ba = partBBox(a), bb = partBBox(b); return (bb ? bb.w * bb.h : 0) - (ba ? ba.w * ba.h : 0); })[0]; };
+    FINGERS.forEach(function (F) {
+      const s1 = hands.filter(function (p) { const f = rigFinger(p); return f && f.k === F.k && f.n === 1; });
+      const s2 = hands.filter(function (p) { const f = rigFinger(p); return f && f.k === F.k && f.n === 2; });
+      if (!s1.length) return;
+      const e1 = rigEnds(partPts(biggest(s1))); if (!e1) return;
+      const r1 = near(e1, palmC);
+      out.push({ base: "f" + F.k + "1", side: sd, pos: r1[0].p, r: r1[0].r });
+      if (s2.length) {
+        const e2 = rigEnds(partPts(biggest(s2)));
+        if (e2) { const r2 = near(e2, r1[1].p); out.push({ base: "f" + F.k + "2", side: sd, pos: mid(r1[1].p, r2[0].p), r: (r1[1].r + r2[0].r) / 2 }); }
+      }
+    });
+  });
   /* 首：首のパーツの上の端（頭の回転の中心） */
   const neck = docData.parts.find(function (p) { return /^首/.test(p.name) && !ed(p.id).hidden && p.category !== "background"; });
   if (neck) {
@@ -1589,14 +1663,14 @@ function rigEstimate() {
 }
 function rigAutoPlace() {
   const est = rigEstimate();
-  if (!est.length) { alert("関節を置けるパーツが見つかりませんでした。\nパーツかフォルダの名前に「上腕・前腕・手」「太腿・すね・足」「首」と、左右（右・左）を入れてください。"); return; }
+  if (!est.length) { alert("関節を置けるパーツが見つかりませんでした。\nパーツかフォルダの名前に「上腕・前腕・手」「太腿・すね・足」「首」と、左右（右・左）を入れてください。\n指を曲げたい時は「右手・人差し指・根元」「右手・人差し指・先」のように、指の名前と根元／先も入れます。"); return; }
   const has = (docData.joints || []).some(function (j) { return /^rig_/.test(j.id); });
   if (has && !confirm("自動で置いた関節を、今の形に合わせて置き直します。よろしいですか？")) return;
   pushUndo();
   if (!Array.isArray(docData.joints)) docData.joints = [];
   est.forEach(function (e) {
-    const id = rigJointId(e.base, e.side);
-    const j = { id: id, name: rigJointName(e.base, e.side), pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], r: Math.round(e.r * 10) / 10, status: "自動で配置" };
+    const id = fingerOfBase(e.base) ? fingerJointId(e.base.slice(1, -1), +e.base.slice(-1), e.side) : rigJointId(e.base, e.side);
+    const j = { id: fingerOfBase(e.base) ? fingerJointId(e.base.slice(1, -1), +e.base.slice(-1), e.side) : id, name: rigJointName(e.base, e.side), pos: [Math.round(e.pos[0] * 10) / 10, Math.round(e.pos[1] * 10) / 10], r: Math.round(e.r * 10) / 10, status: "自動で配置" };
     const i = docData.joints.findIndex(function (x) { return x.id === id; });
     if (i >= 0) docData.joints[i] = Object.assign(docData.joints[i], { pos: j.pos, r: j.r, status: j.status }); else docData.joints.push(j);
   });
@@ -1605,7 +1679,8 @@ function rigAutoPlace() {
   const miss = [];
   ["R", "L"].forEach(function (sd) { ["shoulder", "elbow", "wrist", "hip", "knee", "ankle"].forEach(function (b) { if (!est.some(function (e) { return e.base === b && e.side === sd; })) miss.push(rigJointName(b, sd)); }); });
   if (!est.some(function (e) { return e.base === "neck"; })) miss.unshift("首");
-  alert("関節を " + est.length + " 個置きました。" + (miss.length ? "\n見つからなかった関節：" + miss.join("、") + "\n（パーツかフォルダの名前を確認してください）" : "") + "\n関節の点はドラッグで直せます。点のまわりの点線の円は「付け根の理想の丸み」です。");
+  const nf = est.filter(function (e) { return fingerOfBase(e.base); }).length;
+  alert("関節を " + est.length + " 個置きました。" + (nf ? "（そのうち指の関節 " + nf + " 個）" : "") + (miss.length ? "\n見つからなかった関節：" + miss.join("、") + "\n（パーツかフォルダの名前を確認してください）" : "") + "\n関節の点はドラッグで直せます。点のまわりの点線の円は「付け根の理想の丸み」です。");
 }
 /* ---- 試し曲げ（データは書き換えない） ---- */
 let pose = {};
@@ -1627,8 +1702,10 @@ function limbPartsOf(kind, side) {
 }
 function shiftLimb(kind, side, dx, dy) {
   limbPartsOf(kind, side).forEach(function (p) { translatePart(p, dx, dy); });
-  LIMBS[kind].joints.forEach(function (b) {
-    const j = rigJointById(rigJointId(b, side));
+  const jids = LIMBS[kind].joints.map(function (b) { return rigJointId(b, side); });
+  if (kind === "arm") FINGERS.forEach(function (F) { jids.push(fingerJointId(F.k, 1, side), fingerJointId(F.k, 2, side)); });
+  jids.forEach(function (jid) {
+    const j = rigJointById(jid);
     if (j && j.pos) { j.pos[0] = Math.round((j.pos[0] + dx) * 10) / 10; j.pos[1] = Math.round((j.pos[1] + dy) * 10) / 10; }
   });
 }
@@ -2550,8 +2627,10 @@ function poseChain(p) {
   const sd = sg === "head" ? null : rigSide(p);
   if (sg !== "head" && !sd) return null;
   const list = [];
-  RIG.chainOf[sg].forEach(function (b) {
-    const id = rigJointId(b, sd), j = rigJointById(id), a = pose[id];
+  const ids = RIG.chainOf[sg].map(function (b) { return rigJointId(b, sd); });
+  if (sg === "hand") { const f = rigFinger(p); if (f) { ids.push(fingerJointId(f.k, 1, sd)); if (f.n === 2) ids.push(fingerJointId(f.k, 2, sd)); } }
+  ids.forEach(function (id) {
+    const j = rigJointById(id), a = pose[id];
     if (j && j.pos && a) list.push({ a: a, p: j.pos });
   });
   return list.length ? list : null;
@@ -2572,10 +2651,33 @@ function posePoint(pt, chainIds) {
   return x;
 }
 function posedJointPos(j) {
-  const m = /^rig_(\w+?)(?:_([RL]))?$/.exec(j.id);
-  if (!m || !poseActive()) return j.pos;
-  const parents = { elbow: ["shoulder"], wrist: ["shoulder", "elbow"], knee: ["hip"], ankle: ["hip", "knee"] }[m[1]] || [];
-  return posePoint(j.pos, parents.map(function (b) { return rigJointId(b, m[2]); }));
+  if (!poseActive()) return j.pos;
+  return posePoint(j.pos, jointParents(j.id));
+}
+let gripVals = {}, fingerOpen = {};
+function poseSliderRow(j, label) {
+  const rg = jointRange(j.id), v = pose[j.id] || 0;
+  return '<div class="poseRow"><span class="poseName" title="' + esc(j.name) + '">' + esc(label || j.name) + '</span><input type="range" min="' + (-rg) + '" max="' + rg + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
+}
+/* 握る：親指以外（t＝親指だけ）の指の関節を、付け根は0.6倍・途中は1倍の割合で曲げる */
+function gripJoints(sd, thumb) {
+  const out = [];
+  FINGERS.forEach(function (F) {
+    if ((F.k === "thumb") !== !!thumb) return;
+    [1, 2].forEach(function (n) { const id = fingerJointId(F.k, n, sd); if (rigJointById(id)) out.push({ id: id, f: n === 1 ? 0.6 : 1 }); });
+  });
+  return out;
+}
+function applyGrip(key, g) {
+  const sd = key[0], thumb = key.length > 1;
+  gripVals[key] = g;
+  const ids = [];
+  const set = function (side, val) {
+    gripJoints(side, thumb).forEach(function (o) { const a = Math.round(val / 100 * 100 * o.f * 10) / 10; if (a) pose[o.id] = a; else delete pose[o.id]; ids.push(o.id); });
+  };
+  set(sd, g);
+  if (poseSym) { const o = sd === "R" ? "L" : "R"; gripVals[o + (thumb ? "t" : "")] = g; set(o, -g); }
+  return ids;
 }
 function renderPose() {
   const box = document.getElementById("poseBox");
@@ -2586,11 +2688,21 @@ function renderPose() {
   const sorted = order.map(rigJointById).filter(function (j) { return j && j.pos; });
   let h = '<label class="mini" style="display:flex;gap:6px;align-items:center;margin:2px 0 6px;"><input type="checkbox" id="poseSym"' + (poseSym ? " checked" : "") + '>左右対称に曲げる</label>';
   sorted.forEach(function (j) {
-    const base = j.id.replace(/^rig_/, "").replace(/_[RL]$/, "");
-    const def = RIG.joints.find(function (d) { return d.base === base; }) || { range: 90 };
-    const v = pose[j.id] || 0;
-    h += '<div class="poseRow"><span class="poseName">' + esc(j.name) + '</span><input type="range" min="' + (-def.range) + '" max="' + def.range + '" step="1" value="' + v + '" data-pose="' + j.id + '"><span class="poseVal" id="pv_' + j.id + '">' + v + "°</span></div>";
+    h += poseSliderRow(j);
   });
+  {
+    /* 指：手ごとに「握る」「親指」のまとめスライダーと、1つずつのスライダー */
+    ["R", "L"].forEach(function (sd) {
+      const fj = []; FINGERS.forEach(function (F) { [1, 2].forEach(function (n) { const j = rigJointById(fingerJointId(F.k, n, sd)); if (j && j.pos) fj.push(j); }); });
+      if (!fj.length) return;
+      const hasT = fj.some(function (j) { return /^rig_fthumb/.test(j.id); }), hasO = fj.some(function (j) { return !/^rig_fthumb/.test(j.id); });
+      h += '<details class="fingerBox"' + (fingerOpen[sd] ? " open" : "") + ' data-fside="' + sd + '"><summary>✋ ' + (sd === "R" ? "右" : "左") + "手の指（" + fj.length + "）</summary>" +
+        (hasO ? '<div class="poseRow"><span class="poseName">握る</span><input type="range" min="-100" max="100" step="1" value="' + (gripVals[sd] || 0) + '" data-grip="' + sd + '"><span class="poseVal" id="gv_' + sd + '">' + (gripVals[sd] || 0) + "%</span></div>" : "") +
+        (hasT ? '<div class="poseRow"><span class="poseName">親指</span><input type="range" min="-100" max="100" step="1" value="' + (gripVals[sd + "t"] || 0) + '" data-grip="' + sd + 't"><span class="poseVal" id="gv_' + sd + 't">' + (gripVals[sd + "t"] || 0) + "%</span></div>" : "") +
+        '<p class="note" style="margin:2px 0 6px;">「握る」で親指以外の指の関節がいっせいに曲がります（付け根は少し、途中は大きめ）。曲がる向きが逆なら − 側へ。</p>' +
+        fj.map(function (j) { const f = fingerOfBase(j.id.replace(/^rig_/, "").replace(/_[RL]$/, "")); return poseSliderRow(j, FINGERS.find(function (F) { return F.k === f.k; }).name + (f.n === 1 ? "・付け根" : "・途中")); }).join("") + "</details>";
+    });
+  }
   const layOpt = function (side, low) {
     const key = side + (low ? "low" : ""), v = poseLayer[key] || "";
     return '<select data-poselayer="' + key + '">' +
@@ -2649,6 +2761,18 @@ function renderPose() {
     });
     r.addEventListener("change", function () { const id = r.getAttribute("data-pose"); motAutoKey(["j:" + id, poseSym && /_[RL]$/.test(id) ? "j:" + id.replace(/_([RL])$/, function (m, s) { return s === "R" ? "_L" : "_R"; }) : null]); });
   });
+  box.querySelectorAll(".fingerBox").forEach(function (d) { d.addEventListener("toggle", function () { fingerOpen[d.dataset.fside] = d.open; }); });
+  box.querySelectorAll("[data-grip]").forEach(function (r) {
+    r.addEventListener("input", function () {
+      const k = r.dataset.grip, g = parseFloat(r.value) || 0;
+      const ids = applyGrip(k, g);
+      const l = document.getElementById("gv_" + k); if (l) l.textContent = g + "%";
+      ids.forEach(function (id) { const s2 = box.querySelector('[data-pose="' + id + '"]'); if (s2) s2.value = pose[id] || 0; const v2 = document.getElementById("pv_" + id); if (v2) v2.textContent = (pose[id] || 0) + "°"; });
+      if (!showJoints) { showJoints = true; document.getElementById("jointsBtn").classList.add("on"); }
+      renderStage();
+    });
+    r.addEventListener("change", function () { const k = r.dataset.grip; const ids = applyGrip(k, parseFloat(r.value) || 0); motAutoKey(ids.map(function (id) { return "j:" + id; })); });
+  });
   box.querySelector("#limbSel").addEventListener("change", function (e) { limbTarget = e.target.value; renderPose(); });
   box.querySelector("#limbStepSel").addEventListener("change", function (e) { limbStep = +e.target.value; });
   box.querySelector("#limbSym").addEventListener("change", function (e) { limbSym = e.target.checked; });
@@ -2698,7 +2822,7 @@ function renderPose() {
     if (!confirm("ポーズ「" + q.name + "」を消しますか？（元に戻すで戻せます）")) return;
     pushUndo(); docData.poses = posesOf().filter(function (x) { return x.id !== q.id; }); poseSelId = null; save(); renderPose();
   });
-  box.querySelector("#poseReset").addEventListener("click", function () { cancelAnimationFrame(poseAnim); poseSelId = null; pose = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
+  box.querySelector("#poseReset").addEventListener("click", function () { cancelAnimationFrame(poseAnim); poseSelId = null; pose = {}; gripVals = {}; poseLayer = { R: "", L: "", Rlow: "", Llow: "" }; renderPose(); renderStage(); });
 }
 function buildPartsSVG() {
   buildDefCache();
@@ -4447,18 +4571,24 @@ function easySyncBtns() {
   if (sb) { sb.hidden = !easyMode; sb.classList.toggle("on", !!poseSym); }
   if (rb) rb.hidden = !easyMode;
 }
-function easyJointDef(id) { const base = id.replace(/^rig_/, "").replace(/_[RL]$/, ""); return RIG.joints.find(function (d) { return d.base === base; }) || { range: 90, base: base }; }
+function easyJointDef(id) { return { range: jointRange(id) }; }
 /* 関節から、その先（子の関節）への向き。輪っかの●を骨の向きに置くため */
 function easyBoneDir(j) {
   const m = /^rig_(\w+?)(?:_([RL]))?$/.exec(j.id); if (!m) return [0, 1];
-  const child = { shoulder: "elbow", elbow: "wrist", hip: "knee", knee: "ankle" }[m[1]];
-  const cj = child ? rigJointById(rigJointId(child, m[2])) : null;
+  const fo = fingerOfBase(m[1]);
+  const child = fo ? null : { shoulder: "elbow", elbow: "wrist", hip: "knee", knee: "ankle" }[m[1]];
+  let cj = child ? rigJointById(rigJointId(child, m[2])) : null;
+  if (fo && fo.n === 1) cj = rigJointById(fingerJointId(fo.k, 2, m[2]));
+  if (fo && (fo.n === 2 || !cj)) {
+    /* 指の先：根元から途中への向きの延長（無ければ手首から付け根への向き） */
+    const a = rigJointById(fo.n === 2 ? fingerJointId(fo.k, 1, m[2]) : rigJointId("wrist", m[2]));
+    if (a && a.pos) { const dx = j.pos[0] - a.pos[0], dy = j.pos[1] - a.pos[1], l = Math.hypot(dx, dy); if (l > 1) cj = { pos: [j.pos[0] + dx / l * 10, j.pos[1] + dy / l * 10] }; }
+  }
   let v = m[1] === "neck" ? [0, -1] : [0, 1];
   if (cj && cj.pos) { const dx = cj.pos[0] - j.pos[0], dy = cj.pos[1] - j.pos[1], l = Math.hypot(dx, dy); if (l > 1) v = [dx / l, dy / l]; }
   else if (m[1] === "wrist") { const e = rigJointById(rigJointId("elbow", m[2])); if (e && e.pos) { const dx = j.pos[0] - e.pos[0], dy = j.pos[1] - e.pos[1], l = Math.hypot(dx, dy); if (l > 1) v = [dx / l, dy / l]; } }
   /* 親から自分までの曲げ角を足す（2Dの回転は足し算でつながる） */
-  const parents = { elbow: ["shoulder"], wrist: ["shoulder", "elbow"], knee: ["hip"], ankle: ["hip", "knee"] }[m[1]] || [];
-  let a = pose[j.id] || 0; parents.forEach(function (b) { a += pose[rigJointId(b, m[2])] || 0; });
+  let a = pose[j.id] || 0; jointParents(j.id).forEach(function (id) { a += pose[id] || 0; });
   const r = a * Math.PI / 180;
   return [v[0] * Math.cos(r) - v[1] * Math.sin(r), v[0] * Math.sin(r) + v[1] * Math.cos(r)];
 }
@@ -4506,7 +4636,10 @@ function easyDown(e, t) {
   const sg = p ? rigSeg(p) : null;
   if (sg && EASY_SEG_JOINT[sg]) {
     const sd = sg === "head" ? null : rigSide(p);
-    const jid = rigJointId(EASY_SEG_JOINT[sg], sd);
+    let jid = rigJointId(EASY_SEG_JOINT[sg], sd);
+    /* 指のパーツは、その節の関節で曲げる（指の関節が置いてあれば） */
+    const fi = sg === "hand" && sd ? rigFinger(p) : null;
+    if (fi && rigJointById(fingerJointId(fi.k, fi.n, sd))) jid = fingerJointId(fi.k, fi.n, sd);
     if ((sg === "head" || sd) && rigJointById(jid) && rigJointById(jid).pos && easyStartRot(e, jid)) { renderStage(); return; }
   }
   /* 体や何もない所：画面の移動（軽く押しただけなら、輪っかを消す） */
@@ -5066,6 +5199,7 @@ toggleBtn("easyBtn", function (on) { easySetMode(on); });
 document.getElementById("easySymBtn").addEventListener("click", function () { poseSym = !poseSym; easySyncBtns(); renderPose(); });
 document.getElementById("easyResetBtn").addEventListener("click", function () {
   const ks = Object.keys(pose).filter(function (k) { return pose[k]; }).map(function (k) { return "j:" + k; });
+  gripVals = {};
   pose = {}; renderPose(); renderStage(); motAutoKey(ks);
 });
 toggleBtn("ghostBtn", function (on) { ghostOn = on; renderStage(); });
