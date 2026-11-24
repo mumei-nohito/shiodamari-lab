@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>工房について｜潮だまり工房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--s0:#2d97bb;--s1:#15698c;--s2:#eaf7fa;--s3:#c9e8ef;--fg:#0b2e3b;--mut:#3f6a79;--card:rgba(255,255,255,.62);--line:rgba(21,105,140,.25);--ac:#0b7a93;--glow:rgba(45,151,187,.38);--bub:rgba(21,105,140,.35);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s0:#0d4468;--s1:#062a40;--s2:#04141f;--s3:#020b12;--fg:#d8f1f5;--mut:#8fbac4;--card:rgba(13,46,66,.55);--line:rgba(95,212,222,.22);--ac:#5fd4de;--glow:rgba(95,212,222,.3);--bub:rgba(160,235,245,.4)}}
+:root[data-theme="dark"]{--s0:#0d4468;--s1:#062a40;--s2:#04141f;--s3:#020b12;--fg:#d8f1f5;--mut:#8fbac4;--card:rgba(13,46,66,.55);--line:rgba(95,212,222,.22);--ac:#5fd4de;--glow:rgba(95,212,222,.3);--bub:rgba(160,235,245,.4)}
+:root[data-theme="dusk"]{--s0:#c2553f;--s1:#5a2f6e;--s2:#fbe9df;--s3:#f2cdbd;--fg:#3a2230;--mut:#80606c;--card:rgba(255,248,242,.7);--line:rgba(194,85,63,.28);--ac:#b8452f;--glow:rgba(240,138,93,.4);--bub:rgba(194,85,63,.35)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth;background:linear-gradient(var(--s0) 50%,var(--s3) 50%)}
+body{margin:0;background:var(--s2);color:var(--fg);font:16px/1.8 "Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow-x:hidden}
+#bub{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#bub i{position:absolute;bottom:-40px;border-radius:50%;border:1px solid var(--bub);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.55),rgba(255,255,255,.04));animation:rise linear infinite}
+@keyframes rise{0%{transform:translate(0,0)}50%{transform:translate(14px,-55vh)}100%{transform:translate(-10px,-115vh)}}
+svg{fill:currentColor}
+.hero{position:relative;z-index:1;overflow:hidden;color:#fff;background:linear-gradient(var(--s0),var(--s1));padding:0 20px 150px}
+.hero::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(105deg,rgba(255,255,255,.11) 0 36px,transparent 36px 120px);-webkit-mask:linear-gradient(#000,transparent 85%);mask:linear-gradient(#000,transparent 85%);animation:ray 14s ease-in-out infinite alternate}
+@keyframes ray{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+.in,.bar{max-width:960px;margin:0 auto;position:relative;z-index:2}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
+.logo{font-weight:700;letter-spacing:.08em}
+button{font:inherit;font-size:.85rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:.3em 1em;cursor:pointer;backdrop-filter:blur(6px)}
+select{font:inherit;font-size:.85rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:.3em .8em;cursor:pointer;max-width:60vw}
+option{color:#0b2e3b;background:#fff}
+.eyebrow{margin:48px 0 8px;font-size:.85rem;letter-spacing:.2em;opacity:.85}
+h1{margin:0 0 16px;font-size:clamp(2rem,6.4vw,3.5rem);line-height:1.35}
+.lead{max-width:30em;margin:0 0 28px;opacity:.92}
+.btn{display:inline-block;background:#fff;color:#0b4f6a;font-weight:700;text-decoration:none;border-radius:999px;padding:.7em 1.8em;box-shadow:0 6px 20px rgba(0,30,50,.25);transition:transform .25s}
+.btn:hover{transform:translateY(-2px)}
+.sw{position:absolute;left:0;width:64px;height:64px;color:rgba(255,255,255,.2);animation:swim 44s linear infinite}
+.s1{top:30%}.s2{top:58%;width:40px;height:40px;animation-name:swimr;animation-duration:60s;animation-delay:-22s}
+.jl{position:absolute;right:7%;top:16%;width:70px;height:70px;color:rgba(255,255,255,.22);animation:drift 9s ease-in-out infinite alternate}
+@keyframes swim{from{transform:translateX(-120px) scaleX(-1)}to{transform:translateX(calc(100vw + 120px)) scaleX(-1)}}
+@keyframes swimr{from{transform:translateX(calc(100vw + 120px))}to{transform:translateX(-120px)}}
+@keyframes drift{from{transform:translateY(-10px) rotate(-4deg)}to{transform:translateY(14px) rotate(4deg)}}
+.wave{position:absolute;left:0;right:0;bottom:-1px;height:110px;overflow:hidden;z-index:1}
+.wave svg{position:absolute;bottom:0;left:0;width:200%;height:100%;fill:var(--s2)}
+.w1{opacity:.5;animation:wv 26s linear infinite}.w2{animation:wv 17s linear infinite reverse;transform:translateY(14px)}
+@keyframes wv{to{transform:translateX(-50%)}}
+.w2{animation-name:wv2}@keyframes wv2{from{transform:translate(-50%,14px)}to{transform:translate(0,14px)}}
+main{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:12px 20px 40px}
+.ch{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:36px 0 16px;padding-bottom:10px;border-bottom:2px dotted var(--line)}
+.ch h2{margin:0;font-size:1.5rem}.ch p{margin:0;color:var(--mut);font-size:.92rem;flex:1 1 14em}
+.cnt{font-size:.8rem;color:var(--ac);border:1px solid var(--line);border-radius:999px;padding:0 .8em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;padding:20px;border-radius:20px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:transform .3s,box-shadow .3s,opacity .7s}
+a.card:hover{transform:translateY(-5px);box-shadow:0 14px 34px var(--glow)}
+.card h3{margin:6px 0 0;font-size:1.1rem}.card p{margin:0;font-size:.9rem;color:var(--mut)}
+.ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--ac);background:rgba(120,200,220,.2)}
+.ic svg{width:30px;height:30px}
+.tg{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.tg li{font-size:.75rem;color:var(--ac);border:1px solid var(--line);border-radius:999px;padding:0 .7em}
+.go{margin-top:auto;padding-top:8px;font-size:.88rem;font-weight:700;color:var(--ac)}
+.soon{border-style:dashed;opacity:.8}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}.rv.on{opacity:1;transform:none}
+a.card.rv.on:hover{transform:translateY(-5px)}
+footer{position:relative;z-index:1;text-align:center;font-size:.82rem;color:var(--mut);padding:40px 20px 28px;background:linear-gradient(var(--s2),var(--s3))}
+:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}#bub{display:none}}
+</style>
+<style>
+.hero{padding-bottom:120px}
+.bar a.home{color:#fff;text-decoration:none;font-weight:700;letter-spacing:.08em}
+.box{padding:22px 24px;border-radius:20px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);margin:0 0 18px}
+.box h2{margin:0 0 8px;font-size:1.25rem;display:flex;align-items:center;gap:10px}
+.box h2 .ic{width:38px;height:38px;border-radius:12px}.box h2 .ic svg{width:24px;height:24px}
+.box p{margin:.4em 0}.box ul{margin:.4em 0;padding-left:1.3em}.box li{margin:.25em 0}
+.who{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.who .av{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;color:var(--ac);background:rgba(120,200,220,.2);border:2px solid var(--line);flex:none}
+.who .av svg{width:52px;height:52px}
+.who .nm{font-size:1.5rem;font-weight:700;line-height:1.3}.who .rb{font-size:.85rem;color:var(--mut)}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.lk{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:.45em 1.1em;background:rgba(255,255,255,.18);transition:transform .25s,box-shadow .25s}
+.lk:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--glow)}
+.lk b{font-size:.95rem}.lk small{color:var(--mut);font-size:.78rem}
+.note{font-size:.88rem;color:var(--mut)}
+.back{display:inline-block;margin:8px 0 0;color:var(--ac);font-weight:700;text-decoration:none}
+footer a{color:var(--ac)}
+</style></head>
+<body>
+<div id="bub" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="fish" viewBox="0 0 100 100"><path d="M8 50C24 22 56 22 74 50 56 78 24 78 8 50Z"/><path d="M72 50 96 30V70Z"/></symbol>
+<symbol id="jelly" viewBox="0 0 100 100"><path d="M18 50C18 14 82 14 82 50Q50 58 18 50Z"/><path d="M30 54C24 68 36 76 30 92M50 56C44 72 56 80 50 96M70 54C76 68 64 76 70 92" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="shell" viewBox="0 0 100 100"><path d="M50 14C24 14 10 40 14 64 18 82 34 88 50 88S82 82 86 64C90 40 76 14 50 14Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/><path d="M50 22V86M34 26 40 86M66 26 60 86M22 42 32 84M78 42 68 84" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="pool" viewBox="0 0 100 100"><path d="M10 60C10 40 30 30 50 30S90 40 90 60 70 86 50 86 10 80 10 60Z" fill="none" stroke="currentColor" stroke-width="6"/><path d="M26 58Q38 50 50 58T74 58" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="62" cy="18" r="5"/><circle cx="74" cy="10" r="3"/></symbol>
+<symbol id="chat" viewBox="0 0 100 100"><path d="M14 22H86V68H44L26 84V68H14Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/><circle cx="34" cy="45" r="5"/><circle cx="50" cy="45" r="5"/><circle cx="66" cy="45" r="5"/></symbol>
+<symbol id="lock" viewBox="0 0 100 100"><rect x="20" y="44" width="60" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="6"/><path d="M32 44V32a18 18 0 0 1 36 0v12" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="50" cy="64" r="6"/></symbol>
+<symbol id="wave" viewBox="0 0 100 100"><path d="M8 40Q20 28 32 40T56 40T80 40T96 34M8 62Q20 50 32 62T56 62T80 62T96 56" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></symbol>
+</defs></svg>
+<header class="hero">
+<div class="bar"><a class="home" href="../">← 潮だまり工房</a><select id="th" aria-label="表示モード"></select></div>
+<div class="in"><p class="eyebrow">ABOUT</p>
+<h1>工房について</h1>
+<p class="lead">この潮だまりを作っている人と、工房のちょっとした決まりごとのお話です。</p></div>
+<svg class="sw s1" viewBox="0 0 100 100" aria-hidden="true"><use href="#fish"/></svg>
+<svg class="jl" viewBox="0 0 100 100" aria-hidden="true"><use href="#jelly"/></svg>
+<div class="wave" aria-hidden="true">
+<svg class="w1" viewBox="0 0 2880 120" preserveAspectRatio="none"><path d="M0 60C240 20 480 100 720 60S1200 100 1440 60 1680 20 1920 60 2400 100 2880 60V120H0Z"/></svg>
+<svg class="w2" viewBox="0 0 2880 120" preserveAspectRatio="none"><path d="M0 60C240 100 480 20 720 60S1200 20 1440 60 1680 100 1920 60 2400 20 2880 60V120H0Z"/></svg>
+</div>
+</header>
+<main>
+
+<section class="box rv">
+<h2><span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#shell"/></svg></span>潮だまりの主</h2>
+<div class="who">
+<span class="av"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#shell"/></svg></span>
+<div><div class="nm">無銘</div><div class="rb">むめい</div></div>
+</div>
+<p>AIとおしゃべりしているうちに、いろいろなことに興味がわいてきた人です。プログラミングの経験はなく、「こんなのがあったらいいな」をAIに相談しながら、少しずつ形にしています。</p>
+<p>画像生成やAIチャットでの創作が好きで、そのとき自分が欲しくなった道具をここに置いています。</p>
+<h3 style="margin:16px 0 4px;font-size:1rem">ここにいます</h3>
+<div class="links">
+<a class="lk" href="https://z-etter.com/profile/mistysakuya7598" target="_blank" rel="noopener"><b>Zetter</b><small>@mistysakuya7598</small></a>
+<a class="lk" href="https://x.com/zeta_nanaki10" target="_blank" rel="noopener"><b>X</b><small>@zeta_nanaki10（鍵アカウントです）</small></a>
+<a class="lk" href="https://github.com/mumei-nohito/shiodamari-lab" target="_blank" rel="noopener"><b>GitHub</b><small>工房のソースコード</small></a>
+</div>
+<p class="note">Xは鍵アカウントなので、見るにはフォローリクエストが必要です。</p>
+</section>
+
+<section class="box rv">
+<h2><span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#pool"/></svg></span>この工房のこと</h2>
+<p>「潮だまり工房」は、やってみたいこと・作ってみたいものを、ツールや試作としてひとつずつ並べていく場所です。満ち引きのたびに何かが流れつく潮だまりのように、思いついたものが少しずつ増えていきます。</p>
+<p>どのツールも無料で、登録なしで使えます。</p>
+</section>
+
+<section class="box rv">
+<h2><span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#chat"/></svg></span>AIと一緒に作っています</h2>
+<p>ここにあるツールは、ChatGPT（チャッピー）やClaude（クロード）などのAIと相談しながら作っています。アイデアや「こうしたい」は無銘が考えて、仕組みづくりや文章をAIに手伝ってもらう、という二人三脚です。</p>
+</section>
+
+<section class="box rv">
+<h2><span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lock"/></svg></span>入力したデータのゆくえ</h2>
+<ul>
+<li>ツールに書いたメモや作品、設定は、<b>使っているブラウザの中（その端末）にだけ</b>保存されます。工房や作者のところに送られることはありません。</li>
+<li>そのかわり、ブラウザの履歴やサイトデータを消すと、保存したものも消えてしまいます。大事なものは、各ツールのバックアップ（書き出し）機能で保存しておいてください。</li>
+<li>別の端末や別のブラウザとは、自動ではつながりません。</li>
+<li>文字のデザインのために、一部のページでGoogle Fontsを読み込んでいます。そのときだけ、フォントを受け取るためにGoogleのサーバーへ接続します。</li>
+</ul>
+</section>
+
+<section class="box rv">
+<h2><span class="ic"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wave"/></svg></span>使うときのお願い</h2>
+<ul>
+<li>個人で作っている試作品なので、思わぬ不具合があるかもしれません。ご了承のうえで使ってください。</li>
+<li>ツールで作ったプロンプトや文章は、自由に使ってもらって大丈夫です。</li>
+<li>不具合や感想は、上の「ここにいます」から気軽に教えてもらえるとうれしいです。</li>
+</ul>
+</section>
+
+<a class="back" href="../">← ツール一覧にもどる</a>
+</main>
+<footer>潮だまり工房　ひとつずつ、増やしています。</footer>
+<script>
+const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const io="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("on");io.unobserve(e.target)}}),{threshold:.08}):null;
+document.querySelectorAll(".rv").forEach(e=>io?io.observe(e):e.classList.add("on"));
+const b=$("#bub");for(let i=0;i<10;i++){const e=E("i"),z=6+Math.random()*16;e.style.cssText=`left:${Math.random()*100}%;width:${z}px;height:${z}px;animation-duration:${14+Math.random()*16}s;animation-delay:${-Math.random()*20}s`;b.append(e)}
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("#th").value=tm;for(const o of $("#th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("#th").append(o)});$("#th").onchange=()=>{tm=$("#th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};tmu();
+</script></body></html>
