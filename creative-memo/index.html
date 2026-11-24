@@ -978,7 +978,11 @@ const SYM = c => ({s:c});
 const PAL_TABS = [
   {id:'moji', name:'文字かざり', mark:'any', desc:'ただの文字だから、どのアプリに貼っても見たままだよ',
     groups:[
-      {h:'記号', tip:'何行か選んでから押すと、選んだ行の頭にまとめて付くよ', items:[...'★☆✦✧◆◇●○■□▶▷▼▽※→⇒♡♥♪✿❀☾☽✉❖◎・…'].map(SYM)},
+      {h:'記号', tip:'何行か選んでから押すと、選んだ行の頭にまとめて付くよ', items:[...'★☆✦✧◆◇●○■□▶▷▸▹▼▽※→⇒♡♥♪✿❀☾☽✉❖◎・…'].map(SYM)},
+      {h:'行のそろえ', tip:'何行か選んでから押すと、まとめて変わるよ', list:true, items:[
+        {s:'名前　中身 → 名前：中身', nm:'最初の空白を「：」に', colon:true},
+        {s:'▸ 名前', nm:'頭に「▸ 」を付ける', line:'▸ '},
+        {s:'・名前', nm:'頭に「・」を付ける', line:'・'}]},
       {h:'線', tip:'1行まるごと入るよ', list:true, items:['────────────','━━━━━━━━━━','✦ ──────── ✦','◇ ━━━━━━━━ ◇','┈┈┈┈┈┈┈┈┈┈┈┈','＊　　＊　　＊','✿ ・ ✿ ・ ✿','☾ ⋆ ✧ ⋆ ☽'].map(c => ({s:c, block:c}))},
       {h:'かっこ', tip:'文字を選んでから押すと、その文字を囲むよ', items:['「」','『』','【】','〈〉','《》','（）','［］','〔〕','“”','≪≫'].map(c => ({s:c, wrap:[c[0], c[1], '']}))}]},
   {id:'md', name:'書式', mark:'md', desc:'Markdownの書き方。対応アプリだと飾りに変わって、未対応だと記号のまま見えるよ。見た目はメモを開いて「プレビュー」で確認できるよ',
@@ -1067,7 +1071,7 @@ function putText(t, a, b, str, selA, selB){
   const h = H.get(t); if(h){ const top = h.list[h.i]; top.a = t.selectionStart; top.b = t.selectionEnd; top.kind = 'pal'; }
   updUndo();
 }
-const HEAD = /^(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|[・●○◆◇■□★☆✦✧※▶▷]\s*)/;
+const HEAD = /^(#{1,6}\s+|>\s?|[-*+]\s+|\d+[.)]\s+|[・●○◆◇■□★☆✦✧※▶▷▸▹]\s*)/;
 function applyItem(it){
   const t = palTargetEl(), text = it.block || it.s;
   if(it.sel){ // 選んだところだけ変換する
@@ -1093,7 +1097,7 @@ function applyItem(it){
     }
     return;
   }
-  if(it.line || it.num || it.strip || (!it.wrap && !it.block && sel.includes('\n'))){
+  if(it.line || it.num || it.strip || it.colon || (!it.wrap && !it.block && sel.includes('\n'))){
     const ls = v.lastIndexOf('\n', a - 1) + 1;
     let le = v.indexOf('\n', (b > a && v[b-1]==='\n') ? b - 1 : b); if(le < 0) le = v.length;
     const lines = v.slice(ls, le).split('\n'), multi = lines.length > 1;
@@ -1105,6 +1109,7 @@ function applyItem(it){
       if(multi && !p.body.trim()) return p.ind + p.body;
       if(it.strip) return p.ind + p.body.replace(HEAD, '');
       if(it.num) return p.ind + (++n) + '. ' + p.body.replace(HEAD, '');
+      if(it.colon) return p.ind + p.body.replace(/^([^\s：:]+?)[ \t\u3000]+(?=\S)/, '$1：'); // 「名前　　中身」→「名前：中身」
       if(it.line) return p.ind + (allHave ? p.body.slice(it.line.length) : it.line + p.body.replace(HEAD, ''));
       return p.ind + it.s + p.body;
     }).join('\n');
