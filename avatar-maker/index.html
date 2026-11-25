@@ -333,8 +333,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 カラーパレットの色にマウスを乗せると、その色を使っているパーツが出るようにしました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 ペンタブを使うPCで「🎯 ずらしてつかむ」が出てしまうのを直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/26 01:00</span>ペンタブ・液タブのペンで画面を触ると、PCでも「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出るようになっていたのを直しました。ペンは細かい所まで正確に押せるので、指で触った時だけ出します（一度出てしまった記録もリセットしました）。</div>
     <div class="newsItem"><span>11/26 00:50</span>カラーパレットの色にマウスを乗せると、その色を使っているパーツの名前と使い方（塗り・グラデの先・輪郭線・線）が、パレットの上に出るようにしました（6か所まで。それ以上は「ほか○か所」）。似た色が並んでいても、どれがどの色か見分けやすくなります。</div>
     <div class="newsItem"><span>11/26 00:40</span>カラーパレットに「💧 スポイト（キャンバスのパーツから拾う）」を追加しました。押すとパレットが一度閉じるので、色を拾いたいパーツをキャンバスで押すと、そのパーツの塗り・グラデーションの先・輪郭線の色が並びます（見えている色ではなく、パーツに設定されている色をそのまま拾います。ロック中や透かし中のパーツも拾えます）。押した色が今のパーツに入ります。</div>
     <div class="newsItem"><span>11/26 00:10</span>点の複数選択を追加しました。Shift を押しながら点をクリックで足す・外す、Shift を押しながらドラッグか「▭ 囲んで選ぶ」で囲んでまとめて選べます。「中心線の左を選ぶ／右を選ぶ」もあります。選んだ点はまとめて動かしたり、Delete キーか「選んだ点を消す」でまとめて消せます。また「✂ 中心線で切る（左半分を残す／右半分を残す）」で、形を中心線でぴったり半分にできます（切り口に点を足し、切り口には輪郭線を出しません）。</div>
@@ -5659,8 +5660,10 @@ document.getElementById("sAim").addEventListener("click", function () { aimSetMo
 document.getElementById("aimBtn").addEventListener("click", function () { aimSetMode(!aimMode); });
 /* 🎯 は指で触る画面のためのもの。
    ・ふだん指で操作する端末（スマホ・タブレット）では最初から出す
-   ・PCでは出さない。「タッチ対応」と名乗るだけのPCもあるので、実際に指やペンで画面を触った時に初めて出す（覚えておく） */
-const SEEN_TOUCH_KEY = "avatarMakerSeenTouch";
+   ・PCでは出さない。「タッチ対応」と名乗るだけのPCもあるので、実際に指で画面を触った時に初めて出す（覚えておく）
+   ・ペン（ペンタブ・液タブ）は細かい所まで正確に押せるので数えない。以前はペンでも出していたので、覚えておく名前を変えて一度リセットする */
+const SEEN_TOUCH_KEY = "avatarMakerSeenFinger";
+try { LS.removeItem("avatarMakerSeenTouch"); } catch (e) {}
 function aimAvailable() {
   try { if (matchMedia("(pointer: coarse)").matches) return true; } catch (e) {}
   try { return LS.getItem(SEEN_TOUCH_KEY) === "1"; } catch (e) { return false; }
@@ -5671,7 +5674,7 @@ function aimSyncButtons() {
   document.querySelectorAll(".aimOnly").forEach(function (b) { b.hidden = !(aimMode && av); });
 }
 document.addEventListener("pointerdown", function (e) {
-  if ((e.pointerType === "touch" || e.pointerType === "pen") && !aimAvailable()) {
+  if (e.pointerType === "touch" && !aimAvailable()) {
     try { LS.setItem(SEEN_TOUCH_KEY, "1"); } catch (er) {}
     aimSyncButtons();
   }
