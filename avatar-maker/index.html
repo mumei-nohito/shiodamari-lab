@@ -333,8 +333,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 ペンタブを使うPCで「🎯 ずらしてつかむ」が出てしまうのを直しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 点を動かした時に、変形（瞬き・顔の向きなど）の位置もついてくるように直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/26 01:20</span>点をドラッグ（ずらしてつかむ・数字の入力・まとめて動かすも）した時に、その点の変形（瞬き・顔の向きなど）の位置が一緒に動かず、変形を動かすと点が元の場所へ引っ張られていたのを直しました。また「🌐 顔の向きを自動で下書き」で、「後ろ髪」のフォルダだけを選んでも作り直せるようにしました（ボールの大きさは頭まわり全体から決めるので、前と同じ動きになります。選んでいないフォルダの変形はそのままです）。</div>
     <div class="newsItem"><span>11/26 01:00</span>ペンタブ・液タブのペンで画面を触ると、PCでも「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出るようになっていたのを直しました。ペンは細かい所まで正確に押せるので、指で触った時だけ出します（一度出てしまった記録もリセットしました）。</div>
     <div class="newsItem"><span>11/26 00:50</span>カラーパレットの色にマウスを乗せると、その色を使っているパーツの名前と使い方（塗り・グラデの先・輪郭線・線）が、パレットの上に出るようにしました（6か所まで。それ以上は「ほか○か所」）。似た色が並んでいても、どれがどの色か見分けやすくなります。</div>
     <div class="newsItem"><span>11/26 00:40</span>カラーパレットに「💧 スポイト（キャンバスのパーツから拾う）」を追加しました。押すとパレットが一度閉じるので、色を拾いたいパーツをキャンバスで押すと、そのパーツの塗り・グラデーションの先・輪郭線の色が並びます（見えている色ではなく、パーツに設定されている色をそのまま拾います。ロック中や透かし中のパーツも拾えます）。押した色が今のパーツに入ります。</div>
@@ -1919,6 +1920,20 @@ function morphDelete(sh, at) {
   if (!sh.morphs) return;
   Object.keys(sh.morphs).forEach(function (k) { const m = sh.morphs[k]; if (Array.isArray(m)) m.splice(at, 1); });
 }
+/* 点を1つ動かした時、その点の変形（瞬き・顔の向きなど）の位置も同じだけ動かす。
+   変形は「その点がどこへ行くか」を位置で覚えているので、ついてこないと、動かした点が変形の時に元の場所へ引っ張られる。
+   変形の記録中は、動かしているのが変形の形そのものなので何もしない */
+function morphMovePoint(sh, i, dx, dy) {
+  if (!sh.morphs || recMorph || (!dx && !dy)) return;
+  Object.keys(sh.morphs).forEach(function (k) { const m = sh.morphs[k]; if (Array.isArray(m) && m[i]) { m[i][0] = Math.round((m[i][0] + dx) * 10) / 10; m[i][1] = Math.round((m[i][1] + dy) * 10) / 10; } });
+}
+/* 点の位置をまとめて決める（変形もついてくる） */
+function setPointPos(sh, i, x, y) {
+  const q = sh.points[i]; if (!q) return;
+  const dx = x - q[0], dy = y - q[1];
+  q[0] = x; q[1] = y;
+  morphMovePoint(sh, i, dx, dy);
+}
 function morphShift(sh, dx, dy) {
   if (!sh.morphs) return;
   Object.keys(sh.morphs).forEach(function (k) { (sh.morphs[k] || []).forEach(function (pt) { pt[0] += dx; pt[1] += dy; }); });
@@ -2008,14 +2023,16 @@ function partCenterX(p) { let a = 1e9, b = -1e9; p.shape.points.forEach(function
 function makeTurnMorph(name, dir, deg, folders) {
   const ps = turnParts(folders);
   if (!ps.length) { alert("選んだフォルダに、変形できるパーツ（多角形・線）がありません。"); return; }
-  const fb = turnFaceBox(ps);
+  /* ボールの大きさは、選んだフォルダに関係なく「頭」まわり全体から決める（後ろ髪だけ作り直す時も、前と同じボールになる） */
+  const allRoots = []; groupList().forEach(function (g) { const r = g.name.split(FSEP)[0]; if (allRoots.indexOf(r) < 0) allRoots.push(r); });
+  const fb = turnFaceBox(turnParts(allRoots.filter(function (r) { return r === "頭" || /髪/.test(r); }).concat(folders)));
   if (!fb) { alert("顔の大きさが分かりませんでした。「顔・輪郭」のような名前の、顔の土台のパーツがあるか確かめてください。"); return; }
   /* 頭のボールは顔の輪郭より上に大きい（おでこ・頭のてっぺんは髪に隠れている）ので、中心を少し上に、縦を大きめにとる */
   const rx = Math.max(4, (fb.bb.x1 - fb.bb.x0) / 2), ry = Math.max(4, (fb.bb.y1 - fb.bb.y0) / 2);
   const cx = (fb.bb.x0 + fb.bb.x1) / 2, cy = (fb.bb.y0 + fb.bb.y1) / 2 - ry * 0.25;
   const th = dir * deg * Math.PI / 180;
   const exists = ps.some(function (p) { return p.shape.morphs && p.shape.morphs[name]; });
-  if (exists && !confirm("「" + name + "」はもうあります。作り直しますか？（手直しした形も、自動の下書きで上書きされます）")) return;
+  if (exists && !confirm("「" + name + "」はもうあります。選んだフォルダ（" + folders.join("・") + "）のパーツだけ作り直しますか？\n（そのフォルダで手直しした形は、自動の下書きで上書きされます。ほかのフォルダはそのままです）")) return;
   pushUndo();
   const fy0 = fb.bb.y0, fh = Math.max(1, fb.bb.y1 - fb.bb.y0);
   /* 耳：形は崩さずまるごと動かす。耳の付け根を、ボールの横（正面から75度）にあるとみなして回す。
@@ -4501,8 +4518,8 @@ function renderProps() {
   });
   on("pf_color", "input", function (e) { sh.color = e.target.value; renderStageOnly(); });
   on("pf_color", "change", function (e) { pushUndoSoft(); recordRecent(e.target.value); afterEdit(); });
-  on("pf_sx", "change", function (e) { pushUndo(); sh.points[selPt][0] = parseFloat(e.target.value) || 0; afterEdit(); });
-  on("pf_sy", "change", function (e) { pushUndo(); sh.points[selPt][1] = parseFloat(e.target.value) || 0; afterEdit(); });
+  on("pf_sx", "change", function (e) { pushUndo(); setPointPos(sh, selPt, parseFloat(e.target.value) || 0, sh.points[selPt][1]); afterEdit(); });
+  on("pf_sy", "change", function (e) { pushUndo(); setPointPos(sh, selPt, sh.points[selPt][0], parseFloat(e.target.value) || 0); afterEdit(); });
   on("pf_sw", "change", function (e) { pushUndo(); sh.points[selPt][2] = parseFloat(e.target.value) || 0; afterEdit(); });
   on("pf_scorner", "click", function () {
     const sp = sh.points[selPt]; if (!sp) return;
@@ -4519,8 +4536,8 @@ function renderProps() {
     sh.points.splice(selPt, 1); morphDelete(sh, selPt); selPt = -1;
     afterEdit();
   });
-  on("pf_x", "change", function (e) { pushUndo(); sh.points[selPt][0] = parseFloat(e.target.value) || 0; afterEdit(); });
-  on("pf_y", "change", function (e) { pushUndo(); sh.points[selPt][1] = parseFloat(e.target.value) || 0; afterEdit(); });
+  on("pf_x", "change", function (e) { pushUndo(); setPointPos(sh, selPt, parseFloat(e.target.value) || 0, sh.points[selPt][1]); afterEdit(); });
+  on("pf_y", "change", function (e) { pushUndo(); setPointPos(sh, selPt, sh.points[selPt][0], parseFloat(e.target.value) || 0); afterEdit(); });
   on("pf_smooth", "click", function () {
     pushUndo();
     if (sh.points[selPt][2] === "smooth") sh.points[selPt].length = 2; else sh.points[selPt][2] = "smooth";
@@ -5063,9 +5080,7 @@ function aimMoveEv(e) {
     renderStage();
     return;
   }
-  const pt = p.shape.points[aimGrab.i];
-  pt[0] = Math.round((drag.ox + q.x - drag.s0.x) * 10) / 10;
-  pt[1] = Math.round((drag.oy + q.y - drag.s0.y) * 10) / 10;
+  setPointPos(p.shape, aimGrab.i, Math.round((drag.ox + q.x - drag.s0.x) * 10) / 10, Math.round((drag.oy + q.y - drag.s0.y) * 10) / 10);
   renderStage();
 }
 function aimUp(e) {
@@ -5408,13 +5423,12 @@ stage.addEventListener("pointermove", function (e) {
     /* 複数選んだ点のどれかをつかんだ時は、選んだ点全部を一緒に動かす */
     const q = sel.shape.points[drag.i];
     const dx = Math.round((p.x - q[0]) * 10) / 10, dy = Math.round((p.y - q[1]) * 10) / 10;
-    mselList().forEach(function (k) { const r = sel.shape.points[k]; if (r) { r[0] = Math.round((r[0] + dx) * 10) / 10; r[1] = Math.round((r[1] + dy) * 10) / 10; } });
+    mselList().forEach(function (k) { const r = sel.shape.points[k]; if (r) setPointPos(sel.shape, k, Math.round((r[0] + dx) * 10) / 10, Math.round((r[1] + dy) * 10) / 10); });
     renderStage();
   } else if (drag.kind === "pt" || drag.kind === "sp2") {
     let nx = Math.round(p.x * 10) / 10;
     if (Math.abs(nx - centerX()) < vb.w * 0.012) nx = centerX();
-    sel.shape.points[drag.i][0] = nx;
-    sel.shape.points[drag.i][1] = Math.round(p.y * 10) / 10;
+    setPointPos(sel.shape, drag.i, nx, Math.round(p.y * 10) / 10);
     renderStage();
   } else if (drag.kind === "box") {
     drag.p1 = p;
