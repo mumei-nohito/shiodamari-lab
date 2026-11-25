@@ -268,6 +268,8 @@
   .vtx { fill:#ff8c42; stroke:#fff; stroke-width:2; cursor:grab; }
   .vtx.smooth { fill:#12a594; }
   .vtx.cur { fill:#e5484d; }
+  .pickSw { display:inline-flex; align-items:center; gap:5px; margin:2px 10px 4px 0; }
+  .pickSw .mini { line-height:1.25; }
   .vtx.msel, .spH.msel { fill:#e5484d; stroke:#ffd84d; stroke-width:3; }
   .mselBox { margin:0 0 8px; padding:6px 8px; border:1px dashed var(--line); border-radius:10px; }
   .mid { fill:#fff; stroke:#0b7a93; stroke-width:1.6; cursor:copy; opacity:.85; }
@@ -328,8 +330,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/25 点をまとめて選んで消せるように（Shift＋クリック・囲んで選ぶ）。「✂ 中心線で切る」も追加しました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 カラーパレットに「💧 スポイト」を追加。キャンバスのパーツを押すと、そのパーツの色を拾えます。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/26 00:40</span>カラーパレットに「💧 スポイト（キャンバスのパーツから拾う）」を追加しました。押すとパレットが一度閉じるので、色を拾いたいパーツをキャンバスで押すと、そのパーツの塗り・グラデーションの先・輪郭線の色が並びます（見えている色ではなく、パーツに設定されている色をそのまま拾います。ロック中や透かし中のパーツも拾えます）。押した色が今のパーツに入ります。</div>
     <div class="newsItem"><span>11/26 00:10</span>点の複数選択を追加しました。Shift を押しながら点をクリックで足す・外す、Shift を押しながらドラッグか「▭ 囲んで選ぶ」で囲んでまとめて選べます。「中心線の左を選ぶ／右を選ぶ」もあります。選んだ点はまとめて動かしたり、Delete キーか「選んだ点を消す」でまとめて消せます。また「✂ 中心線で切る（左半分を残す／右半分を残す）」で、形を中心線でぴったり半分にできます（切り口に点を足し、切り口には輪郭線を出しません）。</div>
     <div class="newsItem"><span>11/25 23:30</span>「ゆれ」の設定に「⚙ 物理演算」を追加しました。オンにすると、首の傾き・体の傾きに合わせて、髪や布が振り子のように少し遅れてついてきて、ふわっと揺れてから止まります（モーションに◆を打たなくても、首を動かすだけで自動で揺れます）。「重さ」「揺れの残り」「垂れ下がり」「大きさ」で揺れ方を調整でき、「〜 試しに揺らす」で確かめられます。</div>
     <div class="newsItem"><span>11/23 21:30</span>丸いボタンの上下の余白を減らして、画面に表示できる量を増やしました（スマホなど指で触る画面では、押しやすさのため今まで通り）。パーツ一覧の上の「＋ 丸を追加」「＋ 四角を追加」「＋ 線を追加」は「＋ パーツ ▾」にまとめ、押すと丸・四角・線を選べます。「＋ フォルダ」「全部畳む」「全部開く」「📋 おすすめ」と1〜2行に収まります。</div>
@@ -448,7 +451,7 @@
   <details class="hsec">
     <summary>色・輪郭・合成・マスク</summary>
     <p class="mini">
-      ・色の横の「🎨 パレット」から、このアバターで使っている色・最近使った色・お気に入りから色を選べます。元の色に戻したい時の助けになります。<br>
+      ・色の横の「🎨 パレット」から、このアバターで使っている色・最近使った色・お気に入りから色を選べます。「💧 スポイト」を押してキャンバスのパーツを押すと、そのパーツの色（塗り・グラデーションの先・輪郭線）を拾えます。元の色に戻したい時の助けになります。<br>
       ・輪郭の太さは0にすると輪郭なしになります。塗りと輪郭はそれぞれ「透明」も選べて、輪郭だけの装飾パーツも作れます。不透明度を下げると半透明のパーツになります（入れ墨の上に薄く影を置く等）。<br>
       ・グラデーション：塗りを2色のグラデーションにできます（直線／円形、終わりの色・角度・範囲・透明へのフェードを指定）。ぼかしは輪郭を柔らかくする表現に。
 ・合成（ブレンド）：乗算＝影、加算・発光やスクリーン＝光、など、下に重なる色との混ぜ方を変えられます。<br>
@@ -803,6 +806,8 @@
         <button class="pill" id="palHexApply">この色にする</button>
       </div>
     </div>
+    <div class="toolbar" style="margin:6px 0 0;"><button class="pill sm" id="palPick" title="パレットを一度閉じて、キャンバスのパーツを押すと、そのパーツの色を拾います">💧 スポイト（キャンバスのパーツから拾う）</button></div>
+    <div id="palPicked"></div>
     <div class="palSec">このアバターで使っている色</div>
     <div id="palUsed"></div>
     <div class="palSec">最近使った色</div>
@@ -5143,6 +5148,7 @@ stage.addEventListener("pointerdown", function (e) {
     e.preventDefault();
     return;
   }
+  if (palPickMode) { palPickAt(e); return; }
   if (pickMode) { doPick(e); return; }
   if (underMoveMode && under && !under.locked) {
     const pu = toSvg(e);
@@ -6267,7 +6273,56 @@ function currentPalColor() {
   const inp = palTarget ? document.getElementById(palTarget) : null;
   return inp && /^#[0-9a-f]{6}$/i.test(inp.value) ? inp.value.toLowerCase() : "#e4c6a8";
 }
+/* ============ スポイト（パーツの色を拾う） ============
+   押したところにある一番手前のパーツを探して、その色（塗り・グラデーションの先・輪郭線／線の色）を並べる。
+   見えている色ではなく「パーツに設定されている色」を拾うので、影の色などもそのまま使える。ロック中・透かし中のパーツも拾える */
+let palPickMode = false, palPicked = null;
+function partAtClient(cx, cy) {
+  const groups = Array.from(stage.querySelectorAll("[data-pid]")).reverse();
+  for (let gi = 0; gi < groups.length; gi++) {
+    const g = groups[gi], p = partById(g.getAttribute("data-pid"));
+    if (!p || p.category === "background") continue;
+    const els = g.matches("path,polygon,polyline,ellipse,circle,rect") ? [g] : Array.from(g.querySelectorAll("path,polygon,polyline,ellipse,circle,rect"));
+    for (let k = 0; k < els.length; k++) {
+      const el = els[k];
+      if (typeof el.isPointInFill !== "function") continue;
+      const m = el.getScreenCTM(); if (!m) continue;
+      const q = new DOMPoint(cx, cy).matrixTransform(m.inverse());
+      const hitF = p.shape.type !== "stroke" && el.getAttribute("fill") !== "none" && el.isPointInFill(q);
+      const hitS = (p.shape.type === "stroke" || el.getAttribute("fill") === "none") && el.isPointInStroke && el.isPointInStroke(q);
+      if (hitF || hitS) return p;
+    }
+  }
+  return null;
+}
+function startPalPick() {
+  palPickMode = true;
+  document.getElementById("paletteBox").style.display = "none";
+  stage.style.cursor = "crosshair";
+  aimTip("💧 色を拾いたいパーツを押してください（Esc でやめる）");
+}
+function endPalPick(reopen) {
+  palPickMode = false; stage.style.cursor = ""; aimTip("");
+  if (reopen && palTarget) { renderPalette(); document.getElementById("paletteBox").style.display = "flex"; }
+}
+function palPickAt(e) {
+  const p = partAtClient(e.clientX, e.clientY);
+  if (!p) { aimTip("💧 そこにはパーツがありません。もう一度押してください（Esc でやめる）"); return; }
+  const sh = p.shape, cs = [];
+  const add = function (label, c) { if (c && /^#[0-9a-f]{6}$/i.test(c)) cs.push({ label: label, hex: c.toLowerCase() }); };
+  if (sh.type === "stroke") add("線の色", sh.color);
+  else {
+    add(sh.gradient ? "塗り（グラデの始め）" : "塗り", sh.fill);
+    if (sh.gradient) add("グラデの先", sh.gradient.to);
+    if ((sh.strokeWidth || 0) > 0) add("輪郭線", sh.stroke);
+  }
+  palPicked = { name: p.name, colors: cs };
+  endPalPick(true);
+}
 function renderPalette() {
+  const pk = document.getElementById("palPicked");
+  if (pk) pk.innerHTML = palPicked ? '<div class="palSec">💧 拾った色：' + esc(palPicked.name) + "</div>" +
+    (palPicked.colors.length ? palPicked.colors.map(function (c) { return '<span class="pickSw"><button class="sw" data-sw="' + c.hex + '" style="background:' + c.hex + '" title="' + c.hex + '"></button><span class="mini">' + esc(c.label) + "<br>" + c.hex + "</span></span>"; }).join("") : '<span class="mini">（色がありません）</span>') : "";
   document.getElementById("palUsed").innerHTML = swGrid(usedColors());
   document.getElementById("palRecent").innerHTML = swGrid(pal.recent);
   document.getElementById("palFavs").innerHTML = swGrid(pal.favs, palEditFavs ? "favDel" : "");
@@ -6286,7 +6341,7 @@ function renderPalette() {
   });
 }
 function openPalette(targetId) {
-  palTarget = targetId; palEditFavs = false;
+  palTarget = targetId; palEditFavs = false; palPicked = null;
   renderPalette();
   document.getElementById("paletteBox").style.display = "flex";
 }
@@ -6306,6 +6361,8 @@ function applyPalColor(hex) {
   afterEdit();
 }
 document.getElementById("palClose").addEventListener("click", closePalette);
+document.getElementById("palPick").addEventListener("click", startPalPick);
+document.addEventListener("keydown", function (e) { if (palPickMode && e.key === "Escape") endPalPick(true); });
 document.getElementById("palHexApply").addEventListener("click", function () { applyPalColor(document.getElementById("palHex").value); });
 document.getElementById("palFavAdd").addEventListener("click", function () {
   const hex = document.getElementById("palHex").value;
