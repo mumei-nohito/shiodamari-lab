@@ -204,6 +204,15 @@
   .defEdit { margin-top:8px; padding:8px 10px; border:1.5px solid var(--ac); border-radius:10px; display:flex; flex-direction:column; gap:6px; }
   .defEdit label { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   .defFolders { max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:4px 6px; display:flex; flex-direction:column; gap:2px; }
+  .physBox { margin:8px 0 2px; padding:6px 8px; border:1px dashed var(--ac); border-radius:10px; }
+  .physOnL { display:flex; gap:6px; align-items:center; }
+  .physIn { display:flex; flex-wrap:wrap; gap:4px 12px; margin:6px 0 4px; }
+  .physIn label { display:inline-flex; gap:3px; align-items:center; white-space:nowrap; }
+  .physRow { display:grid; grid-template-columns:5.2em 4.6em minmax(40px,1fr) 4.6em; gap:4px; align-items:center; margin:3px 0; }
+  .physRow .physEnd:nth-of-type(2) { text-align:right; }
+  .physRow input { min-width:0; width:100%; }
+  .physEnd { font-size:10.5px; color:var(--mut); white-space:nowrap; }
+  .physBadge { color:var(--ac); font-size:11px; }
   details.sub { margin:6px 0; border:1px solid var(--line); border-radius:10px; padding:0 8px; }
   details.sub > summary { cursor:pointer; font-weight:700; font-size:12.5px; padding:7px 0; color:var(--fg); }
   details.sub[open] > summary { border-bottom:1px dashed var(--line); margin-bottom:6px; }
@@ -317,8 +326,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/23 ボタンの上下の余白を減らし、パーツ一覧の「＋ 丸・四角・線」を「＋ パーツ ▾」にまとめました。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/25 ゆれに「⚙ 物理演算」を追加。首や体の傾きに合わせて、髪や布が自動で揺れます。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/25 23:30</span>「ゆれ」の設定に「⚙ 物理演算」を追加しました。オンにすると、首の傾き・体の傾きに合わせて、髪や布が振り子のように少し遅れてついてきて、ふわっと揺れてから止まります（モーションに◆を打たなくても、首を動かすだけで自動で揺れます）。「重さ」「揺れの残り」「垂れ下がり」「大きさ」で揺れ方を調整でき、「〜 試しに揺らす」で確かめられます。</div>
     <div class="newsItem"><span>11/23 21:30</span>丸いボタンの上下の余白を減らして、画面に表示できる量を増やしました（スマホなど指で触る画面では、押しやすさのため今まで通り）。パーツ一覧の上の「＋ 丸を追加」「＋ 四角を追加」「＋ 線を追加」は「＋ パーツ ▾」にまとめ、押すと丸・四角・線を選べます。「＋ フォルダ」「全部畳む」「全部開く」「📋 おすすめ」と1〜2行に収まります。</div>
     <div class="newsItem"><span>11/23 21:00</span>右のパネルとモーションのパネルの説明文を「？ 説明」ボタンに畳みました（押すと開きます）。関節のパネルは「首・腕」「脚」「✋ 右手の指」「腕の重なり」「手足を丸ごとずらす」「ポーズの保存」をそれぞれ折り畳めるようにし、開き具合を覚えておきます。「まっすぐに戻す」は上に移動しました。</div>
     <div class="newsItem"><span>11/23 20:30</span>指の関節を追加しました。手のパーツの名前を「右手・人差し指・根元」「右手・人差し指・先」のようにすると（横向きでまとめた指は「右手・指・根元」など）、「関節を自動で置く」で指の付け根と途中に関節が置かれます。関節パネルの「✋ 右手の指」で、「握る」（親指以外がいっせいに曲がる）と「親指」のスライダー、1本ずつのスライダーが使えます。かんたんポーズでは指のパーツをつかむと、その節で曲がります。モーション・ポーズの保存・手足を丸ごとずらすにも対応しています。</div>
@@ -528,6 +538,7 @@
       ・呼吸：腰から上の胴体が少しだけ上下に伸び縮みします。頭・髪・腕は形を変えずに一緒に上下し、ズボンなど腰から下の服は動きません。大きさは3%くらいがおすすめです。<br>
       ・体の傾き：腰を中心に上半身が傾きます。「回す中心」を「右足もと」「左足もと」にすると、その足に体重をかけて全身ごと傾きます（片足重心のポーズ）。浮いた側の脚は、試し曲げの「股」を少し閉じて足先を床に戻します。<br>
       ・上下に弾む：体ごと上下に動きます。<br>
+      ・⚙ 物理演算：ゆれの「設定」で「物理演算」をオンにすると、首の傾き・体の傾きに合わせて、髪や布が振り子のように自動で揺れます。少し遅れてついてきて、ふわっと揺れてから止まります。「重さ」（軽いほどきびきび、重いほどゆったり）、「揺れの残り」（すぐ止まる〜長く揺れる）、「垂れ下がり」（頭を傾けても毛先が下を向こうとする強さ。長い髪は高めがおすすめ）、「大きさ」で調整します。モーションでは首や体の傾きに◆を打つだけで、髪は自動で揺れます。<br>
       ・スライダーは−100%〜＋100%で、−と＋で反対向きに動きます。どれもモーションで動かせます。
     </p>
   </details>
@@ -2151,6 +2162,69 @@ const DEF_TYPES = {
   bob: { label: "上下に弾む", hint: "体ごと上下に動く（ぴょこぴょこ）", amp: 10, unit: "px", ampLabel: "動く大きさ" }
 };
 let defVals = {}, defCache = null, defEditId = null;
+/* ============ 物理演算（ゆれ用） ============
+   ゆれに d.phys = { on, neck, body, weight, linger, gravity, gain } を付けると、
+   首の傾き・体の傾きに合わせて、髪や布が振り子のように自動で揺れる（モーションに◆を打たなくても動く）。
+   ・髪の「本当の向き」φ を、ばね＋ブレーキの振り子として毎フレーム計算する
+     φ'' = ω²(φeq − φ) − 2ζω φ'　　φeq＝頭の傾き a ×（1 − 垂れ下がり）
+     重さ→ω（重いほどゆったり）、揺れの残り→ζ（大きいほどすぐ止まる）、垂れ下がり→頭が傾いても下を向こうとする強さ
+   ・頭と一緒に回った向き a との差（φ − a）を、ゆれの値に直して足す（手で動かした値＋物理の値）
+   ・計算した値は physVals に入る（見た目だけ。データには入らない） */
+const PHYS_DEF = { on: true, neck: true, body: true, weight: 50, linger: 50, gravity: 50, gain: 100 };
+let physVals = {}, physState = {}, physRaf = 0, physLast = 0, physInTick = false;
+function physDefs() { return docData ? deformersOf().filter(function (d) { return d.type === "sway" && d.phys && d.phys.on; }) : []; }
+/* 髪や布を一緒に回している傾き（度）。SVGの回転と同じ向き（＋で時計回り） */
+function physInput(d) {
+  const P = d.phys; let a = 0;
+  if (P.neck) a += pose.rig_neck || 0;
+  if (P.body) deformersOf().forEach(function (e) { if (e.type === "lean") a += (defVals[e.id] || 0) * (e.amp != null ? e.amp : DEF_TYPES.lean.amp); });
+  return a;
+}
+function physKick() {
+  if (physRaf || physInTick || !docData) return;
+  if (!physDefs().length) { if (Object.keys(physVals).length) { physVals = {}; } return; }
+  physLast = performance.now();
+  physRaf = requestAnimationFrame(physTick);
+}
+function physTick(now) {
+  physRaf = 0;
+  const ds = physDefs();
+  if (!ds.length) { physVals = {}; return; }
+  const dt = Math.max(0.001, Math.min(0.05, (now - physLast) / 1000)); physLast = now;
+  let moving = false, changed = false;
+  ds.forEach(function (d) {
+    const P = Object.assign({}, PHYS_DEF, d.phys);
+    const st = physState[d.id] || (physState[d.id] = { phi: physInput(d) * (1 - P.gravity / 100), vel: 0 });
+    const a = physInput(d);
+    const w = 2 * Math.PI * (2.6 - 2.0 * P.weight / 100);          /* 重さ 0→2.6回/秒、100→0.6回/秒 */
+    const z = 0.65 - 0.57 * P.linger / 100;                         /* 揺れの残り 0→すぐ止まる、100→長く揺れる */
+    const eq = a * (1 - P.gravity / 100);
+    const n = Math.ceil(dt / (1 / 240)), h = dt / n;
+    for (let i = 0; i < n; i++) { const acc = w * w * (eq - st.phi) - 2 * z * w * st.vel; st.vel += acc * h; st.phi += st.vel * h; }
+    const r = (st.phi - a) * Math.PI / 180, amp = d.amp != null ? d.amp : DEF_TYPES.sway.amp;
+    /* 毛先の横のずれ＝首の付け根から毛先までの長さ L × 角度の差。ゆれは「高さ H × 大きさ」で動くので、L/H を掛けて合わせる */
+    const LH = physLenRatio(d);
+    let v = -r * LH * 100 / Math.max(1, amp) * P.gain / 100;
+    v = Math.max(-3, Math.min(3, v)); if (Math.abs(v) < 0.002) v = 0;
+    const old = physVals[d.id] || 0;
+    if (v) physVals[d.id] = v; else delete physVals[d.id];
+    if (Math.abs(st.vel) > 0.03 || Math.abs(st.phi - eq) > 0.03) moving = true;
+    if (Math.abs(v - old) > 0.0005) changed = true;
+  });
+  Object.keys(physVals).forEach(function (k) { if (!ds.some(function (d) { return d.id === k; })) { delete physVals[k]; changed = true; } });
+  if (changed) { physInTick = true; try { renderStage(); } finally { physInTick = false; } }
+  if (moving) physRaf = requestAnimationFrame(physTick);
+}
+function physLenRatio(d) {
+  let y0 = 1e9, y1 = -1e9;
+  defTargetParts(d).forEach(function (p) { (p.shape.points || []).forEach(function (pt) { if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; }); });
+  if (!(y1 > y0)) return 1;
+  const root = y0 + (d.root || 0) / 100 * (y1 - y0);
+  const nk = rigJointById("rig_neck"), ny = nk && nk.pos ? nk.pos[1] : y0;
+  return Math.max(0.2, Math.min(1.5, (y1 - Math.max(root, Math.min(ny, y1 - 1))) / Math.max(1, y1 - root)));
+}
+/* 試しに揺らす：振り子をポンと押す */
+function physPoke(d) { const st = physState[d.id] || (physState[d.id] = { phi: 0, vel: 0 }); st.vel += 90; physKick(); }
 function deformersOf() { if (!Array.isArray(docData.deformers)) docData.deformers = []; return docData.deformers; }
 function defActive() { return Object.keys(defVals).some(function (k) { return defVals[k]; }); }
 function defTargetParts(d) {
@@ -2177,7 +2251,7 @@ function defPivot() {
 function buildDefCache() {
   const c = {}, pv = defPivot();
   deformersOf().forEach(function (d) {
-    const v = defVals[d.id] || 0;
+    const v = (defVals[d.id] || 0) + (physVals[d.id] || 0);
     if (!v) return;
     const ps = defTargetParts(d), ids = {};
     let y0 = 1e9, y1 = -1e9;
@@ -2254,7 +2328,7 @@ function renderDeform() {
   if (ds.length) {
     h += ds.map(function (d) {
       const v = Math.round((defVals[d.id] || 0) * 100);
-      return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(DEF_TYPES[d.type].hint) + '">' + esc(d.name) + '</span><input type="range" min="-100" max="100" step="1" value="' + v + '" data-defv="' + d.id + '"><span class="poseVal" data-defl="' + d.id + '">' + v + '%</span><button class="pill sm' + (defEditId === d.id ? " on" : "") + '" data-defedit="' + d.id + '">設定</button></div>';
+      return '<div class="poseRow morphRow"><span class="poseName" title="' + esc(DEF_TYPES[d.type].hint) + '">' + esc(d.name) + (d.phys && d.phys.on ? ' <span class="physBadge" title="物理演算で自動で揺れます">⚙</span>' : "") + '</span><input type="range" min="-100" max="100" step="1" value="' + v + '" data-defv="' + d.id + '"><span class="poseVal" data-defl="' + d.id + '">' + v + '%</span><button class="pill sm' + (defEditId === d.id ? " on" : "") + '" data-defedit="' + d.id + '">設定</button></div>';
     }).join("") + '<div class="toolbar" style="margin-top:6px;"><button class="pill sm" id="defZero">全部 0 に戻す</button></div>';
   } else h += '<p class="mini">まだありません。下のボタンから足せます。</p>';
   const d = ds.find(function (x) { return x.id === defEditId; });
@@ -2272,6 +2346,19 @@ function renderDeform() {
     }
     h += '<label class="mini">' + esc(T.ampLabel) + ' <input type="range" id="defAmp" min="1" max="' + (d.type === "sway" ? 40 : d.type === "lean" ? 30 : d.type === "breath" ? 10 : 40) + '" step="1" value="' + (d.amp != null ? d.amp : T.amp) + '"> <span id="defAmpL">' + (d.amp != null ? d.amp : T.amp) + T.unit + "</span></label>";
     if (d.type === "sway") h += '<label class="mini">根元の高さ（上から） <input type="range" id="defRoot" min="0" max="80" step="1" value="' + (d.root || 0) + '"> <span id="defRootL">' + (d.root || 0) + "%</span></label>";
+    if (d.type === "sway") {
+      const P = Object.assign({}, PHYS_DEF, d.phys || {}), on = !!(d.phys && d.phys.on);
+      const sl = function (k, label, lo, hi, val) { return '<div class="physRow"><span class="mini">' + label + '</span><span class="physEnd">' + lo + '</span><input type="range" min="0" max="' + (k === "gain" ? 200 : 100) + '" step="1" value="' + val + '" data-physk="' + k + '"><span class="physEnd">' + hi + "</span></div>"; };
+      h += '<div class="physBox"><label class="mini physOnL"><input type="checkbox" id="physOn"' + (on ? " checked" : "") + '> <b>⚙ 物理演算</b>（首や体の傾きに合わせて、自動で揺れる）</label>' +
+        (on ? '<div class="physIn mini">反応するもの：<label><input type="checkbox" data-physin="neck"' + (P.neck ? " checked" : "") + '> 首の傾き</label><label><input type="checkbox" data-physin="body"' + (P.body ? " checked" : "") + "> 体の傾き</label></div>" +
+          sl("weight", "重さ", "軽い", "重い", P.weight) +
+          sl("linger", "揺れの残り", "すぐ止まる", "長く揺れる", P.linger) +
+          sl("gravity", "垂れ下がり", "頭と一緒", "下を向く", P.gravity) +
+          sl("gain", "大きさ", "0", "2倍", P.gain) +
+          '<div class="toolbar" style="margin-top:4px;"><button class="pill sm" id="physPoke">〜 試しに揺らす</button></div>' +
+          '<p class="note">首や体を傾けると、髪や布が少し遅れてついてきて、ふわっと揺れてから止まります。モーションに◆を打たなくても、首を動かすだけで自動で揺れます。垂れ下がりを上げると、頭を傾けても毛先が下を向こうとします（長い髪向き）。スライダーの値（手で動かすゆれ）とも一緒に使えます。</p>' : "") +
+        "</div>";
+    }
     if (d.type === "lean") h += '<label class="mini">回す中心 <select id="defPivot">' +
       [["hip", "腰（上半身だけ傾く）"], ["footR", "右足もと（右足に体重をかける）"], ["footL", "左足もと（左足に体重をかける）"]].map(function (o) { return '<option value="' + o[0] + '"' + ((d.pivot || "hip") === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select></label>" +
       ((d.pivot === "footR" || d.pivot === "footL") ? '<p class="mini" style="margin:0;">足もとを中心に回す時は、動かすものを「ぜんぶ」にすると全身ごと傾きます。浮いた側の脚は、関節の試し曲げの「股」で外に開いて、足先を床に戻してください。</p>' : "");
@@ -2312,6 +2399,21 @@ function renderDeform() {
     if (d.pivot !== "hip" && d.target === "upper") d.target = "all";   /* 足もとで回すなら全身ごと */
     save(); renderDeform(); renderStage();
   });
+  const po = box.querySelector("#physOn");
+  if (po) {
+    po.addEventListener("change", function () {
+      pushUndo();
+      d.phys = Object.assign({}, PHYS_DEF, d.phys || {}, { on: po.checked });
+      if (!po.checked) { delete physVals[d.id]; delete physState[d.id]; }
+      save(); renderDeform(); renderStage();
+    });
+    box.querySelectorAll("[data-physin]").forEach(function (c) { c.addEventListener("change", function () { pushUndo(); d.phys[c.dataset.physin] = c.checked; save(); renderStage(); }); });
+    box.querySelectorAll("[data-physk]").forEach(function (r) {
+      r.addEventListener("input", function () { d.phys[r.dataset.physk] = +r.value; renderStage(); });
+      r.addEventListener("change", function () { pushUndo(); save(); });
+    });
+    const pk = box.querySelector("#physPoke"); if (pk) pk.addEventListener("click", function () { physPoke(d); });
+  }
   const rt = box.querySelector("#defRoot");
   if (rt) { rt.addEventListener("input", function () { d.root = +rt.value; box.querySelector("#defRootL").textContent = rt.value + "%"; renderStage(); }); rt.addEventListener("change", function () { pushUndo(); save(); }); }
   box.querySelector("#defDel").addEventListener("click", function () {
@@ -2939,6 +3041,7 @@ function render() { renderStage(); renderList(); renderProps(); renderPose(); re
 }
 function renderStage() {
   setTimeout(aimSyncGrab, 0);
+  physKick();
   let out = "";
   if (docData && docData.canvas) {
     out += '<rect x="0" y="0" width="' + docData.canvas.w + '" height="' + docData.canvas.h + '" style="fill:var(--board);stroke:var(--line)" stroke-width="' + (vb.w * 0.004) + '" stroke-dasharray="' + (vb.w * 0.02) + " " + (vb.w * 0.012) + '" pointer-events="none"/>';
