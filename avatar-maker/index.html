@@ -268,6 +268,8 @@
   .vtx { fill:#ff8c42; stroke:#fff; stroke-width:2; cursor:grab; }
   .vtx.smooth { fill:#12a594; }
   .vtx.cur { fill:#e5484d; }
+  .vtx.msel, .spH.msel { fill:#e5484d; stroke:#ffd84d; stroke-width:3; }
+  .mselBox { margin:0 0 8px; padding:6px 8px; border:1px dashed var(--line); border-radius:10px; }
   .mid { fill:#fff; stroke:#0b7a93; stroke-width:1.6; cursor:copy; opacity:.85; }
   .spH { fill:#b18cff; stroke:#fff; stroke-width:2; cursor:grab; }
   .spH.corner { fill:#ff8c42; }
@@ -326,8 +328,9 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/25 ゆれに「⚙ 物理演算」を追加。首や体の傾きに合わせて、髪や布が自動で揺れます。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/25 点をまとめて選んで消せるように（Shift＋クリック・囲んで選ぶ）。「✂ 中心線で切る」も追加しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/26 00:10</span>点の複数選択を追加しました。Shift を押しながら点をクリックで足す・外す、Shift を押しながらドラッグか「▭ 囲んで選ぶ」で囲んでまとめて選べます。「中心線の左を選ぶ／右を選ぶ」もあります。選んだ点はまとめて動かしたり、Delete キーか「選んだ点を消す」でまとめて消せます。また「✂ 中心線で切る（左半分を残す／右半分を残す）」で、形を中心線でぴったり半分にできます（切り口に点を足し、切り口には輪郭線を出しません）。</div>
     <div class="newsItem"><span>11/25 23:30</span>「ゆれ」の設定に「⚙ 物理演算」を追加しました。オンにすると、首の傾き・体の傾きに合わせて、髪や布が振り子のように少し遅れてついてきて、ふわっと揺れてから止まります（モーションに◆を打たなくても、首を動かすだけで自動で揺れます）。「重さ」「揺れの残り」「垂れ下がり」「大きさ」で揺れ方を調整でき、「〜 試しに揺らす」で確かめられます。</div>
     <div class="newsItem"><span>11/23 21:30</span>丸いボタンの上下の余白を減らして、画面に表示できる量を増やしました（スマホなど指で触る画面では、押しやすさのため今まで通り）。パーツ一覧の上の「＋ 丸を追加」「＋ 四角を追加」「＋ 線を追加」は「＋ パーツ ▾」にまとめ、押すと丸・四角・線を選べます。「＋ フォルダ」「全部畳む」「全部開く」「📋 おすすめ」と1〜2行に収まります。</div>
     <div class="newsItem"><span>11/23 21:00</span>右のパネルとモーションのパネルの説明文を「？ 説明」ボタンに畳みました（押すと開きます）。関節のパネルは「首・腕」「脚」「✋ 右手の指」「腕の重なり」「手足を丸ごとずらす」「ポーズの保存」をそれぞれ折り畳めるようにし、開き具合を覚えておきます。「まっすぐに戻す」は上に移動しました。</div>
@@ -432,6 +435,8 @@
   <details class="hsec">
     <summary>点の編集</summary>
     <p class="mini">
+      ・点をまとめて選ぶ：Shift を押しながら点をクリックすると、選びに足したり外したりできます。Shift を押しながらドラッグするか、「点の調整」の「▭ 囲んで選ぶ」をオンにしてドラッグすると、囲んだ点をまとめて選べます。「中心線の左を選ぶ／右を選ぶ」もあります。選んだ点のどれかをドラッグすると全部一緒に動き、Delete キーか「選んだ点を消す」でまとめて消せます。<br>
+      ・✂ 中心線で切る：「左半分を残す／右半分を残す」で、中心線の位置で形を切って半分にします。切り口には点が足され、切り口の辺には輪郭線を出しません。髪を左右に分けたい時は、パーツを複製して、片方は左、もう片方は右を残すとぴったり分かれます（変形も一緒に切れます）。<br>
       ・点（オレンジ＝角、緑＝なめらか）をドラッグで移動。辺の途中にある小さな□を押すと点が増えます。<br>
       ・点を選んだ状態で、右のパネルから「角／なめらか」の切り替え、点の削除、座標の数値調整ができます。<br>
       ・髪の毛先などを尖らせたい時は、パーツを選んで右パネルの「輪郭の角」を「尖らせる」に切り替えます。「流れをなめらかに（毛先は残す）」で、流れは曲線・毛先は角、もできます。<br>
@@ -942,6 +947,11 @@ let docData = null;
 let bandSel = {};
 let edState = {};
 let selId = null, selPt = -1;
+/* 点の複数選択：msel = { pid, set: {点の番号: true} }。選んでいるパーツが変わったら自動で外れる */
+let msel = { pid: null, set: {} }, boxSelMode = false;
+function mselList() { if (msel.pid !== selId) { msel = { pid: selId, set: {} }; } return Object.keys(msel.set).map(Number).sort(function (a, b) { return a - b; }); }
+function mselClear() { msel = { pid: selId, set: {} }; }
+function mselHas(i) { return msel.pid === selId && !!msel.set[i]; }
 let edgePick = false;   /* 「線を出す辺」をキャンバスで選ぶモード */
 let selJoint = null;
 let easyMode = false, easyJoint = null;   /* 🦴 かんたんポーズ：つかんで回す関節 */
@@ -1429,6 +1439,52 @@ function deletePolyPoint(sh, k) {
   sh.points.splice(k, 1);
   morphDelete(sh, k);
   if (sh.type === "polygon") edgesAfterDelete(sh, k, nOld);
+}
+/* 選んだ点をまとめて消す（後ろから消すので番号がずれない）。多角形は3点、線は2点は残す */
+function deletePointsMany(sh, idxs) {
+  if (recMorph) { alert("変形の記録中は、点を消せません（点を動かすだけにしてください）。"); return 0; }
+  const minN = sh.type === "polygon" ? 3 : 2;
+  const list = idxs.slice().sort(function (a, b) { return b - a; });
+  if (sh.points.length - list.length < minN) { alert("点を全部は消せません（" + (sh.type === "polygon" ? "多角形は3つ" : "線は2つ") + "は残してください）。"); return 0; }
+  list.forEach(function (k) {
+    if (sh.type === "polygon") deletePolyPoint(sh, k);
+    else { sh.points.splice(k, 1); morphDelete(sh, k); }
+  });
+  return list.length;
+}
+/* 中心線で切る：keep＝"L"（画面の左側を残す）か "R"（右側を残す）。
+   切り口には角の点を足し、切り口の辺には線を出さない（半分にした髪を、反対側とつなげる時に線が出ないように） */
+function cutAtCenter(sh, keep) {
+  const C = centerX(), P = sh.points, n = P.length;
+  const inside = function (q) { return keep === "L" ? q[0] <= C + 1e-6 : q[0] >= C - 1e-6; };
+  const src = [];   /* { k: 元の点の番号 } か { a, b, t: 辺 a→b の t の位置 } */
+  for (let i = 0; i < n; i++) {
+    const a = P[i], b = P[(i + 1) % n], ia = inside(a), ib = inside(b);
+    if (ia) src.push({ k: i });
+    if (ia !== ib) { const t = (C - a[0]) / (b[0] - a[0]); src.push({ a: i, b: (i + 1) % n, t: t, cut: true }); }
+  }
+  if (src.length < 3) return false;
+  const build = function (arr) {
+    return src.map(function (e) {
+      if (e.k != null) return arr[e.k].slice();
+      const a = arr[e.a], b = arr[e.b];
+      return [Math.round((a[0] + (b[0] - a[0]) * e.t) * 10) / 10, Math.round((a[1] + (b[1] - a[1]) * e.t) * 10) / 10];
+    });
+  };
+  const oldEdges = edgeSet(sh), hadLine = (sh.strokeWidth || 0) > 0 && sh.stroke;
+  const np = build(P);
+  /* 新しい辺 j（点 j → j+1）が元のどの辺から来たか。切り口どうしをつなぐ辺は線なし */
+  const edges = [];
+  for (let j = 0; j < src.length; j++) {
+    const e = src[j], f = src[(j + 1) % src.length];
+    if (e.cut && f.cut) continue;
+    const from = e.k != null ? e.k : e.a;
+    if (partialLineOn(sh) ? oldEdges[from] : true) edges.push(j);
+  }
+  if (sh.morphs) Object.keys(sh.morphs).forEach(function (k) { if (sh.morphs[k].length === n) sh.morphs[k] = build(sh.morphs[k]); else delete sh.morphs[k]; });
+  sh.points = np;
+  if (hadLine || partialLineOn(sh)) { sh.lineMode = "some"; sh.lineEdges = edges; }
+  return true;
 }
 function strokeAttrsFor(sh) {
   if (partialLineOn(sh)) return "";
@@ -3049,6 +3105,10 @@ function renderStage() {
   out += (under && !under.front) ? underSVG() : "";
   out += buildPartsSVG();
   if (under && under.front) out += underSVG();
+  if (drag && drag.kind === "box" && drag.p1) {
+    const x = Math.min(drag.p0.x, drag.p1.x), y = Math.min(drag.p0.y, drag.p1.y), w = Math.abs(drag.p1.x - drag.p0.x), hh = Math.abs(drag.p1.y - drag.p0.y);
+    drag.boxSVG = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" fill="rgba(229,72,77,0.08)" stroke="#e5484d" stroke-width="1.5" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" pointer-events="none"/>';
+  }
   /* 輪郭線：見えているパーツの形を、塗らずに線だけで重ねる（クリックは下のパーツに通す）。選んでいるパーツは太く */
   if (outlineOn) {
     let ol = "";
@@ -3122,7 +3182,7 @@ function renderStage() {
         out += '<rect class="mid" data-act="ins" data-i="' + i + '"' + (fading ? ' opacity="0"' : "") + ' vector-effect="non-scaling-stroke" x="' + ((a[0] + b[0]) / 2 - hr * 0.55) + '" y="' + ((a[1] + b[1]) / 2 - hr * 0.55) + '" width="' + (hr * 1.1) + '" height="' + (hr * 1.1) + '"/>';
       }
       pts.forEach(function (pt, i) {
-        out += '<circle class="vtx' + (pt[2] === "smooth" ? " smooth" : "") + (i === selPt ? " cur" : "") + '" data-act="pt" data-i="' + i + '" cx="' + pt[0] + '" cy="' + pt[1] + '" r="' + hr + '" vector-effect="non-scaling-stroke"' + opFor(drag && drag.i === i) + "/>";
+        out += '<circle class="vtx' + (pt[2] === "smooth" ? " smooth" : "") + (i === selPt ? " cur" : "") + (mselHas(i) ? " msel" : "") + '" data-act="pt" data-i="' + i + '" cx="' + pt[0] + '" cy="' + pt[1] + '" r="' + hr + '" vector-effect="non-scaling-stroke"' + opFor(drag && drag.i === i) + "/>";
       });
     } else if (sh.type === "stroke") {
       const P = sh.points || [];
@@ -3132,7 +3192,7 @@ function renderStage() {
         out += '<rect class="mid" data-act="insS" data-i="' + i + '"' + (fading ? ' opacity="0"' : "") + ' vector-effect="non-scaling-stroke" x="' + ((a[0] + b[0]) / 2 - hr * 0.55) + '" y="' + ((a[1] + b[1]) / 2 - hr * 0.55) + '" width="' + (hr * 1.1) + '" height="' + (hr * 1.1) + '"/>';
       }
       P.forEach(function (pt, i) {
-        out += '<circle class="spH' + (pt[3] === "corner" ? " corner" : "") + (i === selPt ? " cur" : "") + '" data-act="sp2" data-i="' + i + '" cx="' + pt[0] + '" cy="' + pt[1] + '" r="' + hr + '" vector-effect="non-scaling-stroke"' + opFor(drag && drag.i === i) + "/>";
+        out += '<circle class="spH' + (pt[3] === "corner" ? " corner" : "") + (i === selPt ? " cur" : "") + (mselHas(i) ? " msel" : "") + '" data-act="sp2" data-i="' + i + '" cx="' + pt[0] + '" cy="' + pt[1] + '" r="' + hr + '" vector-effect="non-scaling-stroke"' + opFor(drag && drag.i === i) + "/>";
       });
     }
     /* パーツ全体の変形ハンドル：右下＝サイズ変更、上＝回転（本棚ラボ式） */
@@ -4263,6 +4323,15 @@ function renderProps() {
       h += '<p class="mini">紫の点をクリックすると、その点の位置と太さを調整できます。点と点の間の□を押すと点が増えます。</p>';
     }
   }
+  if (sh.type === "polygon" || sh.type === "stroke") {
+    const ms = mselList();
+    h += '<div class="mselBox"><div class="toolbar" style="margin:0 0 4px;"><button class="pill sm' + (boxSelMode ? " on" : "") + '" id="pf_boxsel" title="オンにすると、キャンバスをドラッグして囲んだ点をまとめて選べます（Shift を押しながらドラッグでも）">▭ 囲んで選ぶ</button>' +
+      '<button class="pill sm" id="pf_selL" title="中心線より画面の左にある点を全部選ぶ">中心線の左を選ぶ</button><button class="pill sm" id="pf_selR" title="中心線より画面の右にある点を全部選ぶ">右を選ぶ</button></div>' +
+      (ms.length ? '<div class="toolbar" style="margin:0 0 4px;"><span class="mini"><b>' + ms.length + "</b> 個の点を選択中</span>" +
+        '<button class="pill sm" id="pf_mdel">選んだ点を消す</button><button class="pill sm" id="pf_mclear">選択を外す</button></div>' : "") +
+      (sh.type === "polygon" ? '<div class="toolbar" style="margin:0 0 2px;"><span class="mini">✂ 中心線で切る：</span><button class="pill sm" id="pf_cutL" title="中心線から右をなくして、左半分を残す">左半分を残す</button><button class="pill sm" id="pf_cutR" title="中心線から左をなくして、右半分を残す">右半分を残す</button></div>' : "") +
+      '<p class="note" style="margin:4px 0 0;">点をまとめて選ぶ：Shift を押しながら点をクリック（足す・外す）、Shift を押しながらドラッグか「▭ 囲んで選ぶ」で囲む。選んだ点のどれかをドラッグすると、全部一緒に動きます。Delete キーでまとめて消せます。「✂ 中心線で切る」は、中心線の位置で形を切って半分にします（切り口に点が足され、切り口の辺には輪郭線を出しません）。髪を左右に分ける時は、パーツを複製して、片方は左、もう片方は右を残すと、ぴったり分かれます。</p></div>';
+  }
   if (sh.type === "polygon") {
     h += '<div class="row2" style="margin-bottom:6px;"><button class="pill" id="pf_flow">流れをなめらかに（毛先は残す）</button></div>' +
       '<div class="row2"><button class="pill" id="pf_allsm">全ての点をなめらかに</button><button class="pill" id="pf_allcr">全ての点を角に</button></div>' +
@@ -4557,6 +4626,23 @@ function renderProps() {
   on("pf_flow", "click", function () { pushUndo(); smoothFlowPart(sel); afterEdit(); });
   on("pf_allsm", "click", function () { pushUndo(); setAllPoints(sel, "smooth"); afterEdit(); });
   on("pf_allcr", "click", function () { pushUndo(); setAllPoints(sel, "corner"); afterEdit(); });
+  on("pf_boxsel", "click", function () { boxSelMode = !boxSelMode; renderProps(); aimTip(boxSelMode ? "▭ キャンバスをドラッグして、点を囲んでください" : "", 2400); });
+  const selSide = function (side) {
+    mselClear(); const C = centerX();
+    sh.points.forEach(function (q, i) { if (side === "L" ? q[0] < C - 0.05 : q[0] > C + 0.05) msel.set[i] = true; });
+    render();
+  };
+  on("pf_selL", "click", function () { selSide("L"); });
+  on("pf_selR", "click", function () { selSide("R"); });
+  on("pf_mdel", "click", function () { pushUndo(); if (deletePointsMany(sh, mselList())) { mselClear(); selPt = -1; afterEdit(); } else undoStack.pop(); });
+  on("pf_mclear", "click", function () { mselClear(); render(); });
+  const cut = function (side) {
+    pushUndo();
+    if (!cutAtCenter(sh, side)) { undoStack.pop(); alert("中心線のその側に、形が残りません。"); return; }
+    mselClear(); selPt = -1; afterEdit();
+  };
+  on("pf_cutL", "click", function () { cut("L"); });
+  on("pf_cutR", "click", function () { cut("R"); });
   on("pf_delpt", "click", function () {
     if (sh.points.length <= 3) return;
     pushUndo();
@@ -5138,8 +5224,26 @@ stage.addEventListener("pointerdown", function (e) {
     render();
     return;
   }
+  /* Shift＋点のクリック：点を選びに足す／外す（複数選択） */
+  if (!panMode && e.shiftKey && t.dataset && (t.dataset.act === "pt" || t.dataset.act === "sp2") && sel) {
+    mselList();
+    const i = +t.dataset.i;
+    if (selPt >= 0 && !Object.keys(msel.set).length && selPt !== i) msel.set[selPt] = true;
+    if (msel.set[i]) delete msel.set[i]; else msel.set[i] = true;
+    selPt = i;
+    render();
+    return;
+  }
+  /* 囲んで選ぶ：「▭ 囲んで選ぶ」がオンの時、または Shift を押しながら何もない所／パーツの上からドラッグ */
+  if (!panMode && sel && (sel.shape.type === "polygon" || sel.shape.type === "stroke") && (boxSelMode || e.shiftKey) && !(t.dataset && (t.dataset.act === "pt" || t.dataset.act === "sp2"))) {
+    const p0 = toSvg(e);
+    drag = { kind: "box", p0: p0, p1: null, add: e.shiftKey };
+    stage.setPointerCapture(e.pointerId);
+    return;
+  }
   if (!panMode && t.dataset && t.dataset.act === "pt" && sel) {
     pushUndo();
+    if (!mselHas(+t.dataset.i)) mselClear();
     selPt = +t.dataset.i;
     drag = { kind: "pt", i: selPt };
     stage.setPointerCapture(e.pointerId);
@@ -5160,6 +5264,7 @@ stage.addEventListener("pointerdown", function (e) {
   }
   if (!panMode && t.dataset && t.dataset.act === "sp2" && sel) {
     pushUndo();
+    if (!mselHas(+t.dataset.i)) mselClear();
     selPt = +t.dataset.i;
     drag = { kind: "sp2", i: selPt };
     stage.setPointerCapture(e.pointerId);
@@ -5287,12 +5392,22 @@ stage.addEventListener("pointermove", function (e) {
     translatePart(sel, Math.round((p.x - drag.lx) * 10) / 10, Math.round((p.y - drag.ly) * 10) / 10);
     drag.lx = p.x; drag.ly = p.y;
     renderStage();
+  } else if ((drag.kind === "pt" || drag.kind === "sp2") && mselHas(drag.i) && mselList().length > 1) {
+    /* 複数選んだ点のどれかをつかんだ時は、選んだ点全部を一緒に動かす */
+    const q = sel.shape.points[drag.i];
+    const dx = Math.round((p.x - q[0]) * 10) / 10, dy = Math.round((p.y - q[1]) * 10) / 10;
+    mselList().forEach(function (k) { const r = sel.shape.points[k]; if (r) { r[0] = Math.round((r[0] + dx) * 10) / 10; r[1] = Math.round((r[1] + dy) * 10) / 10; } });
+    renderStage();
   } else if (drag.kind === "pt" || drag.kind === "sp2") {
     let nx = Math.round(p.x * 10) / 10;
     if (Math.abs(nx - centerX()) < vb.w * 0.012) nx = centerX();
     sel.shape.points[drag.i][0] = nx;
     sel.shape.points[drag.i][1] = Math.round(p.y * 10) / 10;
     renderStage();
+  } else if (drag.kind === "box") {
+    drag.p1 = p;
+    renderStage();
+    if (drag.boxSVG) stage.insertAdjacentHTML("beforeend", drag.boxSVG);
   }
 });
 stage.addEventListener("pointerup", function (e) {
@@ -5302,6 +5417,20 @@ stage.addEventListener("pointerup", function (e) {
   if (drag && (drag.kind === "aim" || drag.kind === "aimMove")) { aimUp(e); return; }
   if (drag && drag.kind === "easyRot") { easyUp(); return; }
   if (drag && drag.easyTap && Math.hypot(e.clientX - drag.lx, e.clientY - drag.ly) < 4 && easyJoint) easyJoint = null;
+  if (drag && drag.kind === "box") {
+    const sel = selId ? partById(selId) : null, d = drag; drag = null;
+    if (sel && d.p1) {
+      const x0 = Math.min(d.p0.x, d.p1.x), x1 = Math.max(d.p0.x, d.p1.x), y0 = Math.min(d.p0.y, d.p1.y), y1 = Math.max(d.p0.y, d.p1.y);
+      mselList(); if (!d.add) mselClear();
+      let last = -1;
+      sel.shape.points.forEach(function (q, i) { if (q[0] >= x0 && q[0] <= x1 && q[1] >= y0 && q[1] <= y1) { msel.set[i] = true; last = i; } });
+      if (last >= 0) selPt = last;
+      const n = mselList().length;
+      aimTip(n ? "▭ 点を " + n + " 個選びました（Delete キーか「選んだ点を消す」で消せます）" : "▭ 囲んだ中に点がありませんでした", 2400);
+    }
+    render();
+    return;
+  }
   if (drag) { if (drag.kind === "umove") saveUnder(); drag = null; save(); render(); }
 });
 stage.addEventListener("pointercancel", function (e) { activePointers.delete(e.pointerId); drag = null; aimHide(); });
@@ -5708,6 +5837,11 @@ document.addEventListener("keydown", function (e) {
     if (e.shiftKey) document.getElementById("redoBtn").click(); else document.getElementById("undoBtn").click();
   }
   if ((e.key === "Delete" || e.key === "Backspace") && selJoint) { deleteJoint(selJoint); return; }
+  if ((e.key === "Delete" || e.key === "Backspace") && selId && mselList().length > 1) {
+    const sel = partById(selId);
+    if (sel && sel.shape.points) { pushUndo(); if (deletePointsMany(sel.shape, mselList())) { mselClear(); selPt = -1; afterEdit(); } else undoStack.pop(); }
+    return;
+  }
   if ((e.key === "Delete" || e.key === "Backspace") && selId) {
     const sel = partById(selId);
     if (sel && selPt >= 0 && sel.shape.points && sel.shape.points.length > (sel.shape.type === "polygon" ? 3 : 2)) {
