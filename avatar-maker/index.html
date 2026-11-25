@@ -268,6 +268,9 @@
   .vtx { fill:#ff8c42; stroke:#fff; stroke-width:2; cursor:grab; }
   .vtx.smooth { fill:#12a594; }
   .vtx.cur { fill:#e5484d; }
+  .palUse { font-size:12px; color:var(--mut); line-height:1.5; min-height:3em; margin:6px 0 0; padding:5px 8px; border:1px dashed var(--line); border-radius:8px; }
+  .palUse b { color:var(--fg); }
+  .palRole { color:var(--mut); font-size:11px; }
   .pickSw { display:inline-flex; align-items:center; gap:5px; margin:2px 10px 4px 0; }
   .pickSw .mini { line-height:1.25; }
   .vtx.msel, .spH.msel { fill:#e5484d; stroke:#ffd84d; stroke-width:3; }
@@ -330,8 +333,10 @@
 </header>
 
 <details class="card" id="newsBox">
-  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 カラーパレットに「💧 スポイト」を追加。キャンバスのパーツを押すと、そのパーツの色を拾えます。</span><span class="newsMore"></span></summary>
+  <summary class="newsHead">✦ 更新のお知らせ<span class="newsLatest">11/26 ペンタブを使うPCで「🎯 ずらしてつかむ」が出てしまうのを直しました。</span><span class="newsMore"></span></summary>
   <div class="newsBody">
+    <div class="newsItem"><span>11/26 01:00</span>ペンタブ・液タブのペンで画面を触ると、PCでも「🎯 ずらしてつかむ」「✥ パーツごとつかむ」が出るようになっていたのを直しました。ペンは細かい所まで正確に押せるので、指で触った時だけ出します（一度出てしまった記録もリセットしました）。</div>
+    <div class="newsItem"><span>11/26 00:50</span>カラーパレットの色にマウスを乗せると、その色を使っているパーツの名前と使い方（塗り・グラデの先・輪郭線・線）が、パレットの上に出るようにしました（6か所まで。それ以上は「ほか○か所」）。似た色が並んでいても、どれがどの色か見分けやすくなります。</div>
     <div class="newsItem"><span>11/26 00:40</span>カラーパレットに「💧 スポイト（キャンバスのパーツから拾う）」を追加しました。押すとパレットが一度閉じるので、色を拾いたいパーツをキャンバスで押すと、そのパーツの塗り・グラデーションの先・輪郭線の色が並びます（見えている色ではなく、パーツに設定されている色をそのまま拾います。ロック中や透かし中のパーツも拾えます）。押した色が今のパーツに入ります。</div>
     <div class="newsItem"><span>11/26 00:10</span>点の複数選択を追加しました。Shift を押しながら点をクリックで足す・外す、Shift を押しながらドラッグか「▭ 囲んで選ぶ」で囲んでまとめて選べます。「中心線の左を選ぶ／右を選ぶ」もあります。選んだ点はまとめて動かしたり、Delete キーか「選んだ点を消す」でまとめて消せます。また「✂ 中心線で切る（左半分を残す／右半分を残す）」で、形を中心線でぴったり半分にできます（切り口に点を足し、切り口には輪郭線を出しません）。</div>
     <div class="newsItem"><span>11/25 23:30</span>「ゆれ」の設定に「⚙ 物理演算」を追加しました。オンにすると、首の傾き・体の傾きに合わせて、髪や布が振り子のように少し遅れてついてきて、ふわっと揺れてから止まります（モーションに◆を打たなくても、首を動かすだけで自動で揺れます）。「重さ」「揺れの残り」「垂れ下がり」「大きさ」で揺れ方を調整でき、「〜 試しに揺らす」で確かめられます。</div>
@@ -451,7 +456,7 @@
   <details class="hsec">
     <summary>色・輪郭・合成・マスク</summary>
     <p class="mini">
-      ・色の横の「🎨 パレット」から、このアバターで使っている色・最近使った色・お気に入りから色を選べます。「💧 スポイト」を押してキャンバスのパーツを押すと、そのパーツの色（塗り・グラデーションの先・輪郭線）を拾えます。元の色に戻したい時の助けになります。<br>
+      ・色の横の「🎨 パレット」から、このアバターで使っている色・最近使った色・お気に入りから色を選べます。「💧 スポイト」を押してキャンバスのパーツを押すと、そのパーツの色（塗り・グラデーションの先・輪郭線）を拾えます。パレットの色にマウスを乗せると、その色を使っているパーツが出ます。元の色に戻したい時の助けになります。<br>
       ・輪郭の太さは0にすると輪郭なしになります。塗りと輪郭はそれぞれ「透明」も選べて、輪郭だけの装飾パーツも作れます。不透明度を下げると半透明のパーツになります（入れ墨の上に薄く影を置く等）。<br>
       ・グラデーション：塗りを2色のグラデーションにできます（直線／円形、終わりの色・角度・範囲・透明へのフェードを指定）。ぼかしは輪郭を柔らかくする表現に。
 ・合成（ブレンド）：乗算＝影、加算・発光やスクリーン＝光、など、下に重なる色との混ぜ方を変えられます。<br>
@@ -806,6 +811,7 @@
         <button class="pill" id="palHexApply">この色にする</button>
       </div>
     </div>
+    <div id="palUse" class="palUse">色にマウスを乗せると、その色を使っているパーツが出ます</div>
     <div class="toolbar" style="margin:6px 0 0;"><button class="pill sm" id="palPick" title="パレットを一度閉じて、キャンバスのパーツを押すと、そのパーツの色を拾います">💧 スポイト（キャンバスのパーツから拾う）</button></div>
     <div id="palPicked"></div>
     <div class="palSec">このアバターで使っている色</div>
@@ -5654,8 +5660,10 @@ document.getElementById("sAim").addEventListener("click", function () { aimSetMo
 document.getElementById("aimBtn").addEventListener("click", function () { aimSetMode(!aimMode); });
 /* 🎯 は指で触る画面のためのもの。
    ・ふだん指で操作する端末（スマホ・タブレット）では最初から出す
-   ・PCでは出さない。「タッチ対応」と名乗るだけのPCもあるので、実際に指やペンで画面を触った時に初めて出す（覚えておく） */
-const SEEN_TOUCH_KEY = "avatarMakerSeenTouch";
+   ・PCでは出さない。「タッチ対応」と名乗るだけのPCもあるので、実際に指で画面を触った時に初めて出す（覚えておく）
+   ・ペン（ペンタブ・液タブ）は細かい所まで正確に押せるので数えない。以前はペンでも出していたので、覚えておく名前を変えて一度リセットする */
+const SEEN_TOUCH_KEY = "avatarMakerSeenFinger";
+try { LS.removeItem("avatarMakerSeenTouch"); } catch (e) {}
 function aimAvailable() {
   try { if (matchMedia("(pointer: coarse)").matches) return true; } catch (e) {}
   try { return LS.getItem(SEEN_TOUCH_KEY) === "1"; } catch (e) { return false; }
@@ -5666,7 +5674,7 @@ function aimSyncButtons() {
   document.querySelectorAll(".aimOnly").forEach(function (b) { b.hidden = !(aimMode && av); });
 }
 document.addEventListener("pointerdown", function (e) {
-  if ((e.pointerType === "touch" || e.pointerType === "pen") && !aimAvailable()) {
+  if (e.pointerType === "touch" && !aimAvailable()) {
     try { LS.setItem(SEEN_TOUCH_KEY, "1"); } catch (er) {}
     aimSyncButtons();
   }
@@ -6265,9 +6273,35 @@ function usedColors() {
   });
   return seen;
 }
+/* その色を使っているパーツ：{ "#hex": [{ name, role }] } */
+function colorUsage() {
+  const map = {};
+  const add = function (c, p, role) { if (!c || !/^#[0-9a-f]{6}$/i.test(c)) return; c = c.toLowerCase(); (map[c] || (map[c] = [])).push({ name: p.name, role: role, id: p.id }); };
+  (docData ? docData.parts : []).forEach(function (p) {
+    const sh = p.shape;
+    if (sh.type === "stroke") add(sh.color, p, "線");
+    else {
+      add(sh.fill, p, sh.gradient ? "塗り・始め" : "塗り");
+      if (sh.gradient) add(sh.gradient.to, p, "グラデの先");
+      if ((sh.strokeWidth || 0) > 0) add(sh.stroke, p, "輪郭線");
+    }
+  });
+  return map;
+}
+let palUsage = {};
+function palUseText(c) {
+  const us = palUsage[c] || [];
+  if (!us.length) return '<b>' + c + "</b>　このアバターではまだ使っていません";
+  const shown = us.slice(0, 6).map(function (u) { return esc(u.name) + '<span class="palRole">（' + u.role + "）</span>"; }).join("、");
+  return '<b>' + c + "</b>　" + us.length + " か所：" + shown + (us.length > 6 ? " ほか " + (us.length - 6) + " か所" : "");
+}
 function swGrid(colors, cls) {
   if (!colors.length) return '<span class="mini">（なし）</span>';
-  return colors.map(function (c) { return '<button class="sw' + (cls ? " " + cls : "") + '" data-sw="' + c + '" style="background:' + c + '" title="' + c + '"></button>'; }).join("");
+  return colors.map(function (c) {
+    const us = palUsage[c] || [];
+    const tip = c + (us.length ? "\n" + us.slice(0, 12).map(function (u) { return u.name + "（" + u.role + "）"; }).join("\n") + (us.length > 12 ? "\nほか " + (us.length - 12) + " か所" : "") : "");
+    return '<button class="sw' + (cls ? " " + cls : "") + '" data-sw="' + c + '" style="background:' + c + '" title="' + esc(tip) + '"></button>';
+  }).join("");
 }
 function currentPalColor() {
   const inp = palTarget ? document.getElementById(palTarget) : null;
@@ -6320,6 +6354,9 @@ function palPickAt(e) {
   endPalPick(true);
 }
 function renderPalette() {
+  palUsage = colorUsage();
+  const pu = document.getElementById("palUse");
+  if (pu) pu.innerHTML = "色にマウスを乗せると、その色を使っているパーツが出ます";
   const pk = document.getElementById("palPicked");
   if (pk) pk.innerHTML = palPicked ? '<div class="palSec">💧 拾った色：' + esc(palPicked.name) + "</div>" +
     (palPicked.colors.length ? palPicked.colors.map(function (c) { return '<span class="pickSw"><button class="sw" data-sw="' + c.hex + '" style="background:' + c.hex + '" title="' + c.hex + '"></button><span class="mini">' + esc(c.label) + "<br>" + c.hex + "</span></span>"; }).join("") : '<span class="mini">（色がありません）</span>') : "";
@@ -6331,6 +6368,9 @@ function renderPalette() {
   document.getElementById("palHex").value = currentPalColor();
   document.getElementById("palFavEdit").classList.toggle("on", palEditFavs);
   document.querySelectorAll("#paletteBox [data-sw]").forEach(function (b) {
+    const show = function () { const u = document.getElementById("palUse"); if (u) u.innerHTML = palUseText(b.getAttribute("data-sw")); };
+    b.addEventListener("mouseenter", show);
+    b.addEventListener("focus", show);
     b.addEventListener("click", function () {
       const c = b.getAttribute("data-sw");
       if (b.classList.contains("favDel")) {
