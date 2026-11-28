@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>潮だまりタロット</title>
+<meta name="description" content="カードは本物のシャッフルで引いて、読み解きはお好きなAIに任せるタロット抽選機。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday toy, a little magical, retro doujin-site night
+   IDEA a tarot cloth laid out on a moonlit tidepool desk
+   PICTURE the drawn cards themselves, large, flipping face up
+   COLOUR deep indigo night ground, lavender cloth, moon gold accent
+   TYPE Shippori Mincho for card names and title, Zen Maru Gothic body
+   LAYOUT title + compact controls, cards row full width, reading and AI hand-off below (2 cols wide, stacked on phone) */
+:root{color-scheme:light;--bg:#eef0fb;--cloth:#ffffff;--cloth2:#e6e3fa;--line:#c9c2ee;--ink:#241f47;--mute:#5d5690;--gold:#8a6514;--hi:#e4dfff;--face:#fbf7ff;--faceink:#2a2350;--pink:#b23b6e;--btn:#f2cf73;--btnink:#2b2140}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="dusk"]){color-scheme:dark;--bg:#15122b;--cloth:#241f47;--cloth2:#2e2858;--line:#4a4285;--ink:#ece8ff;--mute:#b7aee6;--gold:#f2cf73;--hi:#3a3270;--pink:#f3a6c8}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#15122b;--cloth:#241f47;--cloth2:#2e2858;--line:#4a4285;--ink:#ece8ff;--mute:#b7aee6;--gold:#f2cf73;--hi:#3a3270;--pink:#f3a6c8}
+:root[data-theme="dusk"]{color-scheme:light;--bg:#fbe9df;--cloth:#fff7f1;--cloth2:#f6d9cc;--line:#ecc9bd;--ink:#3a2230;--mute:#80606c;--gold:#b8452f;--hi:#fde3d6;--pink:#9c2f45}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Zen Maru Gothic",system-ui,sans-serif;overflow-x:clip}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;margin-bottom:14px}
+.topbar a{color:var(--mute)}
+.topbar select{min-height:36px;padding:4px 10px;font-size:14px}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.wrap{max-width:1100px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px}
+h1{font:800 clamp(30px,5vw,44px)/1.05 "Shippori Mincho",serif;margin:0;letter-spacing:-.01em}
+h1 small{display:block;font:400 14px/1.4 "Zen Maru Gothic",sans-serif;color:var(--mute);margin-top:6px}
+h2{font:600 20px/1.3 "Shippori Mincho",serif;margin:0 0 12px}
+.controls{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end;margin-top:18px;background:var(--cloth);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)}
+.field.grow{flex:1 1 220px}
+select,input[type=text]{font:16px "Zen Maru Gothic",sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:44px}
+input[type=text]::placeholder{color:var(--mute);opacity:.75}
+.check{flex-direction:row;align-items:center;gap:8px;min-height:44px;color:var(--ink);font-size:15px}
+.check input{width:20px;height:20px;accent-color:var(--gold)}
+button,.btn{font:700 16px "Zen Maru Gothic",sans-serif;min-height:44px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--cloth2);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+button:hover,.btn:hover{border-color:var(--gold)}
+button:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#draw{background:var(--btn);color:var(--btnink);border-color:#d9b24f}
+#draw:hover{filter:brightness(1.06)}
+.table{margin-top:18px;background:radial-gradient(ellipse at 50% 0%,var(--hi),var(--cloth) 70%);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,3vw,32px) 12px;display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(12px,3vw,32px);min-height:300px}
+.slot{display:flex;flex-direction:column;align-items:center;gap:8px;width:clamp(96px,26vw,160px)}
+.pos{font-size:14px;color:var(--gold);white-space:nowrap}
+.card{width:100%;aspect-ratio:5/8.4;perspective:900px}
+.inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
+.card.open .inner{transform:rotateY(180deg)}
+.back,.face{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{background:#2c2560;border:2px solid var(--gold);background-image:repeating-linear-gradient(45deg,transparent 0 9px,rgba(242,207,115,.14) 9px 10px),repeating-linear-gradient(-45deg,transparent 0 9px,rgba(242,207,115,.14) 9px 10px);display:grid;place-items:center}
+.back svg{width:46%;opacity:.9}
+.face{transform:rotateY(180deg);background:var(--face);color:var(--faceink);border:2px solid #c9b9f2;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8% 6%;text-align:center}
+.face .turn{display:flex;flex-direction:column;align-items:center;justify-content:space-between;width:100%;height:100%}
+.face.rev .turn{transform:rotate(180deg)}
+.num{font:800 clamp(13px,2.4vw,17px)/1 "Shippori Mincho",serif;color:#6b5bb8}
+.face svg{width:62%;height:auto}
+.cname{font:800 clamp(13px,2.4vw,17px)/1.25 "Shippori Mincho",serif}
+.ori{font-size:13px;white-space:nowrap;padding:2px 10px;border-radius:99px;background:var(--cloth2);border:1px solid var(--line)}
+.ori.r{color:var(--pink);border-color:var(--pink)}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;margin-top:18px}
+.panel{background:var(--cloth);border:1px solid var(--line);border-radius:14px;padding:16px}
+ol{margin:0;padding-left:1.4em}
+ol li{margin:4px 0}
+ol li b{font-family:"Shippori Mincho",serif}
+.r-txt{color:var(--pink)}
+textarea{width:100%;min-height:200px;font:15px/1.6 "Zen Maru Gothic",sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
+.ai{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+#copied{font-size:14px;color:var(--gold);min-height:1.4em;margin:6px 0 0}
+.hist{margin-top:18px}
+.hist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hist li{font-size:14px;color:var(--mute);border-bottom:1px dashed var(--line);padding-bottom:6px}
+.hist time{color:var(--gold);margin-right:8px;white-space:nowrap}
+footer{font-size:13px;color:var(--mute);text-align:center;padding-bottom:28px}
+@media(max-width:720px){.lower{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.inner{transition:none}}
+</style>
+</head>
+<body>
+<div class="band"><div class="wrap">
+<div class="topbar"><a href="../">潮だまり工房へ戻る</a><select id="th" aria-label="表示モード"></select></div>
+<header>
+<h1>潮だまりタロット<small>カードは本物のシャッフルで引いて、読み解きはお好きなAIへ</small></h1>
+</header>
+
+<form class="controls" id="form">
+<label class="field">スプレッド
+<select id="spread">
+<option value="one">1枚引き（今日のメッセージ）</option>
+<option value="time" selected>3枚：過去・現在・未来</option>
+<option value="self">3枚：性格診断</option>
+<option value="choice">2枚：AとBどっちがいい？</option>
+</select></label>
+<label class="field">デッキ
+<select id="deck">
+<option value="major">大アルカナ22枚</option>
+<option value="full">フルデッキ78枚</option>
+</select></label>
+<label class="field check"><input type="checkbox" id="rev" checked>逆位置あり</label>
+<label class="field grow">占いたいこと（空欄でもOK）
+<input type="text" id="q" placeholder="例：最近の創作のモチベーションについて"></label>
+<button type="submit" id="draw">カードを引く</button>
+</form>
+
+<div class="table" id="table" aria-live="polite"></div>
+
+<div class="lower">
+<section class="panel">
+<h2>出たカード</h2>
+<ol id="list"></ol>
+<p class="note">引き直したくなっても、まずはこの結果で読んでもらうのが占いの醍醐味。</p>
+</section>
+<section class="panel">
+<h2>AIに読み解いてもらう</h2>
+<textarea id="prompt" aria-label="AIに渡す文章"></textarea>
+<div class="ai">
+<button type="button" id="copy">文章をコピー</button>
+<a class="btn" id="gpt" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPTで開く</a>
+<a class="btn" id="cld" href="https://claude.ai/new" target="_blank" rel="noopener">Claudeで開く</a>
+<a class="btn" id="gem" href="https://gemini.google.com/app" target="_blank" rel="noopener">Geminiを開く</a>
+</div>
+<p id="copied"></p>
+<p class="note">ChatGPTとClaudeは文章が入った状態で開きます。うまく入らない時や、Geminiなど他のAIでは「コピー」してから貼り付けてね。</p>
+</section>
+</div>
+
+<section class="panel hist">
+<h2>最近の結果</h2>
+<ul id="hist"></ul>
+</section>
+</div></div>
+<footer>潮だまり工房　おあそびの小部屋</footer>
+
+<script>
+{
+const MAJOR=["愚者","魔術師","女教皇","女帝","皇帝","教皇","恋人","戦車","力","隠者","運命の輪","正義","吊るされた男","死神","節制","悪魔","塔","星","月","太陽","審判","世界"];
+const ROMAN=["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
+const SUITS=[["wand","ワンド"],["cup","カップ"],["sword","ソード"],["pent","ペンタクル"]];
+const RANKS=["エース","2","3","4","5","6","7","8","9","10","ペイジ","ナイト","クイーン","キング"];
+const SPREADS={
+one:{name:"1枚引き（今日のメッセージ）",pos:["今日のメッセージ"]},
+time:{name:"過去・現在・未来（3枚）",pos:["過去","現在","未来"]},
+self:{name:"性格診断（3枚）",pos:["表の自分","内なる自分","隠れた才能"]},
+choice:{name:"二択（2枚）",pos:["Aを選んだら","Bを選んだら"]}
+};
+const ICON={
+major:'<svg viewBox="0 0 60 60"><path d="M38 10a20 20 0 1 0 12 30A16 16 0 0 1 38 10z" fill="#6b5bb8"/><path d="M44 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#e0b84f"/></svg>',
+wand:'<svg viewBox="0 0 60 60"><path d="M16 50L44 10" stroke="#8a5a2b" stroke-width="5" stroke-linecap="round"/><path d="M40 16c6-2 9 1 9 1s-4 1-9 0zM30 30c-6-1-8 2-8 2s4 1 8-1z" fill="#5a9a5a"/></svg>',
+cup:'<svg viewBox="0 0 60 60"><path d="M14 12h32c0 14-7 22-16 22S14 26 14 12z" fill="#e0b84f"/><path d="M30 34v10M20 48h20" stroke="#b08a2c" stroke-width="5" stroke-linecap="round"/></svg>',
+sword:'<svg viewBox="0 0 60 60"><path d="M30 6v36" stroke="#8c9bb5" stroke-width="6" stroke-linecap="round"/><path d="M18 42h24" stroke="#6b5bb8" stroke-width="5" stroke-linecap="round"/><path d="M30 44v10" stroke="#6b5bb8" stroke-width="5" stroke-linecap="round"/></svg>',
+pent:'<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="22" fill="#e0b84f"/><path d="M30 13l5 15h16l-13 9 5 15-13-9-13 9 5-15-13-9h16z" fill="none" stroke="#7a5b16" stroke-width="2.5" stroke-linejoin="round"/></svg>'
+};
+const BACK='<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="20" fill="none" stroke="#f2cf73" stroke-width="2"/><path d="M36 16a14 14 0 1 0 8 22A11 11 0 0 1 36 16z" fill="#f2cf73"/></svg>';
+
+function buildDeck(kind){
+const d=MAJOR.map((n,i)=>({name:n,num:ROMAN[i],icon:"major"}));
+if(kind==="full"){for(const [k,s] of SUITS){RANKS.forEach((r,i)=>d.push({name:s+"の"+r,num:i===0?"A":(i<10?String(i+1):""),icon:k}));}}
+return d;
+}
+function rnd(n){
+try{const lim=Math.floor(4294967296/n)*n;const a=new Uint32Array(1);do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n;}
+catch(e){return Math.floor(Math.random()*n);}
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+const $=id=>document.getElementById(id);
+let current=null;
+
+function draw(animate){
+const sp=SPREADS[$("spread").value];
+const deckKind=$("deck").value;
+const useRev=$("rev").checked;
+const deck=shuffle(buildDeck(deckKind));
+const cards=sp.pos.map((p,i)=>({pos:p,...deck[i],rev:useRev&&rnd(2)===1}));
+current={sp,deckKind,useRev,q:$("q").value.trim(),cards,at:new Date()};
+render(animate);
+makePrompt();
+if(animate)saveHist();
+}
+
+function render(animate){
+$("table").innerHTML=current.cards.map((c,i)=>`
+<div class="slot">
+<div class="pos">${esc(c.pos)}</div>
+<div class="card" id="c${i}"><div class="inner">
+<div class="back">${BACK}</div>
+<div class="face${c.rev?" rev":""}"><div class="turn">
+<div class="num">${esc(c.num)}</div>${ICON[c.icon]}<div class="cname">${esc(c.name)}</div>
+</div></div>
+</div></div>
+<div class="ori${c.rev?" r":""}">${c.rev?"逆位置":"正位置"}</div>
+</div>`).join("");
+const open=i=>$("c"+i).classList.add("open");
+current.cards.forEach((c,i)=>{if(animate){setTimeout(()=>open(i),250+i*380)}else{open(i)}});
+$("list").innerHTML=current.cards.map(c=>`<li>${esc(c.pos)}：<b>${esc(c.name)}</b>（<span class="${c.rev?"r-txt":""}">${c.rev?"逆位置":"正位置"}</span>）</li>`).join("");
+}
+
+function makePrompt(){
+const c=current;
+const lines=c.cards.map((x,i)=>`${i+1}. ${x.pos}：${x.name}（${x.rev?"逆位置":"正位置"}）`).join("\n");
+const t=`タロット占いの結果を読み解いてください。
+
+占いたいこと：${c.q||"今の自分について（特にテーマなし）"}
+スプレッド：${c.sp.name}
+デッキ：${c.deckKind==="full"?"フルデッキ78枚":"大アルカナ22枚"}${c.useRev?"（逆位置あり）":"（正位置のみ）"}
+
+${lines}
+
+このカードは占いツールで公平にシャッフルして引いた結果です。カードを引き直したり変えたりせず、この結果のまま読み解いてください。
+各カードの意味と、全体の流れやアドバイスを、親しみやすい日本語でお願いします。`;
+$("prompt").value=t;
+updateLinks();
+}
+function updateLinks(){
+const enc=encodeURIComponent($("prompt").value);
+$("gpt").href="https://chatgpt.com/?q="+enc;
+$("cld").href="https://claude.ai/new?q="+enc;
+}
+
+function loadHist(){try{return JSON.parse(localStorage.getItem("shiodamari-tarot")||"[]")}catch(e){return[]}}
+function saveHist(){
+const h=loadHist();
+const t=current.at;
+h.unshift({t:`${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`,s:current.sp.name,c:current.cards.map(x=>x.name+(x.rev?"(逆)":"")).join("・")});
+try{localStorage.setItem("shiodamari-tarot",JSON.stringify(h.slice(0,8)))}catch(e){}
+showHist(h.slice(0,8));
+}
+function showHist(h){
+$("hist").innerHTML=h.length?h.map(x=>`<li><time>${esc(x.t)}</time>${esc(x.s)}：${esc(x.c)}</li>`).join(""):"<li>まだ記録はないよ</li>";
+}
+
+$("form").addEventListener("submit",e=>{e.preventDefault();draw(true);});
+$("prompt").addEventListener("input",updateLinks);
+$("copy").addEventListener("click",async()=>{
+const ta=$("prompt");
+try{await navigator.clipboard.writeText(ta.value);$("copied").textContent="コピーしたよ！AIのチャット欄に貼り付けてね";}
+catch(e){ta.focus();ta.select();$("copied").textContent="文章を選択したよ。Ctrl+Cでコピーしてね";}
+});
+
+showHist(loadHist());
+draw(false);
+}
+{
+const $=s=>document.getElementById(s);
+const TM=["time","light","dusk","dark","auto"],TL={time:"時間帯",light:"ライト",dusk:"夕方",dark:"ダーク",auto:"端末設定"},t0=document.documentElement.getAttribute("data-theme"),TK="shiodamari-theme";let tm="time";function readTheme(){try{const saved=localStorage.getItem(TK);return TM.includes(saved)?saved:"time"}catch(e){return "time"}}tm=readTheme();
+const PH={light:"昼",dusk:"夕方",dark:"夜"};
+function ph(){const d=new Date(),h=d.getHours()+d.getMinutes()/60,n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),c=Math.cos(2*Math.PI*(n-172)/365),sr=5.6-1.18*c,ss=17.77+1.23*c;return h<sr-.3||h>=ss+.5?"dark":h>=ss-.75?"dusk":"light"}
+function tmu(){const r=document.documentElement,p=ph(),v=tm=="auto"?t0:tm=="time"?p:tm;v?r.setAttribute("data-theme",v):r.removeAttribute("data-theme");$("th").value=tm;for(const o of $("th").options)o.textContent=TL[o.value]+(o.value=="time"?"（今は"+PH[p]+"）":"")}setInterval(tmu,60000);
+function syncTheme(){const next=readTheme();if(next!==tm){tm=next;tmu()}}
+window.addEventListener("storage",e=>{if(e.key===TK||e.key===null)syncTheme()});
+window.addEventListener("focus",syncTheme);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTheme()});
+TM.forEach(v=>{const o=document.createElement("option");o.value=v;$("th").append(o)});$("th").onchange=()=>{tm=$("th").value;try{localStorage.setItem(TK,tm)}catch(e){}tmu()};
+tmu();
+}
+</script>
+</body>
+</html>
